@@ -15,6 +15,14 @@ import Patients from "../pages/admin/patients/Patients";
 import Staff from "../pages/admin/staff/Staff";
 import Services from "../pages/admin/services/Services";
 import ServiceRequests from "../pages/admin/requests/ServiceRequests";
+import Attendance from "../pages/admin/attendance/Attendance";
+import Bookings from "../pages/admin/bookings/Booking";
+import Appointments from "../pages/admin/appointment/Appointments";
+import Schedules from "../pages/admin/schedules/Schedules";
+import StaffShifts from "../pages/admin/shifts/StaffShifts";
+import Assignments from "../pages/admin/Assignments/Assignments";
+import BloodBank from "../pages/admin/bloods/BloodBank";
+
 
 
 const AppRoutes = () => {
@@ -46,7 +54,7 @@ const AppRoutes = () => {
         <Route index element={<AdminDashboard />} />
 
         {/* Blood Management */}
-        {/* <Route path="blood" element={<BloodBank />} /> */}
+        <Route path="blood" element={<BloodBank />} />
 
         {/* People */}
         <Route path="users" element={<AdminModulePage />} />
@@ -57,16 +65,17 @@ const AppRoutes = () => {
 
         {/* Care Management */}
         <Route path="services" element={<Services />} />
-        <Route path="bookings" element={<AdminModulePage />} />
-        <Route path="appointments" element={<AdminModulePage />} />
-        <Route path="schedules" element={<AdminModulePage />} />
+        <Route path="bookings" element={<Bookings />} />
+        <Route path="appointments" element={<Appointments />} />
+        <Route path="schedules" element={<Schedules />} />
 
         {/* Workforce */}
-        <Route path="shifts" element={<AdminModulePage />} />
-        <Route path="assignments" element={<AdminModulePage />} />
-        <Route path="attendance" element={<AdminModulePage />} />
+        <Route path="shifts" element={<StaffShifts />} />
+        <Route path="assignments" element={<Assignments />} />
+        <Route path="attendance" element={<Attendance/>} />
 
         {/* Hospital Services */}
+        {/* <Route path="bloods" element={<Bloods />} /> */}
         <Route path="medicine" element={<AdminModulePage />} />
         <Route path="food" element={<AdminModulePage />} />
         <Route path="emergency" element={<AdminModulePage />} />
