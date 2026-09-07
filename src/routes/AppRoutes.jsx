@@ -15,7 +15,7 @@ import Patients from "../pages/admin/patients/Patients";
 import Staff from "../pages/admin/staff/Staff";
 import Services from "../pages/admin/services/Services";
 import ServiceRequests from "../pages/admin/requests/ServiceRequests";
-
+import User from "../pages/admin/User/User";
 
 const AppRoutes = () => {
   return (
@@ -26,10 +26,7 @@ const AppRoutes = () => {
 
       <Route path="/services" element={<ServicesPage />} />
 
-      <Route
-        path="/services/:serviceId"
-        element={<ServiceDetailsPage />}
-      />
+      <Route path="/services/:serviceId" element={<ServiceDetailsPage />} />
 
       <Route path="/about" element={<AboutPage />} />
 
@@ -49,7 +46,7 @@ const AppRoutes = () => {
         {/* <Route path="blood" element={<BloodBank />} /> */}
 
         {/* People */}
-        <Route path="users" element={<AdminModulePage />} />
+        <Route path="users" element={<User />} />
         <Route path="patients" element={<Patients />} />
         <Route path="doctors" element={<AdminModulePage />} />
         <Route path="nurses" element={<AdminModulePage />} />
