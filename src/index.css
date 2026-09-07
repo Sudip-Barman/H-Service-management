@@ -21,6 +21,7 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+<<<<<<< HEAD
 /* Hide scrollbar but keep scrolling */
 .hide-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
@@ -29,4 +30,20 @@ a {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;              /* Chrome, Safari, Opera */
+=======
+/* Hide scrollbar while keeping scrolling enabled */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar but keep scrolling functional */
+.sidebar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.sidebar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+>>>>>>> ee1045002a50ecc607c373a9cee62b54c6f1f84c
 }

@@ -15,6 +15,7 @@ import Patients from "../pages/admin/patients/Patients";
 import Staff from "../pages/admin/staff/Staff";
 import Services from "../pages/admin/services/Services";
 import ServiceRequests from "../pages/admin/requests/ServiceRequests";
+<<<<<<< HEAD
 import Attendance from "../pages/admin/attendance/Attendance";
 import Bookings from "../pages/admin/bookings/Booking";
 import Appointments from "../pages/admin/appointment/Appointments";
@@ -24,6 +25,9 @@ import Assignments from "../pages/admin/Assignments/Assignments";
 import BloodBank from "../pages/admin/bloods/BloodBank";
 
 
+=======
+import User from "../pages/admin/User/User";
+>>>>>>> ee1045002a50ecc607c373a9cee62b54c6f1f84c
 
 const AppRoutes = () => {
   return (
@@ -34,10 +38,7 @@ const AppRoutes = () => {
 
       <Route path="/services" element={<ServicesPage />} />
 
-      <Route
-        path="/services/:serviceId"
-        element={<ServiceDetailsPage />}
-      />
+      <Route path="/services/:serviceId" element={<ServiceDetailsPage />} />
 
       <Route path="/about" element={<AboutPage />} />
 
@@ -57,7 +58,7 @@ const AppRoutes = () => {
         <Route path="blood" element={<BloodBank />} />
 
         {/* People */}
-        <Route path="users" element={<AdminModulePage />} />
+        <Route path="users" element={<User />} />
         <Route path="patients" element={<Patients />} />
         <Route path="doctors" element={<AdminModulePage />} />
         <Route path="nurses" element={<AdminModulePage />} />
