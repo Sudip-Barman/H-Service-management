@@ -1,246 +1,57 @@
 import { useMemo, useState } from "react";
 import {
   Activity,
-  CalendarClock,
-  CheckCircle2,
-  ChevronDown,
-  Clock3,
-  Edit3,
-  Eye,
-  Filter,
-  IndianRupee,
+  Baby,
+  ClipboardPlus,
+  HeartHandshake,
+  HeartPulse,
+  HouseHeart,
   Plus,
   Search,
-  Settings2,
-  ShieldCheck,
   Stethoscope,
-  ToggleLeft,
-  ToggleRight,
-  Users,
-  X,
+  UserRound,
+  UserRoundCheck,
 } from "lucide-react";
 
-/* =========================================================
-   INITIAL SERVICES
-========================================================= */
+import StatCard from "../../../components/admin/StatCard";
+import SearchFilter from "../../../components/admin/SearchFilter";
+import ServiceDetails from "../../../components/admin/ServiceDetails";
+import ServiceForm from "../../../components/admin/ServiceForm";
+import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 
-const initialServices = [
-  {
-    id: "SRV-001",
-    code: "PC-001",
-    name: "Patient Caretaker",
-    category: "Personal Care",
-    description:
-      "General assistance with daily activities, patient support and basic personal care.",
-    qualification: "Patient Care Training",
-    duration: "Flexible",
-    pricingMethod: "Per Day",
-    price: 800,
-    availability: "Available",
-    active: true,
-    assignedStaff: 18,
-    activeRequests: 12,
-  },
-  {
-    id: "SRV-002",
-    code: "BC-001",
-    name: "Baby Caretaker",
-    category: "Child Care",
-    description:
-      "Dedicated support for infant care, feeding assistance and daily baby supervision.",
-    qualification: "Child Care Training",
-    duration: "Flexible",
-    pricingMethod: "Per Day",
-    price: 900,
-    availability: "Available",
-    active: true,
-    assignedStaff: 11,
-    activeRequests: 7,
-  },
-  {
-    id: "SRV-003",
-    code: "JS-001",
-    name: "Japa Service",
-    category: "Mother & Baby Care",
-    description:
-      "Post-delivery support for mother and newborn including daily assistance and care.",
-    qualification: "Japa / Postnatal Care Training",
-    duration: "7-30 Days",
-    pricingMethod: "Per Day",
-    price: 1200,
-    availability: "Available",
-    active: true,
-    assignedStaff: 9,
-    activeRequests: 5,
-  },
-  {
-    id: "SRV-004",
-    code: "BS-001",
-    name: "Baby Sitter",
-    category: "Child Care",
-    description:
-      "Child supervision and basic childcare support for families.",
-    qualification: "Child Care Experience",
-    duration: "Flexible",
-    pricingMethod: "Per Hour",
-    price: 150,
-    availability: "Available",
-    active: true,
-    assignedStaff: 14,
-    activeRequests: 9,
-  },
-  {
-    id: "SRV-005",
-    code: "MA-001",
-    name: "Male Attendant",
-    category: "Personal Care",
-    description:
-      "Assistance for male patients with mobility, daily activities and personal support.",
-    qualification: "Patient Care Training",
-    duration: "Flexible",
-    pricingMethod: "Per Day",
-    price: 850,
-    availability: "Limited",
-    active: true,
-    assignedStaff: 6,
-    activeRequests: 8,
-  },
-  {
-    id: "SRV-006",
-    code: "EC-001",
-    name: "Elder Care",
-    category: "Elder Care",
-    description:
-      "Daily assistance, companionship, mobility support and elderly care.",
-    qualification: "Elder Care Experience",
-    duration: "Flexible",
-    pricingMethod: "Per Day",
-    price: 800,
-    availability: "Available",
-    active: true,
-    assignedStaff: 13,
-    activeRequests: 15,
-  },
-  {
-    id: "SRV-007",
-    code: "GNM-001",
-    name: "GNM Nurse",
-    category: "Nursing",
-    description:
-      "Professional nursing support including monitoring, medication assistance and nursing care.",
-    qualification: "GNM",
-    duration: "Shift Based",
-    pricingMethod: "Per Shift",
-    price: 600,
-    availability: "Available",
-    active: true,
-    assignedStaff: 22,
-    activeRequests: 11,
-  },
-  {
-    id: "SRV-008",
-    code: "ANM-001",
-    name: "ANM Nurse",
-    category: "Nursing",
-    description:
-      "Qualified auxiliary nursing support for basic clinical and patient care requirements.",
-    qualification: "ANM",
-    duration: "Shift Based",
-    pricingMethod: "Per Shift",
-    price: 550,
-    availability: "Available",
-    active: true,
-    assignedStaff: 12,
-    activeRequests: 6,
-  },
-  {
-    id: "SRV-009",
-    code: "BSC-001",
-    name: "B.Sc Nurse",
-    category: "Nursing",
-    description:
-      "Professional nursing services delivered by B.Sc qualified nurses.",
-    qualification: "B.Sc Nursing",
-    duration: "Shift Based",
-    pricingMethod: "Per Shift",
-    price: 700,
-    availability: "Available",
-    active: true,
-    assignedStaff: 16,
-    activeRequests: 8,
-  },
-  {
-    id: "SRV-010",
-    code: "ICU-001",
-    name: "ICU Nurse",
-    category: "Specialized Nursing",
-    description:
-      "Specialized nursing support for ICU and critically ill patients.",
-    qualification: "B.Sc/GNM + ICU Experience",
-    duration: "Shift Based",
-    pricingMethod: "Per Shift",
-    price: 1200,
-    availability: "Limited",
-    active: true,
-    assignedStaff: 7,
-    activeRequests: 4,
-  },
-];
+import {
+  serviceData,
+  serviceCategoryOptions,
+  serviceAvailabilityOptions,
+  serviceStatusOptions,
+} from "../../../data";
 
-/* =========================================================
-   OPTIONS
-========================================================= */
+/* =========================
+   Empty Service Form
+========================= */
 
-const categoryOptions = [
-  "All",
-  "Personal Care",
-  "Child Care",
-  "Mother & Baby Care",
-  "Elder Care",
-  "Nursing",
-  "Specialized Nursing",
-];
-
-const availabilityOptions = [
-  "All",
-  "Available",
-  "Limited",
-  "Unavailable",
-];
-
-const statusOptions = [
-  "All",
-  "Active",
-  "Inactive",
-];
-
-const pricingOptions = [
-  "Per Hour",
-  "Per Shift",
-  "Per Day",
-  "Per Week",
-  "Per Month",
-  "Per Visit",
-  "Custom",
-];
-
-const emptyForm = {
+const emptyServiceForm = {
   name: "",
-  code: "",
-  category: "Personal Care",
+  category: "Patient Care",
   description: "",
-  qualification: "",
-  duration: "",
-  pricingMethod: "Per Day",
+  icon: "Stethoscope",
   price: "",
+  priceUnit: "per day",
+  duration: "12 Hours",
+  staffRequired: 1,
+  availableStaff: 0,
+  status: "Active",
+  availability: "Available",
+  bookings: 0,
+  rating: 0,
 };
 
-/* =========================================================
-   MAIN COMPONENT
-========================================================= */
-
 const Services = () => {
-  const [services, setServices] = useState(initialServices);
+  const [services, setServices] = useState(serviceData);
+
+  /* =========================
+     Search & Filters
+  ========================= */
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -248,68 +59,74 @@ const Services = () => {
     useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  /* Collapsible filter state */
   const [showFilters, setShowFilters] = useState(false);
 
-  const [showAddModal, setShowAddModal] = useState(false);
+  /* =========================
+     Service Details
+  ========================= */
+
   const [selectedService, setSelectedService] =
     useState(null);
 
-  const [form, setForm] = useState(emptyForm);
-  const [formError, setFormError] = useState("");
+  /* =========================
+     Service Form
+  ========================= */
 
-  /* =======================================================
-     STATISTICS
-  ======================================================= */
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyServiceForm);
+  const [formError, setFormError] = useState("");
+  const [editingService, setEditingService] =
+    useState(null);
+
+  /* =========================
+     Remove Confirmation
+  ========================= */
+
+  const [serviceToRemove, setServiceToRemove] =
+    useState(null);
+
+  /* =========================
+     Statistics
+  ========================= */
 
   const stats = useMemo(() => {
     return {
       total: services.length,
 
       active: services.filter(
-        (service) => service.active
+        (service) => service.status === "Active"
       ).length,
 
-      inactive: services.filter(
-        (service) => !service.active
+      available: services.filter(
+        (service) => service.availability === "Available"
       ).length,
 
-      requests: services.reduce(
-        (sum, service) =>
-          sum + service.activeRequests,
-        0
-      ),
+      limited: services.filter(
+        (service) => service.availability === "Limited"
+      ).length,
 
-      staff: services.reduce(
-        (sum, service) =>
-          sum + service.assignedStaff,
+      bookings: services.reduce(
+        (total, service) =>
+          total + Number(service.bookings || 0),
         0
       ),
     };
   }, [services]);
 
-  /* =======================================================
-     FILTERED SERVICES
-  ======================================================= */
+  /* =========================
+     Filtering
+  ========================= */
 
   const filteredServices = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const searchValue = search.trim().toLowerCase();
 
     return services.filter((service) => {
       const matchesSearch =
-        !query ||
-        service.name
-          .toLowerCase()
-          .includes(query) ||
-        service.code
-          .toLowerCase()
-          .includes(query) ||
-        service.category
-          .toLowerCase()
-          .includes(query) ||
-        service.qualification
-          .toLowerCase()
-          .includes(query);
+        !searchValue ||
+        service.name.toLowerCase().includes(searchValue) ||
+        service.id.toLowerCase().includes(searchValue) ||
+        service.category.toLowerCase().includes(searchValue) ||
+        service.description.toLowerCase().includes(searchValue);
 
       const matchesCategory =
         categoryFilter === "All" ||
@@ -317,15 +134,11 @@ const Services = () => {
 
       const matchesAvailability =
         availabilityFilter === "All" ||
-        service.availability ===
-          availabilityFilter;
+        service.availability === availabilityFilter;
 
       const matchesStatus =
         statusFilter === "All" ||
-        (statusFilter === "Active" &&
-          service.active) ||
-        (statusFilter === "Inactive" &&
-          !service.active);
+        service.status === statusFilter;
 
       return (
         matchesSearch &&
@@ -342,9 +155,9 @@ const Services = () => {
     statusFilter,
   ]);
 
-  /* =======================================================
-     FILTER HELPERS
-  ======================================================= */
+  /* =========================
+     Clear Filters
+  ========================= */
 
   const clearFilters = () => {
     setSearch("");
@@ -353,1420 +166,909 @@ const Services = () => {
     setStatusFilter("All");
   };
 
-  const hasFilters =
-    search.trim() ||
+  const hasActiveFilters =
+    search.trim() !== "" ||
     categoryFilter !== "All" ||
     availabilityFilter !== "All" ||
     statusFilter !== "All";
 
-  /* =======================================================
-     FORM
-  ======================================================= */
+  /* =========================
+     Generate Service ID
+  ========================= */
 
-  const updateForm = (field, value) => {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
+  const generateServiceId = () => {
+    const highestNumber = services.reduce(
+      (maxNumber, service) => {
+        const match = service.id?.match(/^SRV-(\d+)$/);
 
-  /* =======================================================
-     TOGGLE SERVICE
-  ======================================================= */
+        if (!match) return maxNumber;
 
-  const toggleService = (serviceId) => {
-    setServices((current) =>
-      current.map((service) =>
-        service.id === serviceId
-          ? {
-              ...service,
-              active: !service.active,
-              availability: service.active
-                ? "Unavailable"
-                : "Available",
-            }
-          : service
-      )
+        return Math.max(
+          maxNumber,
+          Number(match[1])
+        );
+      },
+      1000
     );
 
-    setSelectedService((current) => {
-      if (
-        !current ||
-        current.id !== serviceId
-      ) {
-        return current;
-      }
-
-      return {
-        ...current,
-        active: !current.active,
-        availability: current.active
-          ? "Unavailable"
-          : "Available",
-      };
-    });
+    return `SRV-${String(highestNumber + 1).padStart(
+      4,
+      "0"
+    )}`;
   };
 
-  /* =======================================================
-     ADD SERVICE
-  ======================================================= */
+  /* =========================
+     Form Helpers
+  ========================= */
 
-  const handleAddService = (event) => {
-    event.preventDefault();
+  const updateForm = (field, value) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      [field]: value,
+    }));
 
+    if (formError) {
+      setFormError("");
+    }
+  };
+
+  /* =========================
+     Open Add Form
+  ========================= */
+
+  const handleAddService = () => {
+    setEditingService(null);
+    setForm({ ...emptyServiceForm });
+    setFormError("");
+
+    setSelectedService(null);
+    setShowForm(true);
+  };
+
+  /* =========================
+     Open Edit Form
+  ========================= */
+
+  const handleEditService = (service) => {
+    setEditingService(service);
+
+    setForm({
+      ...emptyServiceForm,
+      ...service,
+    });
+
+    setFormError("");
+
+    setSelectedService(null);
+    setShowForm(true);
+  };
+
+  /* =========================
+     Close Form
+  ========================= */
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingService(null);
+    setForm({ ...emptyServiceForm });
+    setFormError("");
+  };
+
+  /* =========================
+     Validate Form
+  ========================= */
+
+  const validateForm = () => {
     if (!form.name.trim()) {
-      setFormError(
-        "Service name is required."
-      );
-      return;
+      return "Please enter a service name.";
     }
 
-    if (!form.code.trim()) {
-      setFormError(
-        "Service code is required."
-      );
-      return;
+    if (!form.category) {
+      return "Please select a service category.";
     }
 
-    if (!form.qualification.trim()) {
-      setFormError(
-        "Required qualification is required."
-      );
-      return;
+    if (!form.description.trim()) {
+      return "Please enter a service description.";
     }
 
     if (
-      !form.price ||
-      Number(form.price) <= 0
+      form.price === "" ||
+      Number(form.price) < 0
     ) {
-      setFormError(
-        "Please enter a valid service price."
-      );
+      return "Please enter a valid service price.";
+    }
+
+    if (!form.priceUnit) {
+      return "Please select a price unit.";
+    }
+
+    if (!form.duration.trim()) {
+      return "Please enter the service duration.";
+    }
+
+    if (
+      form.staffRequired === "" ||
+      Number(form.staffRequired) < 1
+    ) {
+      return "Staff required must be at least 1.";
+    }
+
+    if (
+      form.availableStaff === "" ||
+      Number(form.availableStaff) < 0
+    ) {
+      return "Available staff cannot be negative.";
+    }
+
+    if (!form.availability) {
+      return "Please select service availability.";
+    }
+
+    if (!form.status) {
+      return "Please select service status.";
+    }
+
+    if (
+      form.rating !== "" &&
+      (Number(form.rating) < 0 ||
+        Number(form.rating) > 5)
+    ) {
+      return "Patient rating must be between 0 and 5.";
+    }
+
+    return "";
+  };
+
+  /* =========================
+     Add / Update Service
+  ========================= */
+
+  const handleSubmitService = (event) => {
+    event.preventDefault();
+
+    const validationError = validateForm();
+
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
-    const newService = {
-      id: `SRV-${String(
-        services.length + 1
-      ).padStart(3, "0")}`,
+    const serviceDataToSave = {
       ...form,
+
+      name: form.name.trim(),
+      description: form.description.trim(),
+      duration: form.duration.trim(),
+
       price: Number(form.price),
-      availability: "Available",
-      active: true,
-      assignedStaff: 0,
-      activeRequests: 0,
+      staffRequired: Number(form.staffRequired),
+      availableStaff: Number(form.availableStaff),
+      bookings: Number(form.bookings || 0),
+      rating: Number(form.rating || 0),
     };
 
-    setServices((current) => [
+    /* =========================
+       UPDATE EXISTING SERVICE
+    ========================= */
+
+    if (editingService) {
+      setServices((currentServices) =>
+        currentServices.map((service) =>
+          service.id === editingService.id
+            ? {
+                ...service,
+                ...serviceDataToSave,
+                id: editingService.id,
+              }
+            : service
+        )
+      );
+
+      handleCloseForm();
+      return;
+    }
+
+    /* =========================
+       ADD NEW SERVICE
+    ========================= */
+
+    const newService = {
+      ...serviceDataToSave,
+      id: generateServiceId(),
+    };
+
+    setServices((currentServices) => [
+      ...currentServices,
       newService,
-      ...current,
     ]);
 
-    setForm(emptyForm);
-    setFormError("");
-    setShowAddModal(false);
+    handleCloseForm();
+  };
+
+  /* =========================
+     View Details
+  ========================= */
+
+  const handleViewDetails = (service) => {
+    setSelectedService(service);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedService(null);
+  };
+
+  /* =========================
+     Remove Service
+  ========================= */
+
+  const handleRemoveService = (service) => {
+    setServiceToRemove(service);
+  };
+
+  /* =========================
+     Confirm Remove
+  ========================= */
+
+  const handleConfirmRemove = () => {
+    if (!serviceToRemove) return;
+
+    const removedServiceId = serviceToRemove.id;
+
+    setServices((currentServices) =>
+      currentServices.filter(
+        (service) => service.id !== removedServiceId
+      )
+    );
+
+    if (
+      selectedService?.id === removedServiceId
+    ) {
+      setSelectedService(null);
+    }
+
+    setServiceToRemove(null);
+  };
+
+  /* =========================
+     Cancel Remove
+  ========================= */
+
+  const handleCancelRemove = () => {
+    setServiceToRemove(null);
   };
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      {/* ===================================================
-          PAGE HEADER
-      =================================================== */}
+    <div className="space-y-5 sm:space-y-6">
+      {/* =========================
+          Page Header
+      ========================= */}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6]">
-              <Settings2 className="h-5 w-5 text-[#08A6A0]" />
-            </div>
+          <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl">
+            Services
+          </h1>
 
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-wide text-[#08A6A0] sm:text-[10px]">
-                CARE CONFIGURATION
-              </p>
-
-              <h1 className="text-lg font-bold leading-tight text-[#173F41] sm:text-xl lg:text-2xl">
-                Service Management
-              </h1>
-
-              <p className="text-[10px] text-[#789092] sm:text-xs">
-                Configure hospital care services,
-                pricing and availability
-              </p>
-            </div>
-          </div>
+          <p className="mt-1 text-xs text-[#819596] sm:text-sm">
+            Manage hospital care services, pricing, availability
+            and service status.
+          </p>
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            setForm(emptyForm);
-            setFormError("");
-            setShowAddModal(true);
-          }}
-          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#08A6A0] px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[#078F8A] sm:h-10 sm:px-4"
+          onClick={handleAddService}
+          className="
+            inline-flex
+            w-full
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            bg-[#08A6A0]
+            px-4
+            py-2.5
+            text-sm
+            font-semibold
+            text-white
+            transition
+            hover:bg-[#078F8A]
+
+            sm:w-auto
+          "
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus size={18} />
           Add Service
         </button>
       </div>
 
-      {/* ===================================================
-          COMPACT STAT GRID
-      =================================================== */}
+      {/* =========================
+          Statistics
+      ========================= */}
 
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
         <StatCard
-          label="Total Services"
-          shortLabel="Total"
-          value={stats.total}
-          icon={Settings2}
-        />
-
-        <StatCard
-          label="Active Services"
-          shortLabel="Active"
-          value={stats.active}
-          icon={CheckCircle2}
-          iconClass="text-emerald-600"
-        />
-
-        <StatCard
-          label="Inactive Services"
-          shortLabel="Inactive"
-          value={stats.inactive}
-          icon={Activity}
-          iconClass="text-gray-500"
-        />
-
-        <StatCard
-          label="Active Requests"
-          shortLabel="Requests"
-          value={stats.requests}
-          icon={Users}
-          iconClass="text-blue-600"
-        />
-
-        <StatCard
-          label="Assigned Staff"
-          shortLabel="Staff"
-          value={stats.staff}
           icon={Stethoscope}
-          iconClass="text-violet-600"
+          label="Total Services"
+          value={stats.total}
+        />
+
+        <StatCard
+          icon={Activity}
+          label="Active Services"
+          value={stats.active}
+        />
+
+        <StatCard
+          icon={UserRoundCheck}
+          label="Available"
+          value={stats.available}
+        />
+
+        <StatCard
+          icon={Search}
+          label="Limited"
+          value={stats.limited}
+        />
+
+        <StatCard
+          icon={ClipboardPlus}
+          label="Total Bookings"
+          value={stats.bookings}
         />
       </div>
 
-      {/* ===================================================
-          COLLAPSIBLE SEARCH & FILTERS
-          EXACT SERVICE REQUEST STYLE
-      =================================================== */}
+      {/* =========================
+          Search & Filters
 
-      <div className="rounded-2xl border border-[#E2EFED] bg-white p-4 shadow-sm">
-        {/* Filter Header */}
+          Existing SearchFilter
+          is reused unchanged.
+      ========================= */}
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 shrink-0 text-[#08A6A0]" />
-
-              <p className="text-xs font-semibold text-[#173F41] sm:text-sm">
-                Filters
-              </p>
-
-              {hasFilters && (
-                <span className="rounded-full bg-[#E8F8F6] px-2 py-0.5 text-[9px] font-semibold text-[#078F8A]">
-                  Active
-                </span>
-              )}
-            </div>
-
-            {!showFilters && hasFilters && (
-              <p className="mt-0.5 text-[9px] text-[#789092]">
-                Showing{" "}
-                {filteredServices.length} of{" "}
-                {services.length} services
-              </p>
-            )}
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-[10px] font-semibold text-[#08A6A0] transition hover:text-[#078F8A]"
-              >
-                Clear
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowFilters(
-                  (current) => !current
-                )
-              }
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-[#DCEBE9] bg-[#FBFEFD] px-3 text-[10px] font-semibold text-[#173F41] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6]"
+      <SearchFilter
+        search={search}
+        setSearch={setSearch}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        placeholder="Search service by name, ID or category..."
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Service Category */}
+          <div>
+            <label
+              htmlFor="service-category"
+              className="
+                mb-2
+                block
+                text-xs
+                font-medium
+                text-[#31585A]
+                sm:text-sm
+              "
             >
-              <Filter className="h-3.5 w-3.5 text-[#08A6A0]" />
+              Service Category
+            </label>
 
-              {showFilters
-                ? "Hide Filters"
-                : "Show Filters"}
-
-              <ChevronDown
-                className={`h-3.5 w-3.5 text-[#819596] transition-transform ${
-                  showFilters
-                    ? "rotate-180"
-                    : ""
-                }`}
-              />
-            </button>
+            <select
+              id="service-category"
+              value={categoryFilter}
+              onChange={(event) =>
+                setCategoryFilter(event.target.value)
+              }
+              className="
+                h-9
+                w-full
+                rounded-lg
+                border
+                border-[#D9E9E7]
+                bg-[#FAFDFC]
+                px-3
+                text-xs
+                text-[#073F42]
+                outline-none
+                transition
+                focus:border-[#08A6A0]
+                focus:ring-2
+                focus:ring-[#08A6A0]/10
+                sm:h-11
+                sm:rounded-xl
+                sm:text-sm
+              "
+            >
+              {serviceCategoryOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
 
-        {/* Filter Controls */}
+          {/* Availability */}
+          <div>
+            <label
+              htmlFor="service-availability"
+              className="
+                mb-2
+                block
+                text-xs
+                font-medium
+                text-[#31585A]
+                sm:text-sm
+              "
+            >
+              Availability
+            </label>
 
-        {showFilters && (
-          <div className="mt-3 border-t border-[#EDF4F2] pt-3">
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
-              {/* Search */}
+            <select
+              id="service-availability"
+              value={availabilityFilter}
+              onChange={(event) =>
+                setAvailabilityFilter(event.target.value)
+              }
+              className="
+                h-9
+                w-full
+                rounded-lg
+                border
+                border-[#D9E9E7]
+                bg-[#FAFDFC]
+                px-3
+                text-xs
+                text-[#073F42]
+                outline-none
+                transition
+                focus:border-[#08A6A0]
+                focus:ring-2
+                focus:ring-[#08A6A0]/10
+                sm:h-11
+                sm:rounded-xl
+                sm:text-sm
+              "
+            >
+              {serviceAvailabilityOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              <div className="relative sm:col-span-2 lg:col-span-2">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#819596]" />
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="service-status"
+              className="
+                mb-2
+                block
+                text-xs
+                font-medium
+                text-[#31585A]
+                sm:text-sm
+              "
+            >
+              Status
+            </label>
 
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(event) =>
-                    setSearch(
-                      event.target.value
-                    )
-                  }
-                  placeholder="Search service, code or qualification..."
-                  className="h-9 w-full rounded-lg border border-[#DCEBE9] bg-[#FBFEFD] pl-9 pr-3 text-xs text-[#173F41] outline-none transition placeholder:text-[#9AA9AA] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-                />
-              </div>
+            <select
+              id="service-status"
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
+              className="
+                h-9
+                w-full
+                rounded-lg
+                border
+                border-[#D9E9E7]
+                bg-[#FAFDFC]
+                px-3
+                text-xs
+                text-[#073F42]
+                outline-none
+                transition
+                focus:border-[#08A6A0]
+                focus:ring-2
+                focus:ring-[#08A6A0]/10
+                sm:h-11
+                sm:rounded-xl
+                sm:text-sm
+              "
+            >
+              {serviceStatusOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              {/* Category */}
-
-              <div className="relative">
-                <select
-                  value={categoryFilter}
-                  onChange={(event) =>
-                    setCategoryFilter(
-                      event.target.value
-                    )
-                  }
-                  className="h-9 w-full appearance-none rounded-lg border border-[#DCEBE9] bg-[#FBFEFD] px-3 pr-8 text-xs text-[#173F41] outline-none focus:border-[#08A6A0]"
-                >
-                  {categoryOptions.map(
-                    (option) => (
-                      <option
-                        key={option}
-                        value={option}
-                      >
-                        {option === "All"
-                          ? "All Categories"
-                          : option}
-                      </option>
-                    )
-                  )}
-                </select>
-
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#819596]" />
-              </div>
-
-              {/* Availability */}
-
-              <div className="relative">
-                <select
-                  value={availabilityFilter}
-                  onChange={(event) =>
-                    setAvailabilityFilter(
-                      event.target.value
-                    )
-                  }
-                  className="h-9 w-full appearance-none rounded-lg border border-[#DCEBE9] bg-[#FBFEFD] px-3 pr-8 text-xs text-[#173F41] outline-none focus:border-[#08A6A0]"
-                >
-                  {availabilityOptions.map(
-                    (option) => (
-                      <option
-                        key={option}
-                        value={option}
-                      >
-                        {option === "All"
-                          ? "All Availability"
-                          : option}
-                      </option>
-                    )
-                  )}
-                </select>
-
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#819596]" />
-              </div>
-
-              {/* Status */}
-
-              <div className="relative">
-                <select
-                  value={statusFilter}
-                  onChange={(event) =>
-                    setStatusFilter(
-                      event.target.value
-                    )
-                  }
-                  className="h-9 w-full appearance-none rounded-lg border border-[#DCEBE9] bg-[#FBFEFD] px-3 pr-8 text-xs text-[#173F41] outline-none focus:border-[#08A6A0]"
-                >
-                  {statusOptions.map(
-                    (option) => (
-                      <option
-                        key={option}
-                        value={option}
-                      >
-                        {option === "All"
-                          ? "All Status"
-                          : option}
-                      </option>
-                    )
-                  )}
-                </select>
-
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#819596]" />
-              </div>
-            </div>
-
-            {/* Results */}
-
-            <div className="mt-2.5 flex items-center justify-between">
-              <p className="text-[10px] text-[#789092]">
-                Showing{" "}
-                <span className="font-semibold text-[#173F41]">
-                  {filteredServices.length}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-[#173F41]">
-                  {services.length}
-                </span>{" "}
-                services
-              </p>
-
-              {hasFilters && (
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-[10px] font-semibold text-[#08A6A0] hover:text-[#078F8A]"
+                  className="
+                    text-xs
+                    font-medium
+                    text-[#08A6A0]
+                    transition
+                    hover:text-[#078F8A]
+                    sm:text-sm
+                  "
                 >
-                  Clear filters
+                  Clear Filters
                 </button>
-              )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* ===================================================
-          SERVICES TABLE
-      =================================================== */}
-
-      <div className="overflow-hidden rounded-xl border border-[#E2EFED] bg-white shadow-sm">
-        {/* Table Header */}
-
-        <div className="flex items-center justify-between border-b border-[#EAF2F0] px-3 py-3 sm:px-4">
-          <div>
-            <h2 className="text-sm font-bold text-[#073F42]">
-              Hospital Care Services
-            </h2>
-
-            <p className="mt-0.5 text-[10px] text-[#819596]">
-              {filteredServices.length} service
-              {filteredServices.length !== 1
-                ? "s"
-                : ""}{" "}
-              found
-            </p>
-          </div>
-
-          <div className="hidden items-center gap-1.5 rounded-lg bg-[#E8F8F6] px-2 py-1 text-[10px] font-semibold text-[#087F7A] sm:flex">
-            <Filter className="h-3 w-3" />
-            {hasFilters
-              ? "Filtered"
-              : "All Services"}
-          </div>
+          )}
         </div>
+      </SearchFilter>
 
-        {filteredServices.length === 0 ? (
-          <EmptyState
-            onClear={clearFilters}
-          />
-        ) : (
-          <>
-            {/* =================================================
-                DESKTOP TABLE
-            ================================================= */}
+      {/* =========================
+          Result Summary
+      ========================= */}
 
-            <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[1050px]">
-                <thead>
-                  <tr className="border-b border-[#EAF2F0] bg-[#F8FCFB] text-left">
-                    <th className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Service
-                    </th>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-[#073F42] sm:text-lg">
+            Hospital Services
+          </h2>
 
-                    <th className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Category
-                    </th>
-
-                    <th className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Qualification
-                    </th>
-
-                    <th className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Pricing
-                    </th>
-
-                    <th className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Requests
-                    </th>
-
-                    <th className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Availability
-                    </th>
-
-                    <th className="px-3 py-2.5 text-right text-[10px] font-semibold uppercase tracking-wide text-[#789092]">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredServices.map(
-                    (service) => (
-                      <ServiceRow
-                        key={service.id}
-                        service={service}
-                        onView={() =>
-                          setSelectedService(
-                            service
-                          )
-                        }
-                        onToggle={() =>
-                          toggleService(
-                            service.id
-                          )
-                        }
-                      />
-                    )
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* =================================================
-                MOBILE CARDS
-            ================================================= */}
-
-            <div className="divide-y divide-[#EAF2F0] lg:hidden">
-              {filteredServices.map(
-                (service) => (
-                  <ServiceMobileCard
-                    key={service.id}
-                    service={service}
-                    onView={() =>
-                      setSelectedService(
-                        service
-                      )
-                    }
-                  />
-                )
-              )}
-            </div>
-          </>
-        )}
+          <p className="text-xs text-[#819596] sm:text-sm">
+            Showing {filteredServices.length} of{" "}
+            {services.length} services
+          </p>
+        </div>
       </div>
 
-      {/* ===================================================
-          SERVICE DETAILS
-      =================================================== */}
+      {/* =========================
+          Services
+      ========================= */}
+
+      {filteredServices.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredServices.map((service) => (
+            <ServiceCard
+              key={service.id}
+              service={service}
+              onViewDetails={handleViewDetails}
+              onEdit={handleEditService}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-[#D9E9E7] bg-white px-6 py-12 text-center sm:py-14">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+            <Search size={24} />
+          </div>
+
+          <h3 className="mt-4 text-lg font-semibold text-[#073F42]">
+            No services found
+          </h3>
+
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#819596]">
+            No services match your current search or filter
+            criteria. Try changing the filters or search term.
+          </p>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="
+                mt-5
+                rounded-xl
+                bg-[#08A6A0]
+                px-4
+                py-2.5
+                text-sm
+                font-semibold
+                text-white
+                transition
+                hover:bg-[#078F8A]
+              "
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* =========================
+          Service Details
+      ========================= */}
 
       {selectedService && (
         <ServiceDetails
           service={selectedService}
-          onClose={() =>
-            setSelectedService(null)
-          }
-          onToggle={() =>
-            toggleService(
-              selectedService.id
-            )
-          }
+          onClose={handleCloseDetails}
+          onEdit={handleEditService}
+          onRemove={handleRemoveService}
         />
       )}
 
-      {/* ===================================================
-          ADD SERVICE
-      =================================================== */}
+      {/* =========================
+          Add / Edit Service Form
+      ========================= */}
 
-      {showAddModal && (
-        <AddServiceModal
+      {showForm && (
+        <ServiceForm
           form={form}
-          error={formError}
           onChange={updateForm}
-          onSubmit={handleAddService}
-          onClose={() =>
-            setShowAddModal(false)
-          }
+          onSubmit={handleSubmitService}
+          onClose={handleCloseForm}
+          formError={formError}
+          isEditing={Boolean(editingService)}
         />
       )}
+
+      {/* =========================
+          Remove Confirmation
+      ========================= */}
+
+      <ConfirmDialog
+        open={Boolean(serviceToRemove)}
+        title="Remove Service"
+        message={
+          serviceToRemove
+            ? `Are you sure you want to remove "${serviceToRemove.name}"? This action cannot be undone.`
+            : ""
+        }
+        confirmText="Remove Service"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleConfirmRemove}
+        onCancel={handleCancelRemove}
+      />
     </div>
   );
 };
 
-/* =========================================================
-   STAT CARD
-========================================================= */
+/* =========================
+   Service Icon Map
+========================= */
 
-const StatCard = ({
-  icon: Icon,
-  label,
-  shortLabel,
-  value,
-  iconClass = "text-[#08A6A0]",
-}) => {
-  return (
-    <div className="h-[50px] rounded-xl border border-[#E2EFED] bg-white px-2.5 py-2 shadow-sm">
-      <div className="flex h-full items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-[9px] font-medium text-[#789092]">
-            <span className="sm:hidden">
-              {shortLabel}
-            </span>
-
-            <span className="hidden sm:inline">
-              {label}
-            </span>
-          </p>
-
-          <p className="mt-0.5 text-sm font-bold leading-none text-[#173F41]">
-            {value}
-          </p>
-        </div>
-
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6]">
-          <Icon
-            className={`h-3.5 w-3.5 ${iconClass}`}
-          />
-        </div>
-      </div>
-    </div>
-  );
+const iconMap = {
+  Activity,
+  Baby,
+  ClipboardPlus,
+  HeartHandshake,
+  HeartPulse,
+  HouseHeart,
+  Stethoscope,
+  UserRound,
+  UserRoundCheck,
 };
 
-/* =========================================================
-   DESKTOP ROW
-========================================================= */
+/* =========================
+   Service Card
+========================= */
 
-const ServiceRow = ({
+const ServiceCard = ({
   service,
-  onView,
-  onToggle,
+  onViewDetails,
+  onEdit,
 }) => {
-  return (
-    <tr className="border-b border-[#EAF2F0] last:border-0 hover:bg-[#FAFDFC]">
-      {/* Service */}
+  const ServiceIcon =
+    iconMap[service.icon] || Stethoscope;
 
-      <td className="px-3 py-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6]">
-            <Stethoscope className="h-4 w-4 text-[#08A6A0]" />
+  return (
+    <div
+      className="
+        group
+        rounded-2xl
+        border
+        border-[#E2EFED]
+        bg-white
+        p-4
+        shadow-sm
+        transition
+        hover:-translate-y-0.5
+        hover:shadow-md
+        sm:p-5
+      "
+    >
+      {/* Card Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className="
+              flex
+              h-11
+              w-11
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-[#E8F8F6]
+              text-[#08A6A0]
+              sm:h-12
+              sm:w-12
+            "
+          >
+            <ServiceIcon size={22} />
           </div>
 
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-bold text-[#173F41] lg:text-sm">
+            <h3 className="truncate text-sm font-semibold text-[#073F42] sm:text-base">
               {service.name}
-            </p>
+            </h3>
 
-            <p className="mt-0.5 text-[9px] text-[#819596] lg:text-[10px]">
-              {service.id} · {service.code}
+            <p className="text-[11px] text-[#819596] sm:text-xs">
+              {service.id}
             </p>
           </div>
         </div>
-      </td>
+
+        <span
+          className={`
+            shrink-0
+            rounded-full
+            px-2
+            py-1
+            text-[10px]
+            font-medium
+            sm:px-2.5
+            sm:text-xs
+            ${
+              service.status === "Active"
+                ? "bg-[#E8F8F6] text-[#078F8A]"
+                : "bg-gray-100 text-gray-500"
+            }
+          `}
+        >
+          {service.status}
+        </span>
+      </div>
 
       {/* Category */}
+      <div className="mt-4">
+        <span className="inline-flex rounded-lg bg-[#FAFDFC] px-2.5 py-1 text-xs font-medium text-[#31585A] ring-1 ring-[#E2EFED]">
+          {service.category}
+        </span>
+      </div>
 
-      <td className="px-3 py-3">
-        <CategoryBadge
-          category={service.category}
-        />
-      </td>
+      {/* Description */}
+      <p className="mt-3 min-h-[66px] text-xs leading-5 text-[#31585A] sm:text-sm sm:leading-6">
+        {service.description}
+      </p>
 
-      {/* Qualification */}
+      {/* Service Information */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+        {/* Price */}
+        <div className="rounded-xl bg-[#FAFDFC] p-3">
+          <p className="text-[11px] text-[#819596] sm:text-xs">
+            Service Charge
+          </p>
 
-      <td className="max-w-[210px] px-3 py-3">
-        <p className="truncate text-[11px] font-medium text-[#31585A] lg:text-xs">
-          {service.qualification}
-        </p>
+          <p className="mt-1 text-sm font-semibold text-[#073F42] sm:text-base">
+            ₹{Number(service.price || 0).toLocaleString("en-IN")}
+          </p>
 
-        <p className="mt-0.5 flex items-center gap-1 text-[9px] text-[#819596] lg:text-[10px]">
-          <CalendarClock className="h-3 w-3" />
-          {service.duration}
-        </p>
-      </td>
+          <p className="text-[11px] text-[#819596] sm:text-xs">
+            {service.priceUnit}
+          </p>
+        </div>
 
-      {/* Pricing */}
+        {/* Duration */}
+        <div className="rounded-xl bg-[#FAFDFC] p-3">
+          <p className="text-[11px] text-[#819596] sm:text-xs">
+            Duration
+          </p>
 
-      <td className="px-3 py-3">
-        <p className="flex items-center gap-0.5 text-[11px] font-bold text-[#173F41] lg:text-xs">
-          <IndianRupee className="h-3 w-3" />
+          <p className="mt-1 text-sm font-semibold text-[#073F42] sm:text-base">
+            {service.duration}
+          </p>
+        </div>
 
-          {service.price.toLocaleString(
-            "en-IN"
-          )}
-        </p>
+        {/* Available Staff */}
+        <div className="rounded-xl bg-[#FAFDFC] p-3">
+          <p className="text-[11px] text-[#819596] sm:text-xs">
+            Available Staff
+          </p>
 
-        <p className="mt-0.5 text-[9px] text-[#819596] lg:text-[10px]">
-          {service.pricingMethod}
-        </p>
-      </td>
+          <p className="mt-1 text-sm font-semibold text-[#073F42] sm:text-base">
+            {service.availableStaff}
+          </p>
+        </div>
 
-      {/* Requests */}
+        {/* Bookings */}
+        <div className="rounded-xl bg-[#FAFDFC] p-3">
+          <p className="text-[11px] text-[#819596] sm:text-xs">
+            Bookings
+          </p>
 
-      <td className="px-3 py-3">
-        <p className="text-[11px] font-bold text-[#31585A] lg:text-xs">
-          {service.activeRequests}
-        </p>
-
-        <p className="mt-0.5 text-[9px] text-[#819596] lg:text-[10px]">
-          {service.assignedStaff} staff
-        </p>
-      </td>
+          <p className="mt-1 text-sm font-semibold text-[#073F42] sm:text-base">
+            {service.bookings}
+          </p>
+        </div>
+      </div>
 
       {/* Availability */}
+      <div className="mt-4 flex items-center justify-between border-t border-[#E2EFED] pt-4">
+        <span className="text-xs text-[#819596] sm:text-sm">
+          Availability
+        </span>
 
-      <td className="px-3 py-3">
-        <AvailabilityBadge
-          availability={
-            service.availability
-          }
-        />
-      </td>
+        <span
+          className={`
+            rounded-full
+            px-2.5
+            py-1
+            text-[10px]
+            font-medium
+            sm:text-xs
+            ${
+              service.availability === "Available"
+                ? "bg-[#E8F8F6] text-[#078F8A]"
+                : service.availability === "Limited"
+                ? "bg-amber-50 text-amber-600"
+                : "bg-red-50 text-red-500"
+            }
+          `}
+        >
+          {service.availability}
+        </span>
+      </div>
+
+      {/* Rating */}
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-xs text-[#819596] sm:text-sm">
+          Patient Rating
+        </span>
+
+        <span className="text-xs font-semibold text-[#073F42] sm:text-sm">
+          ★ {service.rating}
+        </span>
+      </div>
 
       {/* Actions */}
+      <div className="mt-5 flex gap-2">
+        <button
+          type="button"
+          onClick={() => onViewDetails?.(service)}
+          className="
+            flex-1
+            rounded-xl
+            border
+            border-[#D9E9E7]
+            px-3
+            py-2.5
+            text-xs
+            font-medium
+            text-[#31585A]
+            transition
+            hover:border-[#08A6A0]
+            hover:text-[#08A6A0]
+            sm:text-sm
+          "
+        >
+          View Details
+        </button>
 
-      <td className="px-3 py-3">
-        <div className="flex justify-end gap-1.5">
-          <button
-            type="button"
-            onClick={onView}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCEBE9] text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
-            title="View service"
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={onToggle}
-            className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
-              service.active
-                ? "border-emerald-100 text-emerald-600 hover:bg-emerald-50"
-                : "border-gray-200 text-gray-500 hover:bg-gray-50"
-            }`}
-            title={
-              service.active
-                ? "Deactivate"
-                : "Activate"
-            }
-          >
-            {service.active ? (
-              <ToggleRight className="h-4 w-4" />
-            ) : (
-              <ToggleLeft className="h-4 w-4" />
-            )}
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-};
-
-/* =========================================================
-   MOBILE SERVICE CARD
-========================================================= */
-
-const ServiceMobileCard = ({
-  service,
-  onView,
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onView}
-      className="w-full p-3 text-left transition hover:bg-[#FAFDFC]"
-    >
-      <div className="flex items-start gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6]">
-          <Stethoscope className="h-4 w-4 text-[#08A6A0]" />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-[#173F41]">
-                {service.name}
-              </p>
-
-              <p className="mt-0.5 text-[9px] text-[#819596]">
-                {service.code}
-              </p>
-            </div>
-
-            <AvailabilityBadge
-              availability={
-                service.availability
-              }
-            />
-          </div>
-
-          <div className="mt-1.5">
-            <CategoryBadge
-              category={service.category}
-            />
-          </div>
-
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[#819596]">
-            <span>
-              ₹
-              {service.price.toLocaleString(
-                "en-IN"
-              )}{" "}
-              /{" "}
-              {service.pricingMethod.replace(
-                "Per ",
-                ""
-              )}
-            </span>
-
-            <span>
-              {service.activeRequests}{" "}
-              requests
-            </span>
-
-            <span>
-              {service.assignedStaff} staff
-            </span>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => onEdit?.(service)}
+          className="
+            flex-1
+            rounded-xl
+            bg-[#08A6A0]
+            px-3
+            py-2.5
+            text-xs
+            font-medium
+            text-white
+            transition
+            hover:bg-[#078F8A]
+            sm:text-sm
+          "
+        >
+          Edit Service
+        </button>
       </div>
-    </button>
-  );
-};
-
-/* =========================================================
-   CATEGORY BADGE
-========================================================= */
-
-const CategoryBadge = ({ category }) => {
-  return (
-    <span className="inline-flex max-w-full rounded-full border border-[#D7F4F1] bg-[#E8F8F6] px-2 py-0.5 text-[9px] font-semibold text-[#087F7A] sm:text-[10px]">
-      <span className="truncate">
-        {category}
-      </span>
-    </span>
-  );
-};
-
-/* =========================================================
-   AVAILABILITY BADGE
-========================================================= */
-
-const AvailabilityBadge = ({
-  availability,
-}) => {
-  const styles = {
-    Available:
-      "border-emerald-100 bg-emerald-50 text-emerald-700",
-
-    Limited:
-      "border-amber-100 bg-amber-50 text-amber-700",
-
-    Unavailable:
-      "border-red-100 bg-red-50 text-red-700",
-  };
-
-  return (
-    <span
-      className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-semibold sm:text-[10px] ${
-        styles[availability] ||
-        "border-gray-100 bg-gray-50 text-gray-600"
-      }`}
-    >
-      {availability}
-    </span>
-  );
-};
-
-/* =========================================================
-   SERVICE DETAILS MODAL
-========================================================= */
-
-const ServiceDetails = ({
-  service,
-  onClose,
-  onToggle,
-}) => {
-  return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#073F42]/40 p-3 backdrop-blur-sm sm:p-4">
-      <div className="flex min-h-full items-center justify-center">
-        <div className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-          {/* Header */}
-
-          <div className="bg-[#073F42] px-4 py-4 text-white sm:px-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                  <Stethoscope className="h-5 w-5" />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold sm:text-base">
-                    {service.name}
-                  </p>
-
-                  <p className="mt-0.5 text-[10px] text-white/60">
-                    {service.id} ·{" "}
-                    {service.code}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Body */}
-
-          <div className="space-y-4 p-4 sm:p-5">
-            <div className="flex flex-wrap gap-1.5">
-              <CategoryBadge
-                category={service.category}
-              />
-
-              <AvailabilityBadge
-                availability={
-                  service.availability
-                }
-              />
-
-              <span
-                className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
-                  service.active
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {service.active
-                  ? "Active Service"
-                  : "Inactive"}
-              </span>
-            </div>
-
-            {/* Description */}
-
-            <div>
-              <h3 className="text-xs font-bold text-[#073F42]">
-                Service Description
-              </h3>
-
-              <p className="mt-1.5 text-xs leading-5 text-[#789092]">
-                {service.description}
-              </p>
-            </div>
-
-            {/* Details */}
-
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <DetailItem
-                icon={ShieldIcon}
-                label="Required Qualification"
-                value={
-                  service.qualification
-                }
-              />
-
-              <DetailItem
-                icon={Clock3}
-                label="Duration"
-                value={service.duration}
-              />
-
-              <DetailItem
-                icon={IndianRupee}
-                label="Pricing"
-                value={`₹${service.price.toLocaleString(
-                  "en-IN"
-                )} ${service.pricingMethod}`}
-              />
-
-              <DetailItem
-                icon={Users}
-                label="Assigned Staff"
-                value={service.assignedStaff}
-              />
-
-              <DetailItem
-                icon={Activity}
-                label="Active Requests"
-                value={service.activeRequests}
-              />
-
-              <DetailItem
-                icon={CheckCircle2}
-                label="Status"
-                value={
-                  service.active
-                    ? "Active"
-                    : "Inactive"
-                }
-              />
-            </div>
-
-            {/* Assignment Note */}
-
-            <div className="rounded-xl border border-[#D7F4F1] bg-[#E8F8F6] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#087F7A]">
-                Assignment Requirement
-              </p>
-
-              <p className="mt-1 text-[10px] leading-5 text-[#31585A] sm:text-xs">
-                Only active staff members
-                with the required
-                qualification and valid
-                availability should be
-                assigned to this service.
-                The backend will later
-                perform availability and
-                schedule conflict checks.
-              </p>
-            </div>
-
-            {/* Actions */}
-
-            <div className="flex flex-col-reverse gap-2 border-t border-[#EAF2F0] pt-4 sm:flex-row sm:justify-between">
-              <button
-                type="button"
-                onClick={onToggle}
-                className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${
-                  service.active
-                    ? "border-red-100 text-red-600 hover:bg-red-50"
-                    : "border-emerald-100 text-emerald-600 hover:bg-emerald-50"
-                }`}
-              >
-                {service.active ? (
-                  <>
-                    <ToggleLeft className="h-3.5 w-3.5" />
-                    Deactivate Service
-                  </>
-                ) : (
-                  <>
-                    <ToggleRight className="h-3.5 w-3.5" />
-                    Activate Service
-                  </>
-                )}
-              </button>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#DCEBE9] px-3 text-xs font-semibold text-[#31585A] hover:border-[#08A6A0] hover:text-[#08A6A0]"
-                >
-                  <Edit3 className="h-3.5 w-3.5" />
-                  Edit Service
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="h-9 rounded-lg bg-[#08A6A0] px-4 text-xs font-semibold text-white hover:bg-[#078F8A]"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* =========================================================
-   ADD SERVICE MODAL
-========================================================= */
-
-const AddServiceModal = ({
-  form,
-  error,
-  onChange,
-  onSubmit,
-  onClose,
-}) => {
-  return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto bg-[#073F42]/40 p-3 backdrop-blur-sm sm:p-4">
-      <div className="flex min-h-full items-center justify-center">
-        <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-          {/* Header */}
-
-          <div className="flex items-center justify-between border-b border-[#EAF2F0] px-4 py-4 sm:px-5">
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-wide text-[#08A6A0]">
-                SERVICE CONFIGURATION
-              </p>
-
-              <h2 className="mt-0.5 text-base font-bold text-[#073F42] sm:text-lg">
-                Add New Service
-              </h2>
-            </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] hover:bg-[#F5FAF9] hover:text-[#073F42]"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Form */}
-
-          <form
-            onSubmit={onSubmit}
-            className="p-4 sm:p-5"
-          >
-            {error && (
-              <div className="mb-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-                {error}
-              </div>
-            )}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FormField
-                label="Service Name"
-                required
-                value={form.name}
-                onChange={(value) =>
-                  onChange(
-                    "name",
-                    value
-                  )
-                }
-                placeholder="e.g. Patient Caretaker"
-              />
-
-              <FormField
-                label="Service Code"
-                required
-                value={form.code}
-                onChange={(value) =>
-                  onChange(
-                    "code",
-                    value
-                  )
-                }
-                placeholder="e.g. PC-001"
-              />
-
-              <FormSelect
-                label="Category"
-                value={form.category}
-                onChange={(value) =>
-                  onChange(
-                    "category",
-                    value
-                  )
-                }
-                options={categoryOptions.filter(
-                  (option) =>
-                    option !== "All"
-                )}
-              />
-
-              <FormField
-                label="Required Qualification"
-                required
-                value={
-                  form.qualification
-                }
-                onChange={(value) =>
-                  onChange(
-                    "qualification",
-                    value
-                  )
-                }
-                placeholder="e.g. GNM, ANM, Caregiver Training"
-              />
-
-              <FormField
-                label="Duration"
-                value={form.duration}
-                onChange={(value) =>
-                  onChange(
-                    "duration",
-                    value
-                  )
-                }
-                placeholder="e.g. Flexible, Shift Based"
-              />
-
-              <FormSelect
-                label="Pricing Method"
-                value={
-                  form.pricingMethod
-                }
-                onChange={(value) =>
-                  onChange(
-                    "pricingMethod",
-                    value
-                  )
-                }
-                options={pricingOptions}
-              />
-
-              <FormField
-                label="Price"
-                required
-                type="number"
-                value={form.price}
-                onChange={(value) =>
-                  onChange(
-                    "price",
-                    value
-                  )
-                }
-                placeholder="Enter service price"
-              />
-
-              {/* Description */}
-
-              <div className="sm:col-span-2">
-                <label>
-                  <span className="mb-1 block text-[10px] font-bold text-[#708789]">
-                    Service Description
-                  </span>
-
-                  <textarea
-                    value={
-                      form.description
-                    }
-                    onChange={(event) =>
-                      onChange(
-                        "description",
-                        event.target.value
-                      )
-                    }
-                    rows={3}
-                    placeholder="Describe what this service provides..."
-                    className="w-full resize-none rounded-lg border border-[#DCEBE9] bg-white px-3 py-2 text-xs text-[#173F41] outline-none placeholder:text-[#A0B1B2] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Configuration Note */}
-
-            <div className="mt-4 rounded-lg border border-[#D7F4F1] bg-[#E8F8F6] p-3">
-              <p className="text-[10px] font-bold text-[#087F7A]">
-                Configuration Note
-              </p>
-
-              <p className="mt-1 text-[10px] leading-4 text-[#31585A]">
-                Service pricing will
-                later be used
-                automatically when
-                generating patient
-                invoices after service
-                completion.
-              </p>
-            </div>
-
-            {/* Buttons */}
-
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-9 rounded-lg border border-[#DCEBE9] px-4 text-xs font-semibold text-[#31585A] hover:border-[#08A6A0]"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#08A6A0] px-4 text-xs font-semibold text-white hover:bg-[#078F8A]"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Create Service
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* =========================================================
-   FORM FIELD
-========================================================= */
-
-const FormField = ({
-  label,
-  required,
-  type = "text",
-  value,
-  onChange,
-  placeholder,
-}) => {
-  return (
-    <label>
-      <span className="mb-1 block text-[10px] font-bold text-[#708789]">
-        {label}
-
-        {required && (
-          <span className="ml-0.5 text-red-500">
-            *
-          </span>
-        )}
-      </span>
-
-      <input
-        type={type}
-        value={value}
-        onChange={(event) =>
-          onChange(
-            event.target.value
-          )
-        }
-        placeholder={placeholder}
-        className="h-9 w-full rounded-lg border border-[#DCEBE9] bg-white px-3 text-xs text-[#173F41] outline-none placeholder:text-[#A0B1B2] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-      />
-    </label>
-  );
-};
-
-/* =========================================================
-   FORM SELECT
-========================================================= */
-
-const FormSelect = ({
-  label,
-  value,
-  onChange,
-  options,
-}) => {
-  return (
-    <label>
-      <span className="mb-1 block text-[10px] font-bold text-[#708789]">
-        {label}
-      </span>
-
-      <select
-        value={value}
-        onChange={(event) =>
-          onChange(
-            event.target.value
-          )
-        }
-        className="h-9 w-full rounded-lg border border-[#DCEBE9] bg-white px-3 text-xs text-[#173F41] outline-none focus:border-[#08A6A0]"
-      >
-        {options.map((option) => (
-          <option
-            key={option}
-            value={option}
-          >
-            {option}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-};
-
-/* =========================================================
-   DETAIL ITEM
-========================================================= */
-
-const DetailItem = ({
-  icon: Icon,
-  label,
-  value,
-}) => {
-  return (
-    <div className="rounded-lg border border-[#E2EFED] bg-[#FAFDFC] p-3">
-      <Icon className="h-3.5 w-3.5 text-[#08A6A0]" />
-
-      <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-wide text-[#9AAEAF]">
-        {label}
-      </p>
-
-      <p className="mt-0.5 text-xs font-semibold text-[#31585A]">
-        {value}
-      </p>
-    </div>
-  );
-};
-
-/* =========================================================
-   SHIELD ICON
-========================================================= */
-
-const ShieldIcon = ({ className }) => {
-  return (
-    <ShieldCheck
-      className={
-        className || "h-4 w-4"
-      }
-    />
-  );
-};
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
-const EmptyState = ({
-  onClear,
-}) => {
-  return (
-    <div className="px-4 py-12 text-center sm:py-14">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F6]">
-        <Search className="h-5 w-5 text-[#08A6A0]" />
-      </div>
-
-      <h3 className="mt-3 text-sm font-semibold text-[#173F41]">
-        No services found
-      </h3>
-
-      <p className="mx-auto mt-1 max-w-sm text-xs text-[#789092]">
-        Try changing your search or
-        filter options.
-      </p>
-
-      <button
-        type="button"
-        onClick={onClear}
-        className="mt-3 rounded-lg bg-[#08A6A0] px-3 py-2 text-xs font-semibold text-white hover:bg-[#078F8A]"
-      >
-        Clear Filters
-      </button>
     </div>
   );
 };
