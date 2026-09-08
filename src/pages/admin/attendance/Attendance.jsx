@@ -189,7 +189,7 @@ const statusStyles = {
 ========================= */
 
 const Attendance = () => {
-  const [attendance, setAttendance] =
+  const [attendance] =
     useState(initialAttendance);
 
   const [search, setSearch] = useState("");

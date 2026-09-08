@@ -3,14 +3,12 @@ import {
   Activity,
   Archive,
   BedDouble,
-  CalendarDays,
   ChevronRight,
   Droplets,
   Edit3,
   Eye,
   HeartPulse,
   Phone,
-  Plus,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -129,10 +127,9 @@ const StatusBadge = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-        styles[status] ||
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${styles[status] ||
         "border-slate-200 bg-slate-50 text-slate-600"
-      }`}
+        }`}
     >
       {status || "Unknown"}
     </span>
@@ -580,8 +577,8 @@ const Patients = () => {
           typeof service === "string"
             ? service
             : service?.name ||
-              service?.serviceName ||
-              ""
+            service?.serviceName ||
+            ""
         )
         .join(" ");
 
@@ -619,7 +616,7 @@ const Patients = () => {
       const matchesAdmission =
         admissionFilter === "All" ||
         getAdmissionStatus(patient) ===
-          admissionFilter;
+        admissionFilter;
 
       return (
         matchesSearch &&
@@ -702,41 +699,41 @@ const Patients = () => {
         currentPatients.map((patient) =>
           patient.id === editingPatient.id
             ? {
-                ...patient,
-                ...formData,
+              ...patient,
+              ...formData,
 
-                id: editingPatient.id,
+              id: editingPatient.id,
 
-                activeServices:
-                  formData.activeServices ??
-                  editingPatient.activeServices ??
-                  [],
+              activeServices:
+                formData.activeServices ??
+                editingPatient.activeServices ??
+                [],
 
-                services:
-                  formData.services ??
-                  editingPatient.services ??
-                  [],
+              services:
+                formData.services ??
+                editingPatient.services ??
+                [],
 
-                appointments:
-                  formData.appointments ??
-                  editingPatient.appointments ??
-                  [],
+              appointments:
+                formData.appointments ??
+                editingPatient.appointments ??
+                [],
 
-                assignedStaff:
-                  formData.assignedStaff ??
-                  editingPatient.assignedStaff ??
-                  [],
+              assignedStaff:
+                formData.assignedStaff ??
+                editingPatient.assignedStaff ??
+                [],
 
-                admissionStatus:
-                  formData.admissionStatus ??
-                  editingPatient.admissionStatus ??
-                  "Not Admitted",
+              admissionStatus:
+                formData.admissionStatus ??
+                editingPatient.admissionStatus ??
+                "Not Admitted",
 
-                roomBed:
-                  formData.roomBed ??
-                  editingPatient.roomBed ??
-                  "Not Assigned",
-              }
+              roomBed:
+                formData.roomBed ??
+                editingPatient.roomBed ??
+                "Not Assigned",
+            }
             : patient
         )
       );
@@ -809,9 +806,9 @@ const Patients = () => {
       currentPatients.map((patient) =>
         patient.id === patientToArchive.id
           ? {
-              ...patient,
-              status: "Inactive",
-            }
+            ...patient,
+            status: "Inactive",
+          }
           : patient
       )
     );
@@ -1159,8 +1156,8 @@ const Patients = () => {
         message={
           patientToArchive
             ? `This will mark ${getPatientName(
-                patientToArchive
-              )} as inactive. The patient's hospital history will not be deleted.`
+              patientToArchive
+            )} as inactive. The patient's hospital history will not be deleted.`
             : ""
         }
         confirmText="Archive Patient"

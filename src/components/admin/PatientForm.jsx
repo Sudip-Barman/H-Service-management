@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Activity,
   Baby,
@@ -80,15 +80,25 @@ const serviceOptions = [
   },
 ];
 
-function PatientForm({
-  open,
-  patient,
-  onClose,
-  onSubmit,
-}) {
-  const isEdit = Boolean(patient);
+const getInitialPatientForm = (patient) => {
+  if (patient) {
+    return {
+      name: patient.name || patient.fullName || "",
+      age: patient.age || "",
+      gender: patient.gender || "Male",
+      bloodGroup: patient.bloodGroup || "O+",
+      phone: patient.phone || "",
+      email: patient.email || "",
+      address: patient.address || "",
+      emergencyContact: patient.emergencyContact || "",
+      emergencyPhone: patient.emergencyPhone || "",
+      registrationDate: patient.registrationDate || "",
+      status: patient.status || "Registered",
+      admissionStatus: patient.admissionStatus || "Not Admitted",
+    };
+  }
 
-  const [form, setForm] = useState({
+  return {
     name: "",
     age: "",
     gender: "Male",
@@ -98,60 +108,35 @@ function PatientForm({
     address: "",
     emergencyContact: "",
     emergencyPhone: "",
-    registrationDate: "",
+    registrationDate: new Date().toISOString().split("T")[0],
     status: "Registered",
     admissionStatus: "Not Admitted",
-  });
+  };
+};
 
-  const [selectedServices, setSelectedServices] = useState([]);
+function PatientForm({
+  open = true,
+  patient,
+  onClose,
+  onSubmit,
+}) {
+  const isEdit = Boolean(patient);
 
-  useEffect(() => {
-    if (!open) return;
+  const [prevPatient, setPrevPatient] = useState(patient);
+  const [form, setForm] = useState(() => getInitialPatientForm(patient));
+  const [selectedServices, setSelectedServices] = useState(() =>
+    Array.isArray(patient?.activeServices) ? patient.activeServices : []
+  );
 
-    if (patient) {
-      setForm({
-        name: patient.name || "",
-        age: patient.age || "",
-        gender: patient.gender || "Male",
-        bloodGroup: patient.bloodGroup || "O+",
-        phone: patient.phone || "",
-        email: patient.email || "",
-        address: patient.address || "",
-        emergencyContact: patient.emergencyContact || "",
-        emergencyPhone: patient.emergencyPhone || "",
-        registrationDate: patient.registrationDate || "",
-        status: patient.status || "Registered",
-        admissionStatus: patient.admissionStatus || "Not Admitted",
-      });
+  if (prevPatient !== patient) {
+    setPrevPatient(patient);
+    setForm(getInitialPatientForm(patient));
+    setSelectedServices(
+      Array.isArray(patient?.activeServices) ? patient.activeServices : []
+    );
+  }
 
-      setSelectedServices(
-        Array.isArray(patient.activeServices)
-          ? patient.activeServices
-          : []
-      );
-    } else {
-      setForm({
-        name: "",
-        age: "",
-        gender: "Male",
-        bloodGroup: "O+",
-        phone: "",
-        email: "",
-        address: "",
-        emergencyContact: "",
-        emergencyPhone: "",
-        registrationDate: new Date()
-          .toISOString()
-          .split("T")[0],
-        status: "Registered",
-        admissionStatus: "Not Admitted",
-      });
-
-      setSelectedServices([]);
-    }
-  }, [open, patient]);
-
-  if (!open) return null;
+  if (open === false) return null;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
