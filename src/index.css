@@ -28,8 +28,8 @@ a {
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;     
-         }         /* Chrome, Safari, Opera */
+  display: none;  
+            }            /* Chrome, Safari, Opera */
 /* Hide scrollbar while keeping scrolling enabled */
 .scrollbar-hide {
   -ms-overflow-style: none;

@@ -249,11 +249,8 @@ const AdminSidebar = ({ onClose }) => {
         </button>
       </div>
 
-      {/* =====================================================
-          NAVIGATION
-          ===================================================== */}
-
-      <div className="sidebar-hide flex-1 overflow-y-auto px-3 py-5">
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto sidebar-hide px-3 py-5">
         <nav className="space-y-6">
           {menuSections.map((section) => (
             <div key={section.title}>
