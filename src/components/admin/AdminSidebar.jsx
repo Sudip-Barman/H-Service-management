@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
-  Users,
   UserRound,
   Stethoscope,
   HeartPulse,
@@ -10,20 +9,30 @@ import {
   CalendarDays,
   ClipboardList,
   Clock3,
-  UserCheck,
   Droplets,
   Pill,
   Utensils,
-  Siren,
   Building2,
+  Bed,
   ReceiptText,
+  FileText,
+  FlaskConical,
+  Package,
+  MessageSquare,
   Bell,
+  ShieldCheck,
   BarChart3,
   Settings,
+  UserCog,
+  LogIn,
   ChevronDown,
 } from "lucide-react";
 
 const menuSections = [
+  /* =====================================================
+     OVERVIEW
+     ===================================================== */
+
   {
     title: "Overview",
     items: [
@@ -35,19 +44,43 @@ const menuSections = [
     ],
   },
 
+  /* =====================================================
+     PATIENT MANAGEMENT
+     ===================================================== */
+
   {
-    title: "People",
+    title: "Patient Management",
     items: [
-      {
-        label: "Users",
-        path: "/admin/users",
-        icon: Users,
-      },
       {
         label: "Patients",
         path: "/admin/patients",
         icon: UserRound,
       },
+      {
+        label: "Appointments",
+        path: "/admin/appointments",
+        icon: CalendarDays,
+      },
+      {
+        label: "Admissions",
+        path: "/admin/admissions",
+        icon: LogIn,
+      },
+      {
+        label: "Rooms & Beds",
+        path: "/admin/rooms-beds",
+        icon: Bed,
+      },
+    ],
+  },
+
+  /* =====================================================
+     MEDICAL & CARE
+     ===================================================== */
+
+  {
+    title: "Medical & Care",
+    items: [
       {
         label: "Doctors",
         path: "/admin/doctors",
@@ -59,71 +92,68 @@ const menuSections = [
         icon: HeartPulse,
       },
       {
-        label: "Staff",
-        path: "/admin/staff",
-        icon: BriefcaseBusiness,
-      },
-    ],
-  },
-
-  {
-    title: "Care Management",
-    items: [
-      {
         label: "Services",
         path: "/admin/services",
         icon: HandHeart,
       },
       {
-        label: "Bookings",
-        path: "/admin/bookings",
-        icon: ClipboardList,
+        label: "Lab Tests",
+        path: "/admin/lab-tests",
+        icon: FlaskConical,
       },
       {
-        label: "Appointments",
-        path: "/admin/appointments",
-        icon: CalendarDays,
+        label: "Requests",
+        path: "/admin/requests",
+        icon: ClipboardList,
+      },
+    ],
+  },
+
+  /* =====================================================
+     STAFF MANAGEMENT
+     ===================================================== */
+
+  {
+    title: "Staff Management",
+    items: [
+      {
+        label: "Staff",
+        path: "/admin/staff",
+        icon: BriefcaseBusiness,
       },
       {
         label: "Schedules",
         path: "/admin/schedules",
         icon: Clock3,
       },
-    ],
-  },
-
-  {
-    title: "Workforce",
-    items: [
-      {
-        label: "Shifts",
-        path: "/admin/shifts",
-        icon: Clock3,
-      },
-      {
-        label: "Assignments",
-        path: "/admin/assignments",
-        icon: UserCheck,
-      },
       {
         label: "Attendance",
         path: "/admin/attendance",
-        icon: UserCheck,
+        icon: UserCog,
+      },
+      {
+        label: "Staff Documents",
+        path: "/admin/staff-documents",
+        icon: FileText,
       },
     ],
   },
 
+  /* =====================================================
+     HOSPITAL OPERATIONS
+     ===================================================== */
+
   {
-    title: "Hospital Services",
+    title: "Hospital Operations",
     items: [
       {
-        label: "Blood Management",
+        label: "Blood Bank",
         path: "/admin/blood",
         icon: Droplets,
       },
       {
-        label: "Medicine",
-        path: "/admin/medicine",
+        label: "Pharmacy",
+        path: "/admin/pharmacy",
         icon: Pill,
       },
       {
@@ -132,48 +162,55 @@ const menuSections = [
         icon: Utensils,
       },
       {
-        label: "Emergency",
-        path: "/admin/emergency",
-        icon: Siren,
+        label: "Inventory",
+        path: "/admin/inventory",
+        icon: Package,
       },
     ],
   },
 
+  /* =====================================================
+     FINANCE
+     ===================================================== */
+
   {
-    title: "Operations",
+    title: "Finance",
     items: [
-      {
-        label: "Reception",
-        path: "/admin/reception",
-        icon: Building2,
-      },
       {
         label: "Billing",
         path: "/admin/billing",
         icon: ReceiptText,
       },
+    ],
+  },
+
+  /* =====================================================
+     COMMUNICATION
+     ===================================================== */
+
+  {
+    title: "Communication",
+    items: [
       {
-        label: "Notifications",
-        path: "/admin/notifications",
-        icon: Bell,
+        label: "Feedback",
+        path: "/admin/feedback",
+        icon: MessageSquare,
       },
     ],
   },
 
-  {
-    title: "Analytics",
-    items: [
-      {
-        label: "Reports",
-        path: "/admin/reports",
-        icon: BarChart3,
-      },
-    ],
-  },
+  /* =====================================================
+     ADMINISTRATION
+     ===================================================== */
 
   {
-    title: "System",
+    title: "Administration",
     items: [
+      {
+        label: "Users & Security",
+        path: "/admin/security",
+        icon: ShieldCheck,
+      },
       {
         label: "Settings",
         path: "/admin/settings",
@@ -186,7 +223,10 @@ const menuSections = [
 const AdminSidebar = ({ onClose }) => {
   return (
     <aside className="flex h-full w-72 flex-col bg-[#073F42] text-white">
-      {/* Logo */}
+      {/* =====================================================
+          LOGO
+          ===================================================== */}
+
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
         <div>
           <h1 className="text-xl font-bold tracking-tight">
@@ -194,7 +234,7 @@ const AdminSidebar = ({ onClose }) => {
           </h1>
 
           <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.15em] text-[#A8C0C0]">
-            Admin Portal
+            Reception Portal
           </p>
         </div>
 
@@ -209,15 +249,20 @@ const AdminSidebar = ({ onClose }) => {
         </button>
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 overflow-y-auto sidebar-hide px-3 py-5">
+      {/* =====================================================
+          NAVIGATION
+          ===================================================== */}
+
+      <div className="sidebar-hide flex-1 overflow-y-auto px-3 py-5">
         <nav className="space-y-6">
           {menuSections.map((section) => (
             <div key={section.title}>
+              {/* Section title */}
               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7F9C9D]">
                 {section.title}
               </p>
 
+              {/* Section items */}
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const Icon = item.icon;
@@ -250,15 +295,19 @@ const AdminSidebar = ({ onClose }) => {
         </nav>
       </div>
 
-      {/* Bottom Info */}
+      {/* =====================================================
+          BOTTOM INFO
+          ===================================================== */}
+
       <div className="border-t border-white/10 p-4">
         <div className="rounded-xl bg-white/5 p-3">
           <p className="text-xs font-semibold text-white">
-            CareCore Admin
+            CareCore Reception
           </p>
 
           <p className="mt-1 text-[11px] leading-4 text-[#91AEAE]">
-            Manage healthcare services, staff and operations from one place.
+            Manage patients, medical services, staff, hospital operations
+            and finances from one place.
           </p>
         </div>
       </div>

@@ -22,8 +22,8 @@ import Schedules from "../pages/admin/schedules/Schedules";
 import StaffShifts from "../pages/admin/shifts/StaffShifts";
 import Assignments from "../pages/admin/Assignments/Assignments";
 import BloodBank from "../pages/admin/bloods/BloodBank";
-
-
+import Doctors from "../pages/admin/doctors/Doctors";
+import Nurses from "../pages/admin/nurses/Nurses";
 import User from "../pages/admin/User/User";
 
 const AppRoutes = () => {
@@ -57,8 +57,8 @@ const AppRoutes = () => {
         {/* People */}
         <Route path="users" element={<User />} />
         <Route path="patients" element={<Patients />} />
-        <Route path="doctors" element={<AdminModulePage />} />
-        <Route path="nurses" element={<AdminModulePage />} />
+        <Route path="doctors" element={<Doctors />} />
+        <Route path="nurses" element={<Nurses />} />
         <Route path="staff" element={<Staff />} />
 
         {/* Care Management */}
