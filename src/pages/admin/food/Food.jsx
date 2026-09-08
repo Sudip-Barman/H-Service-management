@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Apple,
   ChefHat,
   CheckCircle2,
   Clock3,
-  Edit3,
   Eye,
   Filter,
   Package,
@@ -414,28 +413,7 @@ const Food = () => {
     );
   };
 
-  /* =========================================================
-     STATUS BADGES
-  ========================================================= */
 
-  const getOrderBadge = (status) => {
-    const styles = {
-      Pending: "bg-yellow-50 text-yellow-700",
-      Preparing: "bg-blue-50 text-blue-700",
-      Ready: "bg-[#E8F8F6] text-[#08A6A0]",
-      Delivered: "bg-green-50 text-green-700",
-    };
-
-    return (
-      <span
-        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-          styles[status] || "bg-gray-50 text-gray-600"
-        }`}
-      >
-        {status}
-      </span>
-    );
-  };
 
   const getStockBadge = (stockValue, reorderLevel = 20) => {
     if (stockValue <= reorderLevel) {
@@ -1115,7 +1093,6 @@ const Food = () => {
 ========================================================= */
 
 const Overview = ({
-  statistics,
   orders,
   dietPlans,
   onOrderClick,
@@ -1683,112 +1660,6 @@ const FoodStock = ({ stock, getStockBadge }) => {
   );
 };
 
-/* =========================================================
-   DELIVERY STATUS
-========================================================= */
-
-const DeliveryStatus = ({ orders }) => {
-  return (
-    <SectionCard
-      title="Food Delivery Status"
-      subtitle="Track food delivery to patient rooms"
-    >
-
-      <div className="space-y-4">
-
-        {orders.map((order) => (
-
-          <div
-            key={order.id}
-            className="rounded-2xl border border-[#E2EFED] bg-white p-5"
-          >
-
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-
-              <div className="flex items-center gap-4">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E8F8F6]">
-                  <Truck
-                    size={20}
-                    className="text-[#08A6A0]"
-                  />
-                </div>
-
-                <div>
-                  <p className="font-bold text-[#173F41]">
-                    {order.id}
-                  </p>
-
-                  <p className="text-sm text-[#31585A]">
-                    {order.patient} • Room {order.room}
-                  </p>
-
-                  <p className="text-xs text-[#819596]">
-                    {order.meal} • {order.diet}
-                  </p>
-                </div>
-
-              </div>
-
-              {getOrderStatusBadge(order.status)}
-
-            </div>
-
-            <div className="mt-5 flex items-center">
-
-              <DeliveryStep
-                active
-                label="Order"
-              />
-
-              <DeliveryLine
-                active={order.status !== "Pending"}
-              />
-
-              <DeliveryStep
-                active={
-                  order.status === "Preparing" ||
-                  order.status === "Ready" ||
-                  order.status === "Delivered"
-                }
-                label="Preparing"
-              />
-
-              <DeliveryLine
-                active={
-                  order.status === "Ready" ||
-                  order.status === "Delivered"
-                }
-              />
-
-              <DeliveryStep
-                active={
-                  order.status === "Ready" ||
-                  order.status === "Delivered"
-                }
-                label="Ready"
-              />
-
-              <DeliveryLine
-                active={order.status === "Delivered"}
-              />
-
-              <DeliveryStep
-                active={order.status === "Delivered"}
-                label="Delivered"
-              />
-
-            </div>
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </SectionCard>
-  );
-};
 
 /* =========================================================
    REUSABLE COMPONENTS
@@ -2109,37 +1980,5 @@ const getOrderStatusBadge = (status) => {
     </span>
   );
 };
-
-const DeliveryStep = ({ active, label }) => (
-  <div className="flex min-w-16 flex-col items-center">
-
-    <div
-      className={`flex h-8 w-8 items-center justify-center rounded-full ${
-        active
-          ? "bg-[#08A6A0] text-white"
-          : "bg-[#E8F8F6] text-[#9AAEAF]"
-      }`}
-    >
-      {active ? (
-        <CheckCircle2 size={16} />
-      ) : (
-        <Clock3 size={15} />
-      )}
-    </div>
-
-    <span className="mt-2 text-[10px] font-semibold text-[#819596]">
-      {label}
-    </span>
-
-  </div>
-);
-
-const DeliveryLine = ({ active }) => (
-  <div
-    className={`h-1 flex-1 rounded-full ${
-      active ? "bg-[#08A6A0]" : "bg-[#E8F8F6]"
-    }`}
-  />
-);
 
 export default Food;

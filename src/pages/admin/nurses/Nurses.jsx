@@ -704,25 +704,25 @@ const Nurses = () => {
   <StatCard
     icon={Users}
     label="Total Nurses"
-    value={nurses.length}
+    value={stats.total}
   />
 
   <StatCard
     icon={UserRoundCheck}
     label="Active Nurses"
-    value={nurses.filter((nurse) => nurse.status === "Active").length}
+    value={stats.active}
   />
 
   <StatCard
     icon={Activity}
     label="On Leave"
-    value={nurses.filter((nurse) => nurse.status === "On Leave").length}
+    value={stats.onLeave}
   />
 
   <StatCard
     icon={UserRound}
     label="Inactive Nurses"
-    value={nurses.filter((nurse) => nurse.status === "Inactive").length}
+    value={stats.inactive}
   />
 </div>
       {/* Search & Filters */}

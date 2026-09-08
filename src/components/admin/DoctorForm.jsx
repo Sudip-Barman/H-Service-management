@@ -46,7 +46,10 @@ const DoctorForm = ({
   onClose,
   onSubmit,
 }) => {
-  const [form, setForm] = useState(emptyDoctor);
+  const [prevDoctor, setPrevDoctor] = useState(doctor);
+  const [form, setForm] = useState(() =>
+    doctor ? { ...emptyDoctor, ...doctor } : emptyDoctor
+  );
   const [photoFile, setPhotoFile] = useState(null);
 
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -57,40 +60,35 @@ const DoctorForm = ({
 
   const isEditing = Boolean(doctor);
 
-  /* -------------------------------------------------------------------------- */
-  /* Load Doctor Data                                                           */
-  /* -------------------------------------------------------------------------- */
+  if (prevDoctor !== doctor) {
+    setPrevDoctor(doctor);
+    setForm(doctor ? { ...emptyDoctor, ...doctor } : emptyDoctor);
+    setPhotoFile(null);
+  }
 
-  useEffect(() => {
-    if (!open) return;
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current
+        .getTracks()
+        .forEach((track) => track.stop());
 
-    if (doctor) {
-      setForm({
-        ...emptyDoctor,
-        ...doctor,
-      });
-
-      setPhotoFile(null);
-    } else {
-      setForm({
-        ...emptyDoctor,
-      });
-
-      setPhotoFile(null);
+      streamRef.current = null;
     }
-  }, [open, doctor]);
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
 
   /* -------------------------------------------------------------------------- */
-  /* Stop Camera When Form Closes                                               */
+  /* Stop Camera When Component Unmounts                                        */
   /* -------------------------------------------------------------------------- */
 
   useEffect(() => {
-    if (!open) {
+    return () => {
       stopCamera();
-      setCameraOpen(false);
-      setCameraError("");
-    }
-  }, [open]);
+    };
+  }, []);
 
   /* -------------------------------------------------------------------------- */
   /* Form Handlers                                                              */
@@ -201,23 +199,6 @@ const DoctorForm = ({
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Stop Camera                                                                */
-  /* -------------------------------------------------------------------------- */
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
-
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  };
 
   /* -------------------------------------------------------------------------- */
   /* Close Camera                                                               */

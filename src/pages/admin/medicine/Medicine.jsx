@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowDown,
   ArrowUp,
   CheckCircle2,
-  Edit3,
   Eye,
   Filter,
   Package,
@@ -1346,28 +1345,6 @@ const StatCard = ({ title, value, icon }) => {
   );
 };
 
-/* =========================================================
-   QUICK ACTION
-========================================================= */
-
-const QuickAction = ({ title, count, onClick }) => {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center justify-between rounded-2xl border border-[#E2EFED] bg-white p-4 text-left shadow-sm transition hover:border-[#08A6A0] hover:bg-[#E8F8F6]"
-    >
-
-      <span className="text-sm font-semibold text-[#31585A]">
-        {title}
-      </span>
-
-      <span className="font-bold text-[#08A6A0]">
-        {count}
-      </span>
-
-    </button>
-  );
-};
 
 /* =========================================================
    INPUT

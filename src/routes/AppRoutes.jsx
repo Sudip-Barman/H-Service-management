@@ -11,6 +11,8 @@ import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/Dashboard";
 import AdminModulePage from "../pages/admin/AdminModulePage";
 import Patients from "../pages/admin/patients/Patients";
+import Doctors from "../pages/admin/doctors/Doctors";
+import Nurses from "../pages/admin/nurses/Nurses";
 import Staff from "../pages/admin/staff/Staff";
 import Services from "../pages/admin/services/Services";
 import ServiceRequests from "../pages/admin/requests/ServiceRequests";

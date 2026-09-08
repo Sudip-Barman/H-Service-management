@@ -157,29 +157,6 @@ const getInitials = (doctor) => {
     .toUpperCase();
 };
 
-const formatCurrency = (value) => {
-  const amount = Number(value || 0);
-
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
-
-const formatDate = (value) => {
-  if (!value) return "Not provided";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 const StatusBadge = ({ children, type = "default" }) => {
   const styles = {

@@ -36,14 +36,39 @@ const emptyNurse = {
   photo_file: null,
 };
 
+const buildNurseFormState = (nurse) => {
+  if (!nurse) return emptyNurse;
+  return {
+    ...emptyNurse,
+    ...nurse,
+    ...(nurse.staff || {}),
+    nurse_id: nurse.nurse_id ?? null,
+    staff_id: nurse.staff_id ?? nurse.staff?.staff_id ?? "",
+    registration_number: nurse.registration_number ?? "",
+    qualification: nurse.qualification ?? "",
+    department: nurse.department ?? "",
+    ward: nurse.ward ?? "",
+    experience_years: nurse.experience_years ?? "",
+    license_number: nurse.license_number ?? "",
+    license_expiry: nurse.license_expiry ?? "",
+    shift_type: nurse.shift_type ?? "",
+    status: nurse.status ?? "Active",
+    photo: nurse.photo ?? nurse.staff?.photo ?? "",
+    photo_file: null,
+  };
+};
+
 const NurseForm = ({
   open,
   nurse = null,
   onClose,
   onSubmit,
 }) => {
-  const [form, setForm] = useState(emptyNurse);
-  const [photoPreview, setPhotoPreview] = useState("");
+  const [prevNurse, setPrevNurse] = useState(nurse);
+  const [form, setForm] = useState(() => buildNurseFormState(nurse));
+  const [photoPreview, setPhotoPreview] = useState(
+    () => nurse?.photo || nurse?.staff?.photo || ""
+  );
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -54,78 +79,24 @@ const NurseForm = ({
 
   const isEditing = Boolean(nurse?.nurse_id);
 
-  /* -------------------------------------------------------------------------- */
-  /* Load Existing Nurse                                                        */
-  /* -------------------------------------------------------------------------- */
+  if (prevNurse !== nurse) {
+    setPrevNurse(nurse);
+    const updated = buildNurseFormState(nurse);
+    setForm(updated);
+    setPhotoPreview(updated.photo || "");
+  }
 
-  useEffect(() => {
-    if (!open) return;
-
-    if (nurse) {
-      const loadedNurse = {
-        ...emptyNurse,
-
-        ...nurse,
-
-        // Support nested staff object if your API returns one
-        ...(nurse.staff || {}),
-
-        // Preserve nurse-specific values
-        nurse_id: nurse.nurse_id ?? null,
-        staff_id:
-          nurse.staff_id ??
-          nurse.staff?.staff_id ??
-          "",
-
-        registration_number:
-          nurse.registration_number ?? "",
-
-        qualification:
-          nurse.qualification ?? "",
-
-        department:
-          nurse.department ?? "",
-
-        ward:
-          nurse.ward ?? "",
-
-        experience_years:
-          nurse.experience_years ?? "",
-
-        license_number:
-          nurse.license_number ?? "",
-
-        license_expiry:
-          nurse.license_expiry ?? "",
-
-        shift_type:
-          nurse.shift_type ?? "",
-
-        status:
-          nurse.status ?? "Active",
-
-        // Existing photo
-        photo:
-          nurse.photo ??
-          nurse.staff?.photo ??
-          "",
-
-        photo_file: null,
-      };
-
-      setForm(loadedNurse);
-      setPhotoPreview(loadedNurse.photo || "");
-    } else {
-      setForm({
-        ...emptyNurse,
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
       });
 
-      setPhotoPreview("");
+      streamRef.current = null;
     }
 
     setCameraOpen(false);
-    setCameraError("");
-  }, [open, nurse]);
+  };
 
   /* -------------------------------------------------------------------------- */
   /* Camera Cleanup                                                             */
@@ -247,17 +218,6 @@ const NurseForm = ({
     }
   };
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
-        track.stop();
-      });
-
-      streamRef.current = null;
-    }
-
-    setCameraOpen(false);
-  };
 
   /* -------------------------------------------------------------------------- */
   /* Capture Photo                                                              */

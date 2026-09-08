@@ -9,7 +9,6 @@ import {
   HeartPulse,
   HouseHeart,
   Pencil,
-  ShieldCheck,
   Star,
   Stethoscope,
   Trash2,

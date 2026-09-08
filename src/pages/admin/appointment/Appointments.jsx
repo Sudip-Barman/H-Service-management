@@ -513,14 +513,6 @@ const Appointments = () => {
     return `APT-${maxNumber + 1}`;
   };
 
-  const getSelectedName = (options, id) => {
-    return (
-      options.find(
-        (option) => String(option.id) === String(id)
-      )?.name || ""
-    );
-  };
-
   const handleOpenAdd = () => {
     setEditingAppointment(null);
 
