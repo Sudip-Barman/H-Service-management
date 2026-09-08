@@ -9,13 +9,11 @@ import Login from "../pages/auth/Login";
 
 import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/Dashboard";
-// import BloodBank from "../pages/admin/blood/BloodBank";
 import AdminModulePage from "../pages/admin/AdminModulePage";
 import Patients from "../pages/admin/patients/Patients";
 import Staff from "../pages/admin/staff/Staff";
 import Services from "../pages/admin/services/Services";
 import ServiceRequests from "../pages/admin/requests/ServiceRequests";
-<<<<<<< HEAD
 import Attendance from "../pages/admin/attendance/Attendance";
 import Bookings from "../pages/admin/bookings/Booking";
 import Appointments from "../pages/admin/appointment/Appointments";
@@ -23,11 +21,12 @@ import Schedules from "../pages/admin/schedules/Schedules";
 import StaffShifts from "../pages/admin/shifts/StaffShifts";
 import Assignments from "../pages/admin/Assignments/Assignments";
 import BloodBank from "../pages/admin/bloods/BloodBank";
+import Medicine from "../pages/admin/medicine/Medicine";
+import Food from "../pages/admin/food/Food"; 
+import Emergency from "../pages/admin/emergency/Emergency";
 
 
-=======
 import User from "../pages/admin/User/User";
->>>>>>> ee1045002a50ecc607c373a9cee62b54c6f1f84c
 
 const AppRoutes = () => {
   return (
@@ -54,8 +53,6 @@ const AppRoutes = () => {
         {/* Dashboard */}
         <Route index element={<AdminDashboard />} />
 
-        {/* Blood Management */}
-        <Route path="blood" element={<BloodBank />} />
 
         {/* People */}
         <Route path="users" element={<User />} />
@@ -76,10 +73,11 @@ const AppRoutes = () => {
         <Route path="attendance" element={<Attendance/>} />
 
         {/* Hospital Services */}
-        {/* <Route path="bloods" element={<Bloods />} /> */}
-        <Route path="medicine" element={<AdminModulePage />} />
-        <Route path="food" element={<AdminModulePage />} />
-        <Route path="emergency" element={<AdminModulePage />} />
+        {/* Blood Management */}
+        <Route path="blood" element={<BloodBank />} />
+        <Route path="medicine" element={<Medicine />} />
+        <Route path="food" element={<Food/>} />
+        <Route path="emergency" element={<Emergency />} />
 
         {/* Hospital Operations */}
         <Route path="reception" element={<AdminModulePage />} />
