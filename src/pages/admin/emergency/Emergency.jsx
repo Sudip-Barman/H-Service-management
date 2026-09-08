@@ -17,7 +17,7 @@ import {
 	Users,
 	X,
 } from "lucide-react";
-
+// test comment 
 const initialPatients = [
 	{
 		id: "ER-24081",
@@ -316,3 +316,5 @@ function AddPatientModal({ form, onChange, onSubmit, onClose }) {
 }
 
 export default Emergency;
+
+//hi
