@@ -57,8 +57,8 @@ const AppRoutes = () => {
         {/* People */}
         <Route path="users" element={<User />} />
         <Route path="patients" element={<Patients />} />
-        <Route path="doctors" element={<AdminModulePage />} />
-        <Route path="nurses" element={<AdminModulePage />} />
+        <Route path="doctors" element={<Doctors />} />
+        <Route path="nurses" element={<Nurses />} />
         <Route path="staff" element={<Staff />} />
 
         {/* Care Management */}
