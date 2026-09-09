@@ -12,6 +12,7 @@ import {
   Search,
   ShieldCheck,
   Users,
+  UserPlus,
   X,
 } from "lucide-react";
 
@@ -242,11 +243,15 @@ const requestStatusStyles = {
   Rejected: "border-red-200 bg-red-50 text-red-700",
 };
 
-function Bloods() {
+function BloodBank() {
   const [bloodStocks, setBloodStocks] =
     useState(initialBloodStocks);
 
-  const [donors] = useState(initialDonors);
+  const [donors, setDonors] = useState(initialDonors);
+  const emptyDonorForm = { name: "", bloodGroup: "", age: "", gender: "", phone: "", lastDonation: "", status: "Eligible" };
+  const [showDonorModal, setShowDonorModal] = useState(false);
+  const [donorForm, setDonorForm] = useState(emptyDonorForm);
+  const [donorError, setDonorError] = useState("");
   const [requests, setRequests] =
     useState(initialRequests);
 
@@ -258,6 +263,7 @@ function Bloods() {
     useState("All");
   const [statusFilter, setStatusFilter] =
     useState("All");
+  const [requestFilter, setRequestFilter] = useState("All");
 
   const [showModal, setShowModal] =
     useState(false);
@@ -492,21 +498,91 @@ function Bloods() {
     );
   };
 
+  const getGroupUnits = (group) =>
+    bloodStocks
+      .filter((blood) => blood.bloodGroup === group)
+      .reduce((total, blood) => total + blood.units, 0);
+
   const issueRequest = (id) => {
-    setRequests((prev) =>
-      prev.map((request) =>
-        request.id === id
-          ? { ...request, status: "Issued" }
-          : request
-      )
+    const request = requests.find((item) => item.id === id);
+    if (!request) return;
+
+    const available = getGroupUnits(request.bloodGroup);
+    if (available < request.units) {
+      window.alert(`Cannot issue ${request.units} unit(s) of ${request.bloodGroup}. Only ${available} unit(s) are available.`);
+      return;
+    }
+
+    let remaining = request.units;
+    setBloodStocks((prev) =>
+      prev.map((blood) => {
+        if (blood.bloodGroup !== request.bloodGroup || remaining <= 0) return blood;
+        const deduction = Math.min(blood.units, remaining);
+        remaining -= deduction;
+        const updatedUnits = blood.units - deduction;
+        return {
+          ...blood,
+          units: updatedUnits,
+          status: updatedUnits === 0 ? "Out of Stock" : updatedUnits <= blood.minStock ? "Low Stock" : "Available",
+        };
+      })
     );
 
-    setSelectedRequest((prev) =>
-      prev?.id === id
-        ? { ...prev, status: "Issued" }
-        : prev
-    );
+    setRequests((prev) => prev.map((item) => item.id === id ? { ...item, status: "Issued" } : item));
+    setSelectedRequest((prev) => prev?.id === id ? { ...prev, status: "Issued" } : prev);
   };
+
+  const handleDonorInputChange = (e) => {
+    const { name, value } = e.target;
+    setDonorForm((prev) => ({ ...prev, [name]: value }));
+    setDonorError("");
+  };
+
+  const openDonorModal = () => {
+    setDonorForm(emptyDonorForm);
+    setDonorError("");
+    setShowDonorModal(true);
+  };
+
+  const closeDonorModal = () => {
+    setShowDonorModal(false);
+    setDonorForm(emptyDonorForm);
+    setDonorError("");
+  };
+
+  const handleAddDonor = (e) => {
+    e.preventDefault();
+    if (!donorForm.name || !donorForm.bloodGroup || !donorForm.age || !donorForm.gender || !donorForm.phone) {
+      setDonorError("Please fill all required donor fields.");
+      return;
+    }
+    const age = Number(donorForm.age);
+    if (age < 18 || age > 65) {
+      setDonorError("Donor age must be between 18 and 65 years.");
+      return;
+    }
+    setDonors((prev) => [{
+      id: `D-${String(prev.length + 1).padStart(3, "0")}`,
+      name: donorForm.name.trim(), bloodGroup: donorForm.bloodGroup, age, gender: donorForm.gender,
+      phone: donorForm.phone.trim(), lastDonation: donorForm.lastDonation || "", status: donorForm.status || "Eligible",
+    }, ...prev]);
+    closeDonorModal();
+  };
+
+  const handleAlertClick = (type) => {
+    setSearch(""); setGroupFilter("All"); setStatusFilter("All");
+    if (type === "low") { setStatusFilter("Low Stock"); setActiveTab("Inventory"); }
+    if (type === "expiring") {
+      setActiveTab("Inventory");
+      window.alert(`${expiringSoon} blood stock item(s) are expiring within 7 days. Check the expiry status column.`);
+    }
+    if (type === "emergency") { setRequestFilter("Emergency"); setActiveTab("Requests"); }
+  };
+
+  const filteredRequests = useMemo(() => {
+    if (requestFilter === "All") return requests;
+    return requests.filter((request) => request.priority === requestFilter);
+  }, [requests, requestFilter]);
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -655,6 +731,7 @@ function Bloods() {
                 key={group}
                 onClick={() => {
                   setGroupFilter(group);
+                  setStatusFilter("All");
                   setActiveTab("Inventory");
                 }}
                 className="rounded-xl border border-[#E2EFED] p-4 text-left transition hover:border-[#08A6A0] hover:bg-[#E8F8F6]"
@@ -702,6 +779,7 @@ function Bloods() {
               icon={<AlertCircle size={20} />}
               title={`${lowStockBlood} Low Stock Items`}
               description="Some blood groups need replenishment."
+              onClick={() => handleAlertClick("low")}
             />
           )}
 
@@ -710,6 +788,7 @@ function Bloods() {
               icon={<Clock3 size={20} />}
               title={`${expiringSoon} Expiring Soon`}
               description="Check blood units nearing expiry."
+              onClick={() => handleAlertClick("expiring")}
             />
           )}
 
@@ -718,6 +797,7 @@ function Bloods() {
               icon={<AlertCircle size={20} />}
               title={`${emergencyRequests} Emergency Request`}
               description="Emergency blood requests need attention."
+              onClick={() => handleAlertClick("emergency")}
             />
           )}
 
@@ -1062,9 +1142,11 @@ function Bloods() {
             </div>
 
             <button
+              type="button"
+              onClick={openDonorModal}
               className="flex items-center justify-center gap-2 rounded-lg bg-[#08A6A0] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#078F8A]"
             >
-              <Plus size={17} />
+              <UserPlus size={17} />
               Add Donor
             </button>
 
@@ -1184,6 +1266,17 @@ function Bloods() {
               Manage patient blood requests and reservations
             </p>
 
+            <div className="mt-3 flex items-center gap-2">
+              <label className="text-xs font-semibold text-gray-500">Priority</label>
+              <select value={requestFilter} onChange={(e) => setRequestFilter(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#08A6A0]">
+                <option value="All">All Requests</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Normal">Normal</option>
+              </select>
+              {requestFilter !== "All" && <button type="button" onClick={() => setRequestFilter("All")} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100">Clear</button>}
+            </div>
+
           </div>
 
           <div className="overflow-x-auto">
@@ -1217,7 +1310,7 @@ function Bloods() {
 
               <tbody className="divide-y divide-gray-100">
 
-                {requests.map((request) => (
+                {filteredRequests.map((request) => (
                   <tr
                     key={request.id}
                     className="hover:bg-[#F5FAF9]"
@@ -1434,7 +1527,7 @@ function Bloods() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4">
 
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+          <div className="max-h-[90vh] w-full max-w-3xl scrollbar-hide overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
 
@@ -1554,7 +1647,7 @@ function Bloods() {
 
               </div>
 
-              <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
+              <div className="relative bottom-5 flex flex-col-reverse gap-3 border-t  border-gray-200 pt-5 sm:flex-row sm:justify-end">
 
                 <button
                   type="button"
@@ -1578,6 +1671,34 @@ function Bloods() {
 
           </div>
 
+        </div>
+      )}
+
+      {/* ADD DONOR MODAL */}
+      {showDonorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+              <div><h2 className="text-lg font-bold text-[#073F42]">Add Blood Donor</h2><p className="mt-1 text-sm text-gray-500">Register a new blood donor</p></div>
+              <button type="button" onClick={closeDonorModal} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddDonor} className="space-y-5 p-6">
+              {donorError && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{donorError}</div>}
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <FormInput label="Donor Name" name="name" value={donorForm.name} onChange={handleDonorInputChange} placeholder="Enter donor name" required />
+                <FormSelect label="Blood Group" name="bloodGroup" value={donorForm.bloodGroup} onChange={handleDonorInputChange} options={bloodGroups} placeholder="Select blood group" required />
+                <FormInput label="Age" name="age" type="number" value={donorForm.age} onChange={handleDonorInputChange} placeholder="Enter age" required />
+                <FormSelect label="Gender" name="gender" value={donorForm.gender} onChange={handleDonorInputChange} options={["Male", "Female", "Other"]} placeholder="Select gender" required />
+                <FormInput label="Phone" name="phone" value={donorForm.phone} onChange={handleDonorInputChange} placeholder="Enter phone number" required />
+                <FormInput label="Last Donation" name="lastDonation" type="date" value={donorForm.lastDonation} onChange={handleDonorInputChange} />
+                <FormSelect label="Donor Status" name="status" value={donorForm.status} onChange={handleDonorInputChange} options={["Eligible", "Active", "Inactive"]} required />
+              </div>
+              <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
+                <button type="button" onClick={closeDonorModal} className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" className="flex items-center justify-center gap-2 rounded-lg bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#078F8A]"><UserPlus size={18} />Add Donor</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -1953,9 +2074,10 @@ function AlertBox({
   icon,
   title,
   description,
+  onClick,
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+    <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl border border-[#E2EFED] bg-white p-4 text-left shadow-sm transition hover:border-[#08A6A0] hover:bg-[#F5FAF9]">
 
       <div className="rounded-lg bg-[#E8F8F6] p-2 text-[#08A6A0]">
         {icon}
@@ -1971,7 +2093,7 @@ function AlertBox({
         </p>
       </div>
 
-    </div>
+    </button>
   );
 }
 
@@ -2075,4 +2197,4 @@ function Detail({ label, value }) {
   );
 }
 
-export default Bloods;
+export default BloodBank;
