@@ -17,6 +17,18 @@ body {
     sans-serif;
 }
 
+.dashboard-shell {
+  color: #173f41;
+  font-family: "Aptos", "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.dashboard-shell h1,
+.dashboard-shell h2,
+.dashboard-shell p {
+  text-wrap: pretty;
+}
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;

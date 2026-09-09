@@ -26,6 +26,10 @@ import BloodBank from "../pages/admin/bloods/BloodBank";
 import Medicine from "../pages/admin/medicine/Medicine";
 import Food from "../pages/admin/food/Food"; 
 import Emergency from "../pages/admin/emergency/Emergency";
+import Inventory from "../pages/admin/inventory/Inventory";
+import Notification from "../pages/admin/notification/Notification";
+import Feedback from "../pages/admin/feedback/Feedback";
+import Settings from "../pages/admin/setting/Settings";
 
 
 import User from "../pages/admin/User/User";
@@ -78,13 +82,13 @@ const AppRoutes = () => {
         {/* Blood Management */}
         <Route path="blood" element={<BloodBank />} />
         <Route path="medicine" element={<Medicine />} />
-        <Route path="food" element={<Food/>} />
+        <Route path="food" element={<Food />} />
         <Route path="emergency" element={<Emergency />} />
 
         {/* Hospital Operations */}
         <Route path="reception" element={<AdminModulePage />} />
         <Route path="billing" element={<AdminModulePage />} />
-        <Route path="notifications" element={<AdminModulePage />} />
+        <Route path="notifications" element={<Notification />} />
 
         {/* Clinical / Hospital Management */}
         <Route path="admissions" element={<AdminModulePage />} />
@@ -92,8 +96,8 @@ const AppRoutes = () => {
         <Route path="beds" element={<AdminModulePage />} />
         <Route path="medical-records" element={<AdminModulePage />} />
         <Route path="laboratory" element={<AdminModulePage />} />
-        <Route path="pharmacy" element={<AdminModulePage />} />
-        <Route path="inventory" element={<AdminModulePage />} />
+        <Route path="pharmacy" element={<Medicine />} />
+        <Route path="inventory" element={<Inventory />} />
 
         {/* Finance */}
         <Route path="payments" element={<AdminModulePage />} />
@@ -101,7 +105,7 @@ const AppRoutes = () => {
 
         {/* Patient Experience */}
         <Route path="complaints" element={<AdminModulePage />} />
-        <Route path="feedback" element={<AdminModulePage />} />
+        <Route path="feedback" element={<Feedback />} />
         <Route path="documents" element={<AdminModulePage />} />
 
         {/* Reports */}
@@ -109,7 +113,7 @@ const AppRoutes = () => {
 
         {/* System */}
         <Route path="roles" element={<AdminModulePage />} />
-        <Route path="settings" element={<AdminModulePage />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="audit-logs" element={<AdminModulePage />} />
       </Route>
 

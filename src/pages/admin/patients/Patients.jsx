@@ -1,16 +1,16 @@
 import { useMemo, useState } from "react";
 import {
   Archive,
+  Activity,
   BedDouble,
   ChevronRight,
   Droplets,
   Edit3,
   Eye,
-  Mail,
+  HeartPulse,
   Phone,
   UserPlus,
   Users,
-  X,
 } from "lucide-react";
 
 import StatCard from "../../../components/admin/StatCard";
