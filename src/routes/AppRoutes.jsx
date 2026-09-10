@@ -54,6 +54,7 @@ import WorkforceLeave from "../pages/workforce/Leave";
 import WorkforceNotifications from "../pages/workforce/Notifications";
 import WorkforceSettings from "../pages/workforce/Settings";
 
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -175,10 +176,7 @@ const AppRoutes = () => {
         <Route path="leave" element={<WorkforceLeave />} />
 
         {/* Notifications */}
-        <Route
-            path="notifications"
-            element={<WorkforceNotifications />}
-        />
+        <Route path="notifications" element={<WorkforceNotifications />}/>
 
         {/* Settings */}
         <Route path="settings" element={<WorkforceSettings />} />
