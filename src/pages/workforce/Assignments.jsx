@@ -1,309 +1,230 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ClipboardList,
   Search,
-  Filter,
+  SlidersHorizontal,
+  X,
+  ChevronRight,
+  Phone,
   CalendarDays,
-  Clock3,
-  MapPin,
+  Activity,
   UserRound,
-  Building2,
-  CheckCircle2,
-  CircleAlert,
-  ArrowRight,
-  ListTodo,
-  CircleDashed,
-  LoaderCircle,
+  Stethoscope,
+  Clock3,
 } from "lucide-react";
 
 import {
   getWorkforceUser,
-  getUserAssignments,
+  getUserPatients,
 } from "../../data/workforceData";
 
-export default function Assignments({ user }) {
+const Patients = ({ user }) => {
   const navigate = useNavigate();
 
-  const employeeId = user?.id || "EMP-1002";
+  const employeeId =
+    user?.employeeId ||
+    user?.id ||
+    localStorage.getItem("employeeId") ||
+    "EMP-1001";
 
-  const workforceUser =
+  const profile =
     getWorkforceUser(employeeId) ||
-    getWorkforceUser("EMP-1002");
+    getWorkforceUser("EMP-1001");
 
-  const assignments = getUserAssignments(
-    employeeId
-  );
+  /*
+   * getUserPatients() should return only patients connected
+   * to this workforce member through appointments, treatment,
+   * or direct patient assignment.
+   */
+  const patients = getUserPatients(profile?.id || employeeId);
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const filteredAssignments = useMemo(() => {
-    const searchValue = search
-      .trim()
-      .toLowerCase();
+  const filteredPatients = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
 
-    return assignments.filter((assignment) => {
+    return patients.filter((patient) => {
       const matchesSearch =
-        !searchValue ||
-        assignment.title
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        assignment.description
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        assignment.patient
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        assignment.department
-          ?.toLowerCase()
-          .includes(searchValue);
+        !search ||
+        patient.name?.toLowerCase().includes(search) ||
+        patient.patientId?.toLowerCase().includes(search) ||
+        patient.phone?.toLowerCase().includes(search) ||
+        patient.condition?.toLowerCase().includes(search) ||
+        patient.department?.toLowerCase().includes(search);
 
       const matchesStatus =
         statusFilter === "All" ||
-        assignment.status?.toLowerCase() ===
+        patient.status?.toLowerCase() ===
           statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
-  }, [assignments, search, statusFilter]);
+  }, [patients, searchTerm, statusFilter]);
 
-  const stats = useMemo(() => {
-    const pending = assignments.filter(
-      (item) =>
-        item.status?.toLowerCase() === "pending"
-    ).length;
-
-    const inProgress = assignments.filter(
-      (item) =>
-        item.status?.toLowerCase() ===
-        "in progress"
-    ).length;
-
-    const completed = assignments.filter(
-      (item) =>
-        item.status?.toLowerCase() ===
-        "completed"
-    ).length;
-
-    const highPriority = assignments.filter(
-      (item) =>
-        item.priority?.toLowerCase() === "high" &&
-        item.status?.toLowerCase() !== "completed"
-    ).length;
-
+  const counts = useMemo(() => {
     return {
-      total: assignments.length,
-      pending,
-      inProgress,
-      completed,
-      highPriority,
+      all: patients.length,
+
+      active: patients.filter(
+        (patient) =>
+          patient.status?.toLowerCase() === "active"
+      ).length,
+
+      admitted: patients.filter(
+        (patient) =>
+          patient.status?.toLowerCase() === "admitted"
+      ).length,
+
+      discharged: patients.filter(
+        (patient) =>
+          patient.status?.toLowerCase() === "discharged"
+      ).length,
     };
-  }, [assignments]);
+  }, [patients]);
 
-  const getStatusStyle = (status) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return "bg-emerald-50 text-emerald-700 border-emerald-100";
+  const hasFilters =
+    searchTerm.trim() !== "" ||
+    statusFilter !== "All";
 
-      case "in progress":
-        return "bg-blue-50 text-blue-700 border-blue-100";
-
-      case "pending":
-        return "bg-amber-50 text-amber-700 border-amber-100";
-
-      default:
-        return "bg-slate-50 text-slate-600 border-slate-100";
-    }
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("All");
   };
 
-  const getPriorityStyle = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case "high":
-        return "bg-red-50 text-red-700";
+  const openPatient = (patient) => {
+    if (!patient?.patientId) return;
 
-      case "medium":
-        return "bg-amber-50 text-amber-700";
-
-      case "low":
-        return "bg-slate-100 text-slate-600";
-
-      default:
-        return "bg-slate-100 text-slate-600";
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return CheckCircle2;
-
-      case "in progress":
-        return LoaderCircle;
-
-      default:
-        return CircleDashed;
-    }
-  };
-
-  const formatDate = (date) => {
-    if (!date) return "No due date";
-
-    const parsedDate = new Date(
-      `${date}T00:00:00`
+    navigate(
+      `/workforce/patients/${patient.patientId}`
     );
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return date;
-    }
-
-    return parsedDate.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const isOverdue = (assignment) => {
-    if (
-      !assignment.dueDate ||
-      assignment.status?.toLowerCase() === "completed"
-    ) {
-      return false;
-    }
-
-    return assignment.dueDate < "2026-09-10";
   };
 
   return (
-    <div className="space-y-6">
-      {/* PAGE INTRO */}
-      <section className="rounded-2xl border border-[#DDEBEA] bg-white shadow-sm">
-        <div className="flex flex-col gap-5 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
-              <ClipboardList size={21} />
+    <div className="space-y-5">
+      {/* ------------------------------------------------------------------ */}
+      {/* Header                                                             */}
+      {/* ------------------------------------------------------------------ */}
+
+      <section className="border-b border-[#DCEBE9] pb-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <Stethoscope className="h-4 w-4 text-[#08A6A0]" />
+
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#08A6A0]">
+                Patient Care
+              </span>
+            </div>
+
+            <h1 className="text-2xl font-semibold tracking-tight text-[#073F42] sm:text-3xl">
+              My Patients
+            </h1>
+
+            <p className="mt-1.5 max-w-2xl text-sm text-[#6B7F7B]">
+              Patients connected to your appointments,
+              treatment responsibilities, and assigned care.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 self-start rounded-lg border border-[#DCEBE9] bg-white px-4 py-3 sm:self-auto">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#087F7A]">
+              <UserRound className="h-4 w-4" />
             </div>
 
             <div>
-              <h1 className="text-lg font-semibold text-[#073F42]">
-                My Assignments
-              </h1>
+              <p className="text-lg font-semibold leading-none text-[#073F42]">
+                {patients.length}
+              </p>
 
-              <p className="mt-1 text-sm text-slate-500">
-                View and manage your assigned hospital
-                duties
+              <p className="mt-1 text-[10px] text-[#819596]">
+                Patients under care
               </p>
             </div>
-          </div>
-
-          <div className="rounded-xl bg-[#F7FBFB] px-4 py-3">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
-              Assigned To
-            </p>
-
-            <p className="mt-1 text-sm font-semibold text-[#073F42]">
-              {workforceUser?.name || "Workforce User"}
-            </p>
-
-            <p className="text-xs text-slate-500">
-              {workforceUser?.designation ||
-                "Hospital Staff"}
-            </p>
           </div>
         </div>
       </section>
 
-      {/* SUMMARY */}
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <SummaryCard
-          icon={ListTodo}
-          label="Total"
-          value={stats.total}
-        />
+      {/* ------------------------------------------------------------------ */}
+      {/* Summary                                                            */}
+      {/* ------------------------------------------------------------------ */}
 
-        <SummaryCard
-          icon={CircleDashed}
-          label="Pending"
-          value={stats.pending}
-        />
+      <section className="overflow-hidden rounded-xl border border-[#DCEBE9] bg-white">
+        <div className="grid grid-cols-2 divide-x divide-y divide-[#E8F0EF] lg:grid-cols-4 lg:divide-y-0">
+          <SummaryItem
+            label="All Patients"
+            value={counts.all}
+            active={statusFilter === "All"}
+            onClick={() => setStatusFilter("All")}
+          />
 
-        <SummaryCard
-          icon={LoaderCircle}
-          label="In Progress"
-          value={stats.inProgress}
-        />
+          <SummaryItem
+            label="Active Care"
+            value={counts.active}
+            active={statusFilter === "Active"}
+            onClick={() => setStatusFilter("Active")}
+          />
 
-        <SummaryCard
-          icon={CheckCircle2}
-          label="Completed"
-          value={stats.completed}
-        />
+          <SummaryItem
+            label="Admitted"
+            value={counts.admitted}
+            active={statusFilter === "Admitted"}
+            onClick={() => setStatusFilter("Admitted")}
+          />
+
+          <SummaryItem
+            label="Discharged"
+            value={counts.discharged}
+            active={statusFilter === "Discharged"}
+            onClick={() => setStatusFilter("Discharged")}
+          />
+        </div>
       </section>
 
-      {/* PRIORITY NOTICE */}
-      {stats.highPriority > 0 && (
-        <section className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 sm:px-6">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-red-600">
-              <CircleAlert size={18} />
-            </div>
+      {/* ------------------------------------------------------------------ */}
+      {/* Search                                                             */}
+      {/* ------------------------------------------------------------------ */}
 
-            <div>
-              <h3 className="text-sm font-semibold text-red-800">
-                {stats.highPriority} high-priority{" "}
-                {stats.highPriority === 1
-                  ? "assignment"
-                  : "assignments"}{" "}
-                need attention
-              </h3>
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8AA0A1]" />
 
-              <p className="mt-1 text-xs leading-5 text-red-700/80">
-                Review the priority assignments below
-                and complete them according to their
-                due dates.
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) =>
+              setSearchTerm(event.target.value)
+            }
+            placeholder="Search patient, ID, condition..."
+            className="h-10 w-full rounded-lg border border-[#DCEBE9] bg-white pl-10 pr-10 text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+          />
 
-      {/* FILTER BAR */}
-      <section className="rounded-2xl border border-[#DDEBEA] bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          {/* SEARCH */}
-          <div className="relative w-full lg:max-w-md">
-            <Search
-              size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[#819596] hover:bg-[#E8F8F6] hover:text-[#087F7A]"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
 
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search assignments, patients, departments..."
-              className="h-10 w-full rounded-lg border border-[#DDEBEA] bg-[#FBFDFD] pl-10 pr-4 text-sm text-[#073F42] outline-none transition placeholder:text-slate-400 focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-            />
-          </div>
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 shrink-0 text-[#819596]" />
 
-          {/* STATUS FILTER */}
-          <div className="flex items-center gap-2">
-            <Filter
-              size={16}
-              className="hidden text-slate-400 sm:block"
-            />
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              "All",
+              "Active",
+              "Admitted",
+              "Discharged",
+            ].map((status) => {
+              const selected =
+                statusFilter === status;
 
-            <div className="flex flex-wrap gap-2">
-              {[
-                "All",
-                "Pending",
-                "In Progress",
-                "Completed",
-              ].map((status) => (
+              return (
                 <button
                   key={status}
                   type="button"
@@ -311,316 +232,506 @@ export default function Assignments({ user }) {
                     setStatusFilter(status)
                   }
                   className={`rounded-lg px-3 py-2 text-xs font-medium transition ${
-                    statusFilter === status
+                    selected
                       ? "bg-[#073F42] text-white"
-                      : "border border-[#DDEBEA] bg-white text-slate-600 hover:bg-[#F5FAFA]"
+                      : "bg-white text-[#55716E] hover:bg-[#E8F8F6] hover:text-[#087F7A]"
                   }`}
                 >
                   {status}
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ASSIGNMENTS */}
-      <section className="overflow-hidden rounded-2xl border border-[#DDEBEA] bg-white shadow-sm">
-        <div className="flex flex-col gap-2 border-b border-[#E8EFEF] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
-            <h2 className="font-semibold text-[#073F42]">
-              Assigned Duties
-            </h2>
-
-            <p className="mt-1 text-xs text-slate-500">
-              {filteredAssignments.length}{" "}
-              {filteredAssignments.length === 1
-                ? "assignment"
-                : "assignments"}{" "}
-              found
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <UserRound size={14} />
-            Personal assignment list
-          </div>
-        </div>
-
-        {filteredAssignments.length > 0 ? (
-          <div className="divide-y divide-[#E8EFEF]">
-            {filteredAssignments.map((assignment) => {
-              const StatusIcon = getStatusIcon(
-                assignment.status
-              );
-
-              const overdue = isOverdue(assignment);
-
-              return (
-                <div
-                  key={assignment.id}
-                  className="group px-5 py-5 transition hover:bg-[#FBFDFD] sm:px-6"
-                >
-                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                    {/* MAIN */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-base font-semibold text-[#073F42]">
-                              {assignment.title}
-                            </h3>
-
-                            {assignment.priority && (
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${getPriorityStyle(
-                                  assignment.priority
-                                )}`}
-                              >
-                                {assignment.priority}
-                              </span>
-                            )}
-                          </div>
-
-                          {assignment.description && (
-                            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-                              {assignment.description}
-                            </p>
-                          )}
-                        </div>
-
-                        <span
-                          className={`flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${getStatusStyle(
-                            assignment.status
-                          )}`}
-                        >
-                          <StatusIcon
-                            size={13}
-                            className={
-                              assignment.status?.toLowerCase() ===
-                              "in progress"
-                                ? "animate-spin"
-                                : ""
-                            }
-                          />
-                          {assignment.status ||
-                            "Pending"}
-                        </span>
-                      </div>
-
-                      {/* DETAILS */}
-                      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        {assignment.patient && (
-                          <DetailItem
-                            icon={UserRound}
-                            label="Patient"
-                            value={assignment.patient}
-                          />
-                        )}
-
-                        {assignment.department && (
-                          <DetailItem
-                            icon={Building2}
-                            label="Department"
-                            value={assignment.department}
-                          />
-                        )}
-
-                        {assignment.dueDate && (
-                          <DetailItem
-                            icon={CalendarDays}
-                            label="Due Date"
-                            value={formatDate(
-                              assignment.dueDate
-                            )}
-                            valueClass={
-                              overdue
-                                ? "text-red-600"
-                                : ""
-                            }
-                          />
-                        )}
-
-                        {assignment.location && (
-                          <DetailItem
-                            icon={MapPin}
-                            label="Location"
-                            value={assignment.location}
-                          />
-                        )}
-                      </div>
-
-                      {/* OVERDUE */}
-                      {overdue && (
-                        <div className="mt-4 flex items-center gap-2 text-xs font-medium text-red-600">
-                          <Clock3 size={14} />
-                          This assignment is overdue
-                        </div>
-                      )}
-                    </div>
-
-                    {/* ACTION */}
-                    <div className="xl:pl-5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(
-                            "/workforce/assignments"
-                          )
-                        }
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#DDEBEA] px-4 py-2.5 text-xs font-semibold text-[#087F7B] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6] xl:w-auto"
-                      >
-                        View Details
-                        <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
               );
             })}
           </div>
-        ) : (
-          <EmptyState
-            hasFilters={
-              Boolean(search) ||
-              statusFilter !== "All"
-            }
-            onClear={() => {
-              setSearch("");
-              setStatusFilter("All");
-            }}
-          />
-        )}
+
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="ml-1 text-xs font-medium text-[#08A6A0] hover:text-[#073F42]"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </section>
 
-      {/* FOOTER INFO */}
-      <section className="rounded-2xl border border-[#CFE5E3] bg-[#E8F8F6] px-5 py-5 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#08A6A0]">
-              <ClipboardList size={18} />
-            </div>
+      {/* ------------------------------------------------------------------ */}
+      {/* Patient List                                                       */}
+      {/* ------------------------------------------------------------------ */}
 
-            <div>
-              <h3 className="text-sm font-semibold text-[#073F42]">
-                Keep your assignments up to date
-              </h3>
+      {filteredPatients.length > 0 ? (
+        <section className="overflow-hidden rounded-xl border border-[#DCEBE9] bg-white">
+          {/* Desktop */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[900px] border-collapse">
+              <thead>
+                <tr className="border-b border-[#E2EFED] bg-[#F8FCFB]">
+                  <TableHeader>Patient</TableHeader>
+                  <TableHeader>Care / Condition</TableHeader>
+                  <TableHeader>Department</TableHeader>
+                  <TableHeader>Appointment / Admission</TableHeader>
+                  <TableHeader>Contact</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                  <th className="w-12 px-4 py-3" />
+                </tr>
+              </thead>
 
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-[#5E7777]">
-                Complete assigned duties according to
-                their priority and due date. Assignment
-                changes are managed by hospital
-                administration.
-              </p>
-            </div>
+              <tbody>
+                {filteredPatients.map((patient) => (
+                  <PatientRow
+                    key={
+                      patient.id ||
+                      patient.patientId
+                    }
+                    patient={patient}
+                    onClick={() =>
+                      openPatient(patient)
+                    }
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/workforce/schedule")
-            }
-            className="flex w-fit items-center gap-2 text-sm font-semibold text-[#087F7B] transition hover:text-[#056966]"
-          >
-            View Schedule
-            <ArrowRight size={15} />
-          </button>
-        </div>
-      </section>
+          {/* Mobile */}
+          <div className="divide-y divide-[#E8F0EF] md:hidden">
+            {filteredPatients.map((patient) => (
+              <MobilePatient
+                key={
+                  patient.id ||
+                  patient.patientId
+                }
+                patient={patient}
+                onClick={() =>
+                  openPatient(patient)
+                }
+              />
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between border-t border-[#E8F0EF] bg-[#FCFEFD] px-4 py-3 sm:px-5">
+            <p className="text-xs text-[#819596]">
+              Showing{" "}
+              <span className="font-semibold text-[#31585A]">
+                {filteredPatients.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-[#31585A]">
+                {patients.length}
+              </span>
+            </p>
+
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-xs font-medium text-[#08A6A0] hover:text-[#073F42]"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </section>
+      ) : (
+        <EmptyState
+          hasFilters={hasFilters}
+          onClear={clearFilters}
+        />
+      )}
     </div>
   );
-}
+};
 
-/* SUMMARY CARD */
+export default Patients;
 
-function SummaryCard({
-  icon: Icon,
+/* ========================================================================== */
+/* Summary Item                                                               */
+/* ========================================================================== */
+
+const SummaryItem = ({
   label,
   value,
-}) {
+  active,
+  onClick,
+}) => {
   return (
-    <div className="rounded-2xl border border-[#DDEBEA] bg-white px-4 py-4 shadow-sm sm:px-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            {label}
-          </p>
-
-          <p className="mt-2 text-2xl font-bold text-[#073F42]">
-            {value}
-          </p>
-        </div>
-
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-          <Icon size={18} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* DETAIL ITEM */
-
-function DetailItem({
-  icon: Icon,
-  label,
-  value,
-  valueClass = "",
-}) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#F1F8F7] text-[#08A6A0]">
-        <Icon size={14} />
-      </div>
-
-      <div className="min-w-0">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center justify-between px-5 py-4 text-left transition ${
+        active
+          ? "bg-[#F2FAF9]"
+          : "bg-white hover:bg-[#FAFCFC]"
+      }`}
+    >
+      <div>
+        <p
+          className={`text-[10px] font-semibold uppercase tracking-[0.08em] ${
+            active
+              ? "text-[#087F7A]"
+              : "text-[#819596]"
+          }`}
+        >
           {label}
         </p>
 
-        <p
-          className={`mt-0.5 truncate text-xs font-medium text-[#073F42] ${valueClass}`}
-        >
+        <p className="mt-1 text-xl font-semibold leading-none text-[#073F42]">
           {value}
         </p>
       </div>
-    </div>
+
+      {active && (
+        <span className="h-1.5 w-1.5 rounded-full bg-[#08A6A0]" />
+      )}
+    </button>
   );
-}
+};
 
-/* EMPTY STATE */
+/* ========================================================================== */
+/* Table Header                                                               */
+/* ========================================================================== */
 
-function EmptyState({
-  hasFilters,
-  onClear,
-}) {
+const TableHeader = ({ children }) => {
   return (
-    <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-12 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
-        <ClipboardList size={27} />
+    <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[#819596] first:pl-5">
+      {children}
+    </th>
+  );
+};
+
+/* ========================================================================== */
+/* Desktop Patient Row                                                        */
+/* ========================================================================== */
+
+const PatientRow = ({
+  patient,
+  onClick,
+}) => {
+  return (
+    <tr
+      onClick={onClick}
+      className="group cursor-pointer border-b border-[#E8F0EF] transition hover:bg-[#FBFDFD]"
+    >
+      {/* Patient */}
+      <td className="px-4 py-4 pl-5">
+        <div className="flex items-center gap-3">
+          <PatientAvatar name={patient.name} />
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-[#073F42]">
+              {patient.name || "Unknown Patient"}
+            </p>
+
+            <p className="mt-0.5 text-[11px] text-[#819596]">
+              {patient.patientId || "No patient ID"}
+            </p>
+          </div>
+        </div>
+      </td>
+
+      {/* Condition */}
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#E8F8F6] text-[#08A6A0]">
+            <Activity className="h-3.5 w-3.5" />
+          </span>
+
+          <span className="max-w-[180px] truncate text-sm font-medium text-[#31585A]">
+            {patient.condition || "General Care"}
+          </span>
+        </div>
+      </td>
+
+      {/* Department */}
+      <td className="px-4 py-4">
+        <span className="text-sm text-[#55716E]">
+          {patient.department || "Not assigned"}
+        </span>
+      </td>
+
+      {/* Admission */}
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-3.5 w-3.5 text-[#819596]" />
+
+          <span className="text-xs text-[#55716E]">
+            {patient.admissionDate ||
+              "No admission date"}
+          </span>
+        </div>
+      </td>
+
+      {/* Phone */}
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-2">
+          <Phone className="h-3.5 w-3.5 text-[#819596]" />
+
+          <span className="text-xs text-[#55716E]">
+            {patient.phone || "Not available"}
+          </span>
+        </div>
+      </td>
+
+      {/* Status */}
+      <td className="px-4 py-4">
+        <StatusBadge status={patient.status} />
+      </td>
+
+      {/* Arrow */}
+      <td className="px-4 py-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9AAEAF] transition group-hover:bg-[#E8F8F6] group-hover:text-[#087F7A]">
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+/* ========================================================================== */
+/* Mobile Patient                                                             */
+/* ========================================================================== */
+
+const MobilePatient = ({
+  patient,
+  onClick,
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="block w-full p-4 text-left transition active:bg-[#F8FCFB]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <PatientAvatar name={patient.name} />
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-[#073F42]">
+              {patient.name || "Unknown Patient"}
+            </p>
+
+            <p className="mt-0.5 text-[11px] text-[#819596]">
+              {patient.patientId || "No patient ID"}
+            </p>
+          </div>
+        </div>
+
+        <StatusBadge status={patient.status} />
       </div>
 
-      <h3 className="mt-5 text-base font-semibold text-[#073F42]">
-        {hasFilters
-          ? "No assignments found"
-          : "No assignments available"}
-      </h3>
+      <div className="mt-4 rounded-lg border border-[#E8F0EF] bg-[#FAFCFC] p-3">
+        <div className="flex items-start gap-2.5">
+          <Activity className="mt-0.5 h-4 w-4 shrink-0 text-[#08A6A0]" />
 
-      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[#9AAEAF]">
+              Current Care
+            </p>
+
+            <p className="mt-1 text-xs font-medium text-[#31585A]">
+              {patient.condition || "General Care"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
+        <MobileDetail
+          icon={
+            <Stethoscope className="h-3.5 w-3.5" />
+          }
+          label="Department"
+          value={
+            patient.department ||
+            "Not assigned"
+          }
+        />
+
+        <MobileDetail
+          icon={
+            <CalendarDays className="h-3.5 w-3.5" />
+          }
+          label="Admission"
+          value={
+            patient.admissionDate ||
+            "Not available"
+          }
+        />
+
+        <MobileDetail
+          icon={
+            <Phone className="h-3.5 w-3.5" />
+          }
+          label="Contact"
+          value={
+            patient.phone ||
+            "Not available"
+          }
+        />
+
+        <MobileDetail
+          icon={
+            <Clock3 className="h-3.5 w-3.5" />
+          }
+          label="Status"
+          value={patient.status || "Unknown"}
+        />
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t border-[#E8F0EF] pt-3">
+        <span className="text-xs font-medium text-[#087F7A]">
+          Open patient record
+        </span>
+
+        <ChevronRight className="h-4 w-4 text-[#819596]" />
+      </div>
+    </button>
+  );
+};
+
+/* ========================================================================== */
+/* Mobile Detail                                                              */
+/* ========================================================================== */
+
+const MobileDetail = ({
+  icon,
+  label,
+  value,
+}) => {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-[#08A6A0]">
+        {icon}
+
+        <span className="text-[9px] font-semibold uppercase tracking-[0.07em] text-[#9AAEAF]">
+          {label}
+        </span>
+      </div>
+
+      <p className="mt-1 truncate text-xs font-medium text-[#31585A]">
+        {value}
+      </p>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Avatar                                                                     */
+/* ========================================================================== */
+
+const PatientAvatar = ({ name }) => {
+  const initials =
+    name
+      ?.split(" ")
+      .filter(Boolean)
+      .map((part) => part.charAt(0))
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "PT";
+
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-xs font-semibold text-[#087F7A]">
+      {initials}
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Status                                                                     */
+/* ========================================================================== */
+
+const StatusBadge = ({ status }) => {
+  const normalized =
+    status?.toLowerCase() || "unknown";
+
+  const statusMap = {
+    active: {
+      label: "Active",
+      background: "bg-[#EAF7EF]",
+      text: "text-[#16834A]",
+      dot: "bg-[#20A35A]",
+    },
+
+    admitted: {
+      label: "Admitted",
+      background: "bg-[#EDF5FF]",
+      text: "text-[#2773C7]",
+      dot: "bg-[#3B82D0]",
+    },
+
+    discharged: {
+      label: "Discharged",
+      background: "bg-[#F1F4F4]",
+      text: "text-[#667877]",
+      dot: "bg-[#8A9A98]",
+    },
+
+    pending: {
+      label: "Pending",
+      background: "bg-[#FFF6DE]",
+      text: "text-[#A66A00]",
+      dot: "bg-[#D89A16]",
+    },
+
+    unknown: {
+      label: "Unknown",
+      background: "bg-[#F1F4F4]",
+      text: "text-[#667877]",
+      dot: "bg-[#8A9A98]",
+    },
+  };
+
+  const current =
+    statusMap[normalized] ||
+    statusMap.unknown;
+
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold ${current.background} ${current.text}`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${current.dot}`}
+      />
+
+      {current.label}
+    </span>
+  );
+};
+
+/* ========================================================================== */
+/* Empty State                                                                */
+/* ========================================================================== */
+
+const EmptyState = ({
+  hasFilters,
+  onClear,
+}) => {
+  return (
+    <section className="rounded-xl border border-dashed border-[#CFE1DE] bg-white px-6 py-14 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+        <UserRound className="h-5 w-5" />
+      </div>
+
+      <h2 className="mt-4 text-base font-semibold text-[#073F42]">
+        No patients found
+      </h2>
+
+      <p className="mx-auto mt-1.5 max-w-sm text-xs leading-5 text-[#819596]">
         {hasFilters
-          ? "Try changing your search or status filter to find another assignment."
-          : "You currently don't have any assignments assigned to you."}
+          ? "No patients match your current search or status filter."
+          : "No patients are currently connected to your care."}
       </p>
 
       {hasFilters && (
         <button
           type="button"
           onClick={onClear}
-          className="mt-5 rounded-lg bg-[#073F42] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#0A5154]"
+          className="mt-4 rounded-lg bg-[#073F42] px-4 py-2 text-xs font-medium text-white transition hover:bg-[#087F7A]"
         >
-          Clear Filters
+          Clear filters
         </button>
       )}
-    </div>
+    </section>
   );
-}
+};
