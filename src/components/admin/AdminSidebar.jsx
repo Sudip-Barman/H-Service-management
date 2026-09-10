@@ -205,11 +205,6 @@ const menuSections = [
     title: "Administration",
     items: [
       {
-        label: "Users & Security",
-        path: "/admin/security",
-        icon: ShieldCheck,
-      },
-      {
         label: "Settings",
         path: "/admin/settings",
         icon: Settings,
@@ -248,7 +243,7 @@ const AdminSidebar = ({ onClose }) => {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto sidebar-hide px-3 py-5">
+      <div className="workforce-sidebar-scroll flex-1 overflow-y-auto sidebar-hide px-3 py-5">
         <nav className="space-y-6">
           {menuSections.map((section) => (
             <div key={section.title}>

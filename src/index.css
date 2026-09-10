@@ -57,3 +57,26 @@ a {
 .sidebar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
+
+/* Workforce Sidebar Scrollbar */
+.workforce-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(184, 205, 205, 0.35) transparent;
+}
+
+.workforce-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.workforce-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workforce-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(184, 205, 205, 0.35);
+  border-radius: 999px;
+}
+
+.workforce-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 205, 205, 0.55);
+}

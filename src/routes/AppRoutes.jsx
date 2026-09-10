@@ -39,10 +39,25 @@ import RoomBed from "../pages/admin/roombed/RoomBed";
 import LabTests from "../pages/admin/labtests/LabTests";
 import Request from "../pages/admin/requests/Requests";
 import Billings from "../pages/admin/billings/Billings";
+// import StaffSidebar from "../components/admin/StaffSidebar";
+
+// Workforce Portal
+import WorkforceLayout from "../layouts/WorkforceLayout";
+import WorkforceDashboard from "../pages/workforce/Dashboard";
+import WorkforceProfile from "../pages/workforce/Profile";
+import WorkforceSchedule from "../pages/workforce/Schedule";
+import WorkforceAppointments from "../pages/workforce/Appointments";
+import WorkforcePatients from "../pages/workforce/Patients";
+import WorkforceAssignments from "../pages/workforce/Assignments";
+import WorkforceAttendance from "../pages/workforce/Attendance";
+import WorkforceLeave from "../pages/workforce/Leave";
+import WorkforceNotifications from "../pages/workforce/Notifications";
+import WorkforceSettings from "../pages/workforce/Settings";
 
 const AppRoutes = () => {
   return (
     <Routes>
+        
       {/* ================= PUBLIC ROUTES ================= */}
 
       <Route path="/" element={<LandingPage />} />
@@ -92,17 +107,15 @@ const AppRoutes = () => {
         <Route path="emergency" element={<Emergency />} />
 
         {/* Hospital Operations */}
-        <Route path="reception" element={<AdminModulePage />} />
-        <Route path="billing" element={<AdminModulePage />} />
+
         <Route path="notifications" element={<Notification />} />
         <Route path="medicine" element={<Medicines />} />
         <Route path="food" element={<Food/>} />
         <Route path="emergency" element={<Emergency />} />
-
+        {/* <Route path="sidebar" element={<StaffSidebar/>}/> */}
         {/* Hospital Operations */}
         <Route path="lab-tests" element={<LabTests />} />
         <Route path="billing" element={<Billings />} />
-        <Route path="notifications" element={<AdminModulePage />} />
 
         {/* Clinical / Hospital Management */}
         <Route path="admissions" element={<Admission />} />
@@ -134,12 +147,45 @@ const AppRoutes = () => {
       </Route>
 
 
-      {/* ================= FALLBACK ================= */}
+      {/* ================= WORKFORCE PORTAL ROUTES ================= */}
 
-      <Route
-        path="*"
-        element={<Navigate to="/admin" replace />}
-      />
+        <Route path="/workforce" element={<WorkforceLayout />}>
+        {/* Dashboard */}
+        <Route index element={<WorkforceDashboard />} />
+
+        {/* Profile */}
+        <Route path="profile" element={<WorkforceProfile />} />
+
+        {/* Schedule */}
+        <Route path="schedule" element={<WorkforceSchedule />} />
+
+        {/* Appointments */}
+        <Route path="appointments" element={<WorkforceAppointments />} />
+
+        {/* Patients */}
+        <Route path="patients" element={<WorkforcePatients />} />
+
+        {/* Assignments */}
+        <Route path="assignments" element={<WorkforceAssignments />} />
+
+        {/* Attendance */}
+        <Route path="attendance" element={<WorkforceAttendance />} />
+
+        {/* Leave */}
+        <Route path="leave" element={<WorkforceLeave />} />
+
+        {/* Notifications */}
+        <Route
+            path="notifications"
+            element={<WorkforceNotifications />}
+        />
+
+        {/* Settings */}
+        <Route path="settings" element={<WorkforceSettings />} />
+        </Route>
+        {/* ================= FALLBACK ================= */}
+      
+        <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 };

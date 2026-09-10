@@ -641,7 +641,7 @@ const Inventory = () => {
   };
 
   const handleQuickAction = (title) => {
-    window.alert(`${title} management will be available from this inventory page.`);
+    window.alert(`${title} management will be Unavailable from this inventory.`);
   };
 
   /* =======================================================
