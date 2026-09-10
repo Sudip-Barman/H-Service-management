@@ -10,6 +10,10 @@ export default function WorkforceLayout({ user }) {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // -----------------------------------------
+  // Page Information
+  // -----------------------------------------
+
   const pageInfo = {
     "/workforce": {
       title: "Dashboard",
@@ -72,60 +76,102 @@ export default function WorkforceLayout({ user }) {
     subtitle: "Manage your hospital activities",
   };
 
+  // -----------------------------------------
+  // Navigation
+  // -----------------------------------------
+
   const handleNavigation = (path) => {
     navigate(path);
     setMobileMenuOpen(false);
   };
 
+  // -----------------------------------------
+  // Mobile Sidebar
+  // -----------------------------------------
+
+  const handleOpenSidebar = () => {
+    setMobileMenuOpen(true);
+  };
+
+  const handleCloseSidebar = () => {
+    setMobileMenuOpen(false);
+  };
+
+  // -----------------------------------------
+  // Notifications
+  // -----------------------------------------
+
   const handleNotificationClick = () => {
     navigate("/workforce/notifications");
+    setMobileMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F9F9]">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <WorkforceSidebar
-          activePage={location.pathname}
-          onNavigate={handleNavigation}
-          user={user}
-        />
-      </div>
+    <div className="min-h-screen w-full bg-[#F6F9F9]">
+      {/* -----------------------------------------
+          Mobile Sidebar Overlay
+      ----------------------------------------- */}
 
-      {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={handleCloseSidebar}
+          aria-hidden="true"
         />
       )}
 
-      {/* Mobile Sidebar */}
-      <div
-        className={`fixed left-0 top-0 z-50 h-screen transition-transform duration-300 lg:hidden ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <WorkforceSidebar
-          activePage={location.pathname}
-          onNavigate={handleNavigation}
-          user={user}
-        />
-      </div>
+      {/* -----------------------------------------
+          Workforce Sidebar
+      ----------------------------------------- */}
 
-      {/* Main Content */}
-      <div className="lg:pl-[260px]">
+      <WorkforceSidebar
+        activePage={location.pathname}
+        onNavigate={handleNavigation}
+        user={user}
+        mobileMenuOpen={mobileMenuOpen}
+        onClose={handleCloseSidebar}
+      />
+
+      {/* -----------------------------------------
+          Main Application Area
+
+          Desktop:
+          260px left space for sidebar
+
+          Mobile:
+          Full width
+      ----------------------------------------- */}
+
+      <div className="min-h-screen w-full lg:pl-[260px]">
+        {/* -----------------------------------------
+            Fixed Workforce Header
+
+            The header itself is fixed.
+            Do NOT wrap it inside sticky.
+        ----------------------------------------- */}
+
         <WorkforceHeader
           title={currentPage.title}
           subtitle={currentPage.subtitle}
           user={user}
-          onMenuClick={() => setMobileMenuOpen(true)}
+          onMenuClick={handleOpenSidebar}
           onNotificationClick={handleNotificationClick}
         />
 
-        <main className="min-h-[calc(100vh-72px)] p-4 sm:p-6 lg:p-7">
-          <div className="mx-auto w-full max-w-[1600px]">
-            <Outlet />
+        {/* -----------------------------------------
+            Page Content
+
+            Header height = 64px
+
+            pt-16 keeps content below the fixed
+            header instead of underneath it.
+        ----------------------------------------- */}
+
+        <main className="w-full pt-16">
+          <div className="min-h-[calc(100vh-64px)] w-full p-3 sm:p-5 md:p-6 lg:p-7">
+            <div className="mx-auto w-full max-w-[1600px]">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

@@ -1,416 +1,626 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ClipboardList,
   Search,
+  Filter,
   CalendarDays,
+  Clock3,
+  MapPin,
   UserRound,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  ArrowLeft,
-  CircleDot,
+  Building2,
+  CheckCircle2,
+  CircleAlert,
+  ArrowRight,
+  ListTodo,
+  CircleDashed,
+  LoaderCircle,
 } from "lucide-react";
 
 import {
   getWorkforceUser,
   getUserAssignments,
-  getRolePermissions,
 } from "../../data/workforceData";
 
-const Assignments = ({ user }) => {
+export default function Assignments({ user }) {
   const navigate = useNavigate();
 
   const employeeId = user?.id || "EMP-1002";
 
-  const profile =
-    getWorkforceUser(employeeId) || getWorkforceUser("EMP-1002");
+  const workforceUser =
+    getWorkforceUser(employeeId) ||
+    getWorkforceUser("EMP-1002");
 
-  const role = profile?.role?.toLowerCase() || "staff";
-  const permissions = getRolePermissions(role);
+  const assignments = getUserAssignments(
+    employeeId
+  );
 
-  const assignments = getUserAssignments(employeeId);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [priorityFilter, setPriorityFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState("All");
 
   const filteredAssignments = useMemo(() => {
-    return assignments.filter((assignment) => {
-      const search = searchTerm.toLowerCase();
+    const searchValue = search
+      .trim()
+      .toLowerCase();
 
+    return assignments.filter((assignment) => {
       const matchesSearch =
-        assignment.title?.toLowerCase().includes(search) ||
-        assignment.description?.toLowerCase().includes(search) ||
-        assignment.patient?.toLowerCase().includes(search) ||
-        assignment.department?.toLowerCase().includes(search);
+        !searchValue ||
+        assignment.title
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        assignment.description
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        assignment.patient
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        assignment.department
+          ?.toLowerCase()
+          .includes(searchValue);
 
       const matchesStatus =
         statusFilter === "All" ||
-        assignment.status?.toLowerCase() === statusFilter.toLowerCase();
+        assignment.status?.toLowerCase() ===
+          statusFilter.toLowerCase();
 
-      const matchesPriority =
-        priorityFilter === "All" ||
-        assignment.priority?.toLowerCase() ===
-          priorityFilter.toLowerCase();
-
-      return matchesSearch && matchesStatus && matchesPriority;
+      return matchesSearch && matchesStatus;
     });
-  }, [assignments, searchTerm, statusFilter, priorityFilter]);
+  }, [assignments, search, statusFilter]);
 
-  const pendingCount = assignments.filter(
-    (item) => item.status?.toLowerCase() === "pending"
-  ).length;
+  const stats = useMemo(() => {
+    const pending = assignments.filter(
+      (item) =>
+        item.status?.toLowerCase() === "pending"
+    ).length;
 
-  const inProgressCount = assignments.filter(
-    (item) => item.status?.toLowerCase() === "in progress"
-  ).length;
+    const inProgress = assignments.filter(
+      (item) =>
+        item.status?.toLowerCase() ===
+        "in progress"
+    ).length;
 
-  const completedCount = assignments.filter(
-    (item) => item.status?.toLowerCase() === "completed"
-  ).length;
+    const completed = assignments.filter(
+      (item) =>
+        item.status?.toLowerCase() ===
+        "completed"
+    ).length;
 
-  const highPriorityCount = assignments.filter(
-    (item) => item.priority?.toLowerCase() === "high"
-  ).length;
+    const highPriority = assignments.filter(
+      (item) =>
+        item.priority?.toLowerCase() === "high" &&
+        item.status?.toLowerCase() !== "completed"
+    ).length;
 
-  const getStatusClasses = (status) => {
+    return {
+      total: assignments.length,
+      pending,
+      inProgress,
+      completed,
+      highPriority,
+    };
+  }, [assignments]);
+
+  const getStatusStyle = (status) => {
     switch (status?.toLowerCase()) {
       case "completed":
-        return "bg-green-100 text-green-700";
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
 
       case "in progress":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-50 text-blue-700 border-blue-100";
 
       case "pending":
-        return "bg-yellow-100 text-yellow-700";
-
-      case "cancelled":
-        return "bg-red-100 text-red-700";
+        return "bg-amber-50 text-amber-700 border-amber-100";
 
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-slate-50 text-slate-600 border-slate-100";
     }
   };
 
-  const getPriorityClasses = (priority) => {
+  const getPriorityStyle = (priority) => {
     switch (priority?.toLowerCase()) {
       case "high":
-        return "bg-red-100 text-red-700";
+        return "bg-red-50 text-red-700";
 
       case "medium":
-        return "bg-orange-100 text-orange-700";
+        return "bg-amber-50 text-amber-700";
 
       case "low":
-        return "bg-green-100 text-green-700";
+        return "bg-slate-100 text-slate-600";
 
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-slate-100 text-slate-600";
     }
   };
 
-  // Role-based access
-  if (!permissions.assignments) {
-    return (
-      <div className="space-y-6">
-        <button
-          onClick={() => navigate("/workforce")}
-          className="flex items-center gap-2 text-sm font-medium text-[#08A6A0] transition hover:text-[#073F42]"
-        >
-          <ArrowLeft size={18} />
-          Back to Dashboard
-        </button>
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return CheckCircle2;
 
-        <div className="flex min-h-[450px] items-center justify-center rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-          <div className="max-w-md text-center">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
-              <ClipboardList size={30} />
-            </div>
+      case "in progress":
+        return LoaderCircle;
 
-            <h2 className="text-xl font-bold text-[#073F42]">
-              Assignments Not Available
-            </h2>
+      default:
+        return CircleDashed;
+    }
+  };
 
-            <p className="mt-2 text-sm leading-6 text-gray-500">
-              Assignment management is not available for your current
-              workforce role.
-            </p>
+  const formatDate = (date) => {
+    if (!date) return "No due date";
 
-            <button
-              onClick={() => navigate("/workforce")}
-              className="mt-6 rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#078f8a]"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      </div>
+    const parsedDate = new Date(
+      `${date}T00:00:00`
     );
-  }
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return date;
+    }
+
+    return parsedDate.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const isOverdue = (assignment) => {
+    if (
+      !assignment.dueDate ||
+      assignment.status?.toLowerCase() === "completed"
+    ) {
+      return false;
+    }
+
+    return assignment.dueDate < "2026-09-10";
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <button
-            onClick={() => navigate("/workforce")}
-            className="mb-3 flex items-center gap-2 text-sm font-medium text-[#08A6A0] transition hover:text-[#073F42]"
-          >
-            <ArrowLeft size={17} />
-            Back to Dashboard
-          </button>
+      {/* PAGE INTRO */}
+      <section className="rounded-2xl border border-[#DDEBEA] bg-white shadow-sm">
+        <div className="flex flex-col gap-5 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+              <ClipboardList size={21} />
+            </div>
 
-          <h1 className="text-2xl font-bold text-[#073F42]">
-            My Assignments
-          </h1>
+            <div>
+              <h1 className="text-lg font-semibold text-[#073F42]">
+                My Assignments
+              </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your assigned duties and service responsibilities.
-          </p>
+              <p className="mt-1 text-sm text-slate-500">
+                View and manage your assigned hospital
+                duties
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-[#F7FBFB] px-4 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              Assigned To
+            </p>
+
+            <p className="mt-1 text-sm font-semibold text-[#073F42]">
+              {workforceUser?.name || "Workforce User"}
+            </p>
+
+            <p className="text-xs text-slate-500">
+              {workforceUser?.designation ||
+                "Hospital Staff"}
+            </p>
+          </div>
         </div>
+      </section>
 
-        <div className="flex items-center gap-2 rounded-xl bg-[#E8F8F6] px-4 py-2.5 text-sm font-semibold text-[#087d79]">
-          <ClipboardList size={18} />
-          {assignments.length} Assignments
-        </div>
-      </div>
-
-      {/* Summary */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* SUMMARY */}
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <SummaryCard
-          title="Pending"
-          value={pendingCount}
-          icon={<Clock size={20} />}
+          icon={ListTodo}
+          label="Total"
+          value={stats.total}
         />
 
         <SummaryCard
-          title="In Progress"
-          value={inProgressCount}
-          icon={<CircleDot size={20} />}
+          icon={CircleDashed}
+          label="Pending"
+          value={stats.pending}
         />
 
         <SummaryCard
-          title="Completed"
-          value={completedCount}
-          icon={<CheckCircle size={20} />}
+          icon={LoaderCircle}
+          label="In Progress"
+          value={stats.inProgress}
         />
 
         <SummaryCard
-          title="High Priority"
-          value={highPriorityCount}
-          icon={<AlertCircle size={20} />}
+          icon={CheckCircle2}
+          label="Completed"
+          value={stats.completed}
         />
-      </div>
+      </section>
 
-      {/* Search + Filters */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-        <div className="flex flex-col gap-4">
-          {/* Search */}
-          <div className="relative w-full">
+      {/* PRIORITY NOTICE */}
+      {stats.highPriority > 0 && (
+        <section className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-red-600">
+              <CircleAlert size={18} />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-red-800">
+                {stats.highPriority} high-priority{" "}
+                {stats.highPriority === 1
+                  ? "assignment"
+                  : "assignments"}{" "}
+                need attention
+              </h3>
+
+              <p className="mt-1 text-xs leading-5 text-red-700/80">
+                Review the priority assignments below
+                and complete them according to their
+                due dates.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FILTER BAR */}
+      <section className="rounded-2xl border border-[#DDEBEA] bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          {/* SEARCH */}
+          <div className="relative w-full lg:max-w-md">
             <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={17}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
 
             <input
               type="text"
-              placeholder="Search assignment, patient, department..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search assignments, patients, departments..."
+              className="h-10 w-full rounded-lg border border-[#DDEBEA] bg-[#FBFDFD] pl-10 pr-4 text-sm text-[#073F42] outline-none transition placeholder:text-slate-400 focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
             />
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-[#08A6A0]"
-            >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-[#08A6A0]"
-            >
-              <option value="All">All Priority</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Assignment List */}
-      {filteredAssignments.length === 0 ? (
-        <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-100">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
-            <ClipboardList size={26} />
-          </div>
-
-          <h3 className="text-lg font-semibold text-[#073F42]">
-            No Assignments Found
-          </h3>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Try changing your search or filters.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {filteredAssignments.map((assignment) => (
-            <AssignmentCard
-              key={assignment.id}
-              assignment={assignment}
-              getStatusClasses={getStatusClasses}
-              getPriorityClasses={getPriorityClasses}
+          {/* STATUS FILTER */}
+          <div className="flex items-center gap-2">
+            <Filter
+              size={16}
+              className="hidden text-slate-400 sm:block"
             />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
-/* Assignment Card */
-const AssignmentCard = ({
-  assignment,
-  getStatusClasses,
-  getPriorityClasses,
-}) => {
-  return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition hover:shadow-md sm:p-6">
-      {/* Top Section */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
-            <ClipboardList size={22} />
-          </div>
-
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-semibold text-[#073F42]">
-                {assignment.title}
-              </h3>
-
-              {assignment.priority && (
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${getPriorityClasses(
-                    assignment.priority
-                  )}`}
+            <div className="flex flex-wrap gap-2">
+              {[
+                "All",
+                "Pending",
+                "In Progress",
+                "Completed",
+              ].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() =>
+                    setStatusFilter(status)
+                  }
+                  className={`rounded-lg px-3 py-2 text-xs font-medium transition ${
+                    statusFilter === status
+                      ? "bg-[#073F42] text-white"
+                      : "border border-[#DDEBEA] bg-white text-slate-600 hover:bg-[#F5FAFA]"
+                  }`}
                 >
-                  {assignment.priority} Priority
-                </span>
-              )}
+                  {status}
+                </button>
+              ))}
             </div>
+          </div>
+        </div>
+      </section>
 
-            <p className="mt-1 text-sm text-gray-500">
-              {assignment.description || "No description available."}
+      {/* ASSIGNMENTS */}
+      <section className="overflow-hidden rounded-2xl border border-[#DDEBEA] bg-white shadow-sm">
+        <div className="flex flex-col gap-2 border-b border-[#E8EFEF] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <h2 className="font-semibold text-[#073F42]">
+              Assigned Duties
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {filteredAssignments.length}{" "}
+              {filteredAssignments.length === 1
+                ? "assignment"
+                : "assignments"}{" "}
+              found
             </p>
           </div>
+
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <UserRound size={14} />
+            Personal assignment list
+          </div>
         </div>
 
-        <span
-          className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${getStatusClasses(
-            assignment.status
-          )}`}
-        >
-          {assignment.status || "Pending"}
-        </span>
-      </div>
+        {filteredAssignments.length > 0 ? (
+          <div className="divide-y divide-[#E8EFEF]">
+            {filteredAssignments.map((assignment) => {
+              const StatusIcon = getStatusIcon(
+                assignment.status
+              );
 
-      {/* Details */}
-      <div className="mt-5 grid grid-cols-1 gap-4 border-t border-gray-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
-        <DetailItem
-          icon={<UserRound size={17} />}
-          label="Patient"
-          value={assignment.patient || "Not assigned"}
-        />
+              const overdue = isOverdue(assignment);
 
-        <DetailItem
-          icon={<ClipboardList size={17} />}
-          label="Department"
-          value={assignment.department || "Not assigned"}
-        />
+              return (
+                <div
+                  key={assignment.id}
+                  className="group px-5 py-5 transition hover:bg-[#FBFDFD] sm:px-6"
+                >
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                    {/* MAIN */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-base font-semibold text-[#073F42]">
+                              {assignment.title}
+                            </h3>
 
-        <DetailItem
-          icon={<CalendarDays size={17} />}
-          label="Due Date"
-          value={assignment.dueDate || "Not specified"}
-        />
+                            {assignment.priority && (
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${getPriorityStyle(
+                                  assignment.priority
+                                )}`}
+                              >
+                                {assignment.priority}
+                              </span>
+                            )}
+                          </div>
 
-        <DetailItem
-          icon={<Clock size={17} />}
-          label="Priority"
-          value={assignment.priority || "Normal"}
-        />
-      </div>
+                          {assignment.description && (
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                              {assignment.description}
+                            </p>
+                          )}
+                        </div>
 
-      {/* Footer */}
-      <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-gray-400">
-          Assignment ID: {assignment.id || "Not available"}
-        </p>
+                        <span
+                          className={`flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${getStatusStyle(
+                            assignment.status
+                          )}`}
+                        >
+                          <StatusIcon
+                            size={13}
+                            className={
+                              assignment.status?.toLowerCase() ===
+                              "in progress"
+                                ? "animate-spin"
+                                : ""
+                            }
+                          />
+                          {assignment.status ||
+                            "Pending"}
+                        </span>
+                      </div>
 
-        <div className="flex gap-2">
-          <button className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 transition hover:bg-gray-50">
-            View Details
+                      {/* DETAILS */}
+                      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        {assignment.patient && (
+                          <DetailItem
+                            icon={UserRound}
+                            label="Patient"
+                            value={assignment.patient}
+                          />
+                        )}
+
+                        {assignment.department && (
+                          <DetailItem
+                            icon={Building2}
+                            label="Department"
+                            value={assignment.department}
+                          />
+                        )}
+
+                        {assignment.dueDate && (
+                          <DetailItem
+                            icon={CalendarDays}
+                            label="Due Date"
+                            value={formatDate(
+                              assignment.dueDate
+                            )}
+                            valueClass={
+                              overdue
+                                ? "text-red-600"
+                                : ""
+                            }
+                          />
+                        )}
+
+                        {assignment.location && (
+                          <DetailItem
+                            icon={MapPin}
+                            label="Location"
+                            value={assignment.location}
+                          />
+                        )}
+                      </div>
+
+                      {/* OVERDUE */}
+                      {overdue && (
+                        <div className="mt-4 flex items-center gap-2 text-xs font-medium text-red-600">
+                          <Clock3 size={14} />
+                          This assignment is overdue
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ACTION */}
+                    <div className="xl:pl-5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            "/workforce/assignments"
+                          )
+                        }
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#DDEBEA] px-4 py-2.5 text-xs font-semibold text-[#087F7B] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6] xl:w-auto"
+                      >
+                        View Details
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            hasFilters={
+              Boolean(search) ||
+              statusFilter !== "All"
+            }
+            onClear={() => {
+              setSearch("");
+              setStatusFilter("All");
+            }}
+          />
+        )}
+      </section>
+
+      {/* FOOTER INFO */}
+      <section className="rounded-2xl border border-[#CFE5E3] bg-[#E8F8F6] px-5 py-5 sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#08A6A0]">
+              <ClipboardList size={18} />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-[#073F42]">
+                Keep your assignments up to date
+              </h3>
+
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-[#5E7777]">
+                Complete assigned duties according to
+                their priority and due date. Assignment
+                changes are managed by hospital
+                administration.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/workforce/schedule")
+            }
+            className="flex w-fit items-center gap-2 text-sm font-semibold text-[#087F7B] transition hover:text-[#056966]"
+          >
+            View Schedule
+            <ArrowRight size={15} />
           </button>
+        </div>
+      </section>
+    </div>
+  );
+}
 
-          {assignment.status?.toLowerCase() !== "completed" && (
-            <button className="rounded-lg bg-[#08A6A0] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#078f8a]">
-              Update Status
-            </button>
-          )}
+/* SUMMARY CARD */
+
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-2xl border border-[#DDEBEA] bg-white px-4 py-4 shadow-sm sm:px-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            {label}
+          </p>
+
+          <p className="mt-2 text-2xl font-bold text-[#073F42]">
+            {value}
+          </p>
+        </div>
+
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
+          <Icon size={18} />
         </div>
       </div>
     </div>
   );
-};
+}
 
-/* Detail Item */
-const DetailItem = ({ icon, label, value }) => {
+/* DETAIL ITEM */
+
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+  valueClass = "",
+}) {
   return (
-    <div className="flex items-start gap-2">
-      <div className="mt-0.5 text-[#08A6A0]">{icon}</div>
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#F1F8F7] text-[#08A6A0]">
+        <Icon size={14} />
+      </div>
 
       <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
           {label}
         </p>
 
-        <p className="mt-0.5 truncate text-sm font-medium text-[#073F42]">
+        <p
+          className={`mt-0.5 truncate text-xs font-medium text-[#073F42] ${valueClass}`}
+        >
           {value}
         </p>
       </div>
     </div>
   );
-};
+}
 
-/* Summary Card */
-const SummaryCard = ({ title, value, icon }) => {
+/* EMPTY STATE */
+
+function EmptyState({
+  hasFilters,
+  onClear,
+}) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-        {icon}
+    <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-12 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+        <ClipboardList size={27} />
       </div>
 
-      <p className="text-xs font-medium text-gray-500">{title}</p>
+      <h3 className="mt-5 text-base font-semibold text-[#073F42]">
+        {hasFilters
+          ? "No assignments found"
+          : "No assignments available"}
+      </h3>
 
-      <p className="mt-1 text-2xl font-bold text-[#073F42]">
-        {value}
+      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+        {hasFilters
+          ? "Try changing your search or status filter to find another assignment."
+          : "You currently don't have any assignments assigned to you."}
       </p>
+
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mt-5 rounded-lg bg-[#073F42] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#0A5154]"
+        >
+          Clear Filters
+        </button>
+      )}
     </div>
   );
-};
-
-export default Assignments;
+}

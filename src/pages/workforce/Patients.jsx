@@ -1,14 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  UserRound,
   Search,
-  Phone,
-  CalendarDays,
-  MapPin,
+  UserRound,
   HeartPulse,
-  ArrowLeft,
+  Activity,
+  CalendarDays,
+  Phone,
+  MapPin,
+  Clock3,
   ChevronRight,
+  SlidersHorizontal,
+  X,
+  ArrowUpRight,
 } from "lucide-react";
 
 import {
@@ -19,21 +23,41 @@ import {
 const Patients = ({ user }) => {
   const navigate = useNavigate();
 
-  const employeeId = user?.id || "EMP-1001";
+  // -----------------------------------------
+  // CURRENT USER
+  // -----------------------------------------
+
+  const employeeId =
+    user?.employeeId ||
+    user?.id ||
+    localStorage.getItem("employeeId") ||
+    "EMP-1001";
 
   const profile =
-    getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001");
+    getWorkforceUser(employeeId) ||
+    getWorkforceUser("EMP-1001");
 
-  const patients = getUserPatients(employeeId);
+  const patients = getUserPatients(
+    profile?.id || employeeId
+  );
+
+  // -----------------------------------------
+  // STATE
+  // -----------------------------------------
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const filteredPatients = useMemo(() => {
-    return patients.filter((patient) => {
-      const search = searchTerm.toLowerCase();
+  // -----------------------------------------
+  // FILTER PATIENTS
+  // -----------------------------------------
 
+  const filteredPatients = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+
+    return patients.filter((patient) => {
       const matchesSearch =
+        !search ||
         patient.name?.toLowerCase().includes(search) ||
         patient.patientId?.toLowerCase().includes(search) ||
         patient.phone?.toLowerCase().includes(search) ||
@@ -42,374 +66,585 @@ const Patients = ({ user }) => {
 
       const matchesStatus =
         statusFilter === "All" ||
-        patient.status?.toLowerCase() === statusFilter.toLowerCase();
+        patient.status?.toLowerCase() ===
+          statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
   }, [patients, searchTerm, statusFilter]);
 
+  // -----------------------------------------
+  // STATISTICS
+  // -----------------------------------------
+
   const activePatients = patients.filter(
-    (patient) => patient.status?.toLowerCase() === "active"
+    (patient) =>
+      patient.status?.toLowerCase() === "active"
   ).length;
 
   const admittedPatients = patients.filter(
-    (patient) => patient.status?.toLowerCase() === "admitted"
+    (patient) =>
+      patient.status?.toLowerCase() === "admitted"
   ).length;
 
   const dischargedPatients = patients.filter(
-    (patient) => patient.status?.toLowerCase() === "discharged"
+    (patient) =>
+      patient.status?.toLowerCase() === "discharged"
   ).length;
+
+  // -----------------------------------------
+  // CLEAR FILTERS
+  // -----------------------------------------
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("All");
+  };
+
+  const hasFilters =
+    searchTerm.trim() !== "" ||
+    statusFilter !== "All";
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <button
-            onClick={() => navigate("/workforce")}
-            className="mb-3 flex items-center gap-2 text-sm font-medium text-[#08A6A0] transition hover:text-[#073F42]"
-          >
-            <ArrowLeft size={17} />
-            Back to Dashboard
-          </button>
+      {/* ==================================================
+          PAGE HEADER
+      ================================================== */}
 
-          <h1 className="text-2xl font-bold text-[#073F42]">
-            My Patients
-          </h1>
+      <section className="rounded-3xl border border-[#DCEBE9] bg-white p-5 shadow-sm sm:p-6 lg:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          {/* Title */}
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+                <UserRound className="h-5 w-5" />
+              </div>
 
-          <p className="mt-1 text-sm text-gray-500">
-            View and manage patients connected to your role.
-          </p>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#08A6A0]">
+                Patient Care
+              </span>
+            </div>
+
+            <h1 className="text-2xl font-bold tracking-tight text-[#073F42] sm:text-3xl">
+              My Patients
+            </h1>
+
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#6B7F7B]">
+              View and monitor patients connected to your
+              assigned responsibilities.
+            </p>
+          </div>
+
+          {/* Patient Count */}
+          <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-[#DCEBE9] bg-[#F8FCFB] px-4 py-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D7F4F1] text-[#087F7A]">
+              <UserRound className="h-5 w-5" />
+            </div>
+
+            <div>
+              <p className="text-lg font-bold leading-5 text-[#073F42]">
+                {patients.length}
+              </p>
+
+              <p className="mt-1 text-[11px] font-medium text-[#819596]">
+                Assigned Patients
+              </p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="flex items-center gap-2 rounded-xl bg-[#E8F8F6] px-4 py-2.5 text-sm font-semibold text-[#087d79]">
-          <UserRound size={18} />
-          {patients.length} Patients
-        </div>
-      </div>
+      {/* ==================================================
+          OVERVIEW STATISTICS
+      ================================================== */}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <SummaryCard
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+        <PatientStat
           title="Total Patients"
           value={patients.length}
-          icon={<UserRound size={20} />}
+          icon={<UserRound className="h-5 w-5" />}
+          description="Currently assigned"
         />
 
-        <SummaryCard
+        <PatientStat
           title="Active"
           value={activePatients}
-          icon={<HeartPulse size={20} />}
+          icon={<Activity className="h-5 w-5" />}
+          description="Under active care"
         />
 
-        <SummaryCard
+        <PatientStat
           title="Admitted"
           value={admittedPatients}
-          icon={<MapPin size={20} />}
+          icon={<HeartPulse className="h-5 w-5" />}
+          description="Currently admitted"
         />
 
-        <SummaryCard
+        <PatientStat
           title="Discharged"
           value={dischargedPatients}
-          icon={<CalendarDays size={20} />}
+          icon={<CalendarDays className="h-5 w-5" />}
+          description="Completed care"
         />
-      </div>
+      </section>
 
-      {/* Search and Filters */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      {/* ==================================================
+          SEARCH + FILTER
+      ================================================== */}
+
+      <section className="rounded-2xl border border-[#DCEBE9] bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           {/* Search */}
-          <div className="relative w-full lg:max-w-md">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
+          <div className="relative w-full xl:max-w-xl">
+            <Search className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-[#8AA0A1]" />
 
             <input
               type="text"
-              placeholder="Search patient, ID, condition..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
+              placeholder="Search by patient name, ID, condition..."
+              className="
+                h-11
+                w-full
+                rounded-xl
+                border
+                border-[#DCEBE9]
+                bg-[#F8FCFB]
+                pl-10
+                pr-10
+                text-sm
+                text-[#173F41]
+                outline-none
+                transition
+                placeholder:text-[#9AAEAF]
+                focus:border-[#08A6A0]
+                focus:bg-white
+                focus:ring-2
+                focus:ring-[#08A6A0]/10
+              "
             />
-          </div>
 
-          {/* Status Filter */}
-          <div className="flex flex-wrap gap-2">
-            {["All", "Active", "Admitted", "Discharged"].map((status) => (
+            {searchTerm && (
               <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-lg px-3 py-2 text-xs font-medium transition ${
-                  statusFilter === status
-                    ? "bg-[#08A6A0] text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-[#E8F8F6] hover:text-[#087d79]"
-                }`}
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                aria-label="Clear search"
               >
-                {status}
+                <X className="h-4 w-4" />
               </button>
-            ))}
+            )}
+          </div>
+
+          {/* Filter Area */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#55716E]">
+              <SlidersHorizontal className="h-4 w-4" />
+              <span>Status</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {["All", "Active", "Admitted", "Discharged"].map(
+                (status) => {
+                  const isActive =
+                    statusFilter === status;
+
+                  return (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() =>
+                        setStatusFilter(status)
+                      }
+                      className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
+                        isActive
+                          ? "bg-[#08A6A0] text-white shadow-sm"
+                          : "bg-[#F3F7F6] text-[#55716E] hover:bg-[#E8F8F6] hover:text-[#087F7A]"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  );
+                }
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Patient List */}
+        {/* Active Filters */}
+        {hasFilters && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#E8F0EF] pt-3">
+            <p className="text-xs text-[#819596]">
+              Showing{" "}
+              <span className="font-semibold text-[#31585A]">
+                {filteredPatients.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-[#31585A]">
+                {patients.length}
+              </span>{" "}
+              patients
+            </p>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs font-semibold text-[#08A6A0] transition hover:text-[#073F42]"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* ==================================================
+          PATIENT CONTENT
+      ================================================== */}
+
       {filteredPatients.length === 0 ? (
-        <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-100">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
-            <UserRound size={26} />
-          </div>
-
-          <h3 className="text-lg font-semibold text-[#073F42]">
-            No Patients Found
-          </h3>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Try changing your search or status filter.
-          </p>
-        </div>
+        <EmptyState
+          hasFilters={hasFilters}
+          onClear={clearFilters}
+        />
       ) : (
-        <>
-          {/* Desktop Table */}
-          <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 lg:block">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Patient
-                    </th>
+        <section>
+          {/* Result Header */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-[#073F42]">
+                Patient List
+              </h2>
 
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Contact
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Condition
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Department
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Status
-                    </th>
-
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredPatients.map((patient) => (
-                    <PatientTableRow
-                      key={patient.id || patient.patientId}
-                      patient={patient}
-                    />
-                  ))}
-                </tbody>
-              </table>
+              <p className="mt-0.5 text-xs text-[#819596]">
+                {filteredPatients.length} patient
+                {filteredPatients.length !== 1
+                  ? "s"
+                  : ""}{" "}
+                found
+              </p>
             </div>
           </div>
 
-          {/* Mobile Cards */}
-          <div className="grid grid-cols-1 gap-4 lg:hidden">
+          {/* Desktop Cards */}
+          <div className="hidden grid-cols-1 gap-4 md:grid lg:grid-cols-2">
             {filteredPatients.map((patient) => (
               <PatientCard
                 key={patient.id || patient.patientId}
                 patient={patient}
+                onView={() =>
+                  navigate(
+                    `/workforce/patients/${patient.patientId}`
+                  )
+                }
               />
             ))}
           </div>
-        </>
+
+          {/* Mobile Cards */}
+          <div className="grid grid-cols-1 gap-3 md:hidden">
+            {filteredPatients.map((patient) => (
+              <PatientCard
+                key={patient.id || patient.patientId}
+                patient={patient}
+                compact
+                onView={() =>
+                  navigate(
+                    `/workforce/patients/${patient.patientId}`
+                  )
+                }
+              />
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );
 };
 
-/* Desktop Patient Row */
-const PatientTableRow = ({ patient }) => {
+export default Patients;
+
+/* ======================================================
+   PATIENT STAT
+====================================================== */
+
+const PatientStat = ({
+  title,
+  value,
+  icon,
+  description,
+}) => {
   return (
-    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <PatientAvatar name={patient.name} />
-
-          <div>
-            <p className="font-semibold text-[#073F42]">
-              {patient.name}
-            </p>
-
-            <p className="mt-0.5 text-xs text-gray-400">
-              {patient.patientId}
-            </p>
-          </div>
-        </div>
-      </td>
-
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Phone size={15} className="text-[#08A6A0]" />
-          {patient.phone || "Not available"}
-        </div>
-      </td>
-
-      <td className="px-6 py-4">
-        <p className="text-sm font-medium text-[#073F42]">
-          {patient.condition || "General Care"}
-        </p>
-      </td>
-
-      <td className="px-6 py-4">
-        <p className="text-sm text-gray-600">
-          {patient.department || "Not assigned"}
-        </p>
-      </td>
-
-      <td className="px-6 py-4">
-        <StatusBadge status={patient.status} />
-      </td>
-
-      <td className="px-6 py-4 text-right">
-        <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-[#08A6A0] transition hover:bg-[#E8F8F6]">
-          View
-          <ChevronRight size={15} />
-        </button>
-      </td>
-    </tr>
-  );
-};
-
-/* Mobile Patient Card */
-const PatientCard = ({ patient }) => {
-  return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+    <div className="group rounded-2xl border border-[#DCEBE9] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <PatientAvatar name={patient.name} />
-
-          <div>
-            <h3 className="font-semibold text-[#073F42]">
-              {patient.name}
-            </h3>
-
-            <p className="mt-0.5 text-xs text-gray-400">
-              {patient.patientId}
-            </p>
-          </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+          {icon}
         </div>
 
-        <StatusBadge status={patient.status} />
+        <ArrowUpRight className="h-4 w-4 text-[#C2D5D3] transition group-hover:text-[#08A6A0]" />
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <DetailItem
-          icon={<Phone size={16} />}
-          label="Phone"
-          value={patient.phone}
-        />
+      <div className="mt-4">
+        <p className="text-xs font-medium text-[#819596]">
+          {title}
+        </p>
 
-        <DetailItem
-          icon={<HeartPulse size={16} />}
-          label="Condition"
-          value={patient.condition || "General Care"}
-        />
+        <p className="mt-1 text-2xl font-bold tracking-tight text-[#073F42]">
+          {value}
+        </p>
 
-        <DetailItem
-          icon={<MapPin size={16} />}
-          label="Department"
-          value={patient.department || "Not assigned"}
-        />
-
-        <DetailItem
-          icon={<CalendarDays size={16} />}
-          label="Admission"
-          value={patient.admissionDate || "Not available"}
-        />
+        <p className="mt-1 text-[11px] text-[#9AAEAF]">
+          {description}
+        </p>
       </div>
-
-      <button className="mt-5 flex w-full items-center justify-center gap-1 rounded-xl bg-[#E8F8F6] py-2.5 text-sm font-semibold text-[#087d79] transition hover:bg-[#d7f3f0]">
-        View Patient
-        <ChevronRight size={17} />
-      </button>
     </div>
   );
 };
 
-/* Avatar */
+/* ======================================================
+   PATIENT CARD
+====================================================== */
+
+const PatientCard = ({
+  patient,
+  compact = false,
+  onView,
+}) => {
+  return (
+    <article
+      className={`group overflow-hidden rounded-2xl border border-[#DCEBE9] bg-white shadow-sm transition hover:border-[#BBDDD9] hover:shadow-md ${
+        compact ? "p-4" : "p-5"
+      }`}
+    >
+      {/* -----------------------------------------
+          Card Header
+      ----------------------------------------- */}
+
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <PatientAvatar name={patient.name} />
+
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold text-[#073F42] sm:text-base">
+              {patient.name || "Unknown Patient"}
+            </h3>
+
+            <p className="mt-0.5 text-xs text-[#819596]">
+              {patient.patientId || "No patient ID"}
+            </p>
+          </div>
+        </div>
+
+        <StatusBadge status={patient.status} />
+      </div>
+
+      {/* -----------------------------------------
+          Condition
+      ----------------------------------------- */}
+
+      <div className="mt-5 rounded-xl border border-[#E2EFED] bg-[#F8FCFB] p-3.5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
+            <HeartPulse className="h-4.5 w-4.5" />
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#819596]">
+              Current Condition
+            </p>
+
+            <p className="mt-1 truncate text-sm font-semibold text-[#31585A]">
+              {patient.condition || "General Care"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* -----------------------------------------
+          Patient Details
+      ----------------------------------------- */}
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <PatientDetail
+          icon={<Phone className="h-4 w-4" />}
+          label="Phone"
+          value={patient.phone}
+        />
+
+        <PatientDetail
+          icon={<MapPin className="h-4 w-4" />}
+          label="Department"
+          value={patient.department}
+        />
+
+        <PatientDetail
+          icon={<CalendarDays className="h-4 w-4" />}
+          label="Admission"
+          value={patient.admissionDate}
+        />
+
+        <PatientDetail
+          icon={<Clock3 className="h-4 w-4" />}
+          label="Status"
+          value={patient.status || "Unknown"}
+        />
+      </div>
+
+      {/* -----------------------------------------
+          Action
+      ----------------------------------------- */}
+
+      <button
+        type="button"
+        onClick={onView}
+        className="mt-5 flex w-full items-center justify-between rounded-xl border border-[#DCEBE9] bg-white px-4 py-3 text-sm font-semibold text-[#087F7A] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6]"
+      >
+        <span>View Patient Details</span>
+
+        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      </button>
+    </article>
+  );
+};
+
+/* ======================================================
+   PATIENT AVATAR
+====================================================== */
+
 const PatientAvatar = ({ name }) => {
   const initials =
     name
       ?.split(" ")
-      .map((part) => part[0])
+      .filter(Boolean)
+      .map((part) => part.charAt(0))
       .join("")
       .slice(0, 2)
       .toUpperCase() || "PT";
 
   return (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-sm font-bold text-[#08A6A0]">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#D7F4F1] text-sm font-bold text-[#087F7A]">
       {initials}
     </div>
   );
 };
 
-/* Status Badge */
+/* ======================================================
+   STATUS BADGE
+====================================================== */
+
 const StatusBadge = ({ status }) => {
-  const statusClasses = {
-    active: "bg-green-100 text-green-700",
-    admitted: "bg-blue-100 text-blue-700",
-    discharged: "bg-gray-100 text-gray-600",
-    pending: "bg-yellow-100 text-yellow-700",
+  const normalizedStatus =
+    status?.toLowerCase() || "unknown";
+
+  const statusConfig = {
+    active: {
+      label: "Active",
+      className: "bg-[#E7F7EE] text-[#16834A]",
+      dot: "bg-[#20A35A]",
+    },
+
+    admitted: {
+      label: "Admitted",
+      className: "bg-[#EAF3FF] text-[#2773C7]",
+      dot: "bg-[#3B82D0]",
+    },
+
+    discharged: {
+      label: "Discharged",
+      className: "bg-[#F1F4F4] text-[#667877]",
+      dot: "bg-[#8A9A98]",
+    },
+
+    pending: {
+      label: "Pending",
+      className: "bg-[#FFF6DE] text-[#A66A00]",
+      dot: "bg-[#D89A16]",
+    },
+
+    unknown: {
+      label: "Unknown",
+      className: "bg-[#F1F4F4] text-[#667877]",
+      dot: "bg-[#8A9A98]",
+    },
   };
 
-  const className =
-    statusClasses[status?.toLowerCase()] || "bg-gray-100 text-gray-600";
+  const config =
+    statusConfig[normalizedStatus] ||
+    statusConfig.unknown;
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-bold ${config.className}`}
     >
-      {status || "Unknown"}
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${config.dot}`}
+      />
+
+      {config.label}
     </span>
   );
 };
 
-/* Detail Item */
-const DetailItem = ({ icon, label, value }) => {
+/* ======================================================
+   PATIENT DETAIL
+====================================================== */
+
+const PatientDetail = ({
+  icon,
+  label,
+  value,
+}) => {
   return (
-    <div className="flex items-start gap-2">
-      <div className="mt-0.5 text-[#08A6A0]">{icon}</div>
-
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-          {label}
-        </p>
-
-        <p className="mt-0.5 truncate text-sm font-medium text-[#073F42]">
-          {value || "Not available"}
-        </p>
-      </div>
-    </div>
-  );
-};
-
-/* Summary Card */
-const SummaryCard = ({ title, value, icon }) => {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-[#08A6A0]">
         {icon}
+
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+          {label}
+        </span>
       </div>
 
-      <p className="text-xs font-medium text-gray-500">{title}</p>
-
-      <p className="mt-1 text-2xl font-bold text-[#073F42]">
-        {value}
+      <p className="mt-1 truncate text-xs font-semibold text-[#31585A]">
+        {value || "Not available"}
       </p>
     </div>
   );
 };
 
-export default Patients;
+/* ======================================================
+   EMPTY STATE
+====================================================== */
+
+const EmptyState = ({
+  hasFilters,
+  onClear,
+}) => {
+  return (
+    <section className="rounded-3xl border border-[#DCEBE9] bg-white px-6 py-16 text-center shadow-sm">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
+        <UserRound className="h-7 w-7" />
+      </div>
+
+      <h3 className="mt-5 text-lg font-bold text-[#073F42]">
+        No Patients Found
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#819596]">
+        {hasFilters
+          ? "No patients match your current search or status filter."
+          : "There are currently no patients assigned to your account."}
+      </p>
+
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mt-5 rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#087F7A]"
+        >
+          Clear Filters
+        </button>
+      )}
+    </section>
+  );
+};

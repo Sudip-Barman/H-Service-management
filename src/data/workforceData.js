@@ -1,28 +1,23 @@
-// src/data/workforceData.js
-
-// --------------------------------------------------
-// Workforce Users
-// --------------------------------------------------
+// ============================================================
+// WORKFORCE USERS
+// ============================================================
 
 export const workforceUsers = [
   {
-    id: "EMP-1001",
+    employeeId: "EMP-1001",
     name: "Dr. Arindam Sen",
     role: "doctor",
     designation: "General Physician",
     department: "General Medicine",
-    qualification: "MBBS, MD",
+    qualification: "MBBS MD",
     experience: "12 Years",
     phone: "+91 98765 43210",
     email: "arindam.sen@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "12 March 2018",
   },
 
   {
-    id: "EMP-1002",
+    employeeId: "EMP-1002",
     name: "Suman Roy",
     role: "nurse",
     designation: "GNM Nurse",
@@ -31,14 +26,11 @@ export const workforceUsers = [
     experience: "7 Years",
     phone: "+91 98765 43211",
     email: "suman.roy@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "18 July 2020",
   },
 
   {
-    id: "EMP-1003",
+    employeeId: "EMP-1003",
     name: "Anita Roy",
     role: "staff",
     designation: "Elder Caregiver",
@@ -47,14 +39,11 @@ export const workforceUsers = [
     experience: "5 Years",
     phone: "+91 98765 43212",
     email: "anita.roy@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "08 January 2021",
   },
 
   {
-    id: "EMP-1004",
+    employeeId: "EMP-1004",
     name: "Mita Das",
     role: "staff",
     designation: "Baby Caretaker",
@@ -63,14 +52,11 @@ export const workforceUsers = [
     experience: "4 Years",
     phone: "+91 98765 43213",
     email: "mita.das@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "21 August 2022",
   },
 
   {
-    id: "EMP-1005",
+    employeeId: "EMP-1005",
     name: "Rahul Ghosh",
     role: "nurse",
     designation: "ICU Nurse",
@@ -79,14 +65,11 @@ export const workforceUsers = [
     experience: "9 Years",
     phone: "+91 98765 43214",
     email: "rahul.ghosh@carecore.com",
-    location: "CareCore Hospital",
     status: "On Leave",
-    avatar: null,
-    joiningDate: "14 February 2019",
   },
 
   {
-    id: "EMP-1006",
+    employeeId: "EMP-1006",
     name: "Priyanka Paul",
     role: "nurse",
     designation: "ANM Nurse",
@@ -95,14 +78,11 @@ export const workforceUsers = [
     experience: "6 Years",
     phone: "+91 98765 43215",
     email: "priyanka.paul@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "03 June 2021",
   },
 
   {
-    id: "EMP-1007",
+    employeeId: "EMP-1007",
     name: "Vikash Kumar",
     role: "staff",
     designation: "Male Attendant",
@@ -111,14 +91,11 @@ export const workforceUsers = [
     experience: "3 Years",
     phone: "+91 98765 43216",
     email: "vikash.kumar@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "17 September 2023",
   },
 
   {
-    id: "EMP-1008",
+    employeeId: "EMP-1008",
     name: "Riya Mukherjee",
     role: "staff",
     designation: "Receptionist",
@@ -127,41 +104,39 @@ export const workforceUsers = [
     experience: "4 Years",
     phone: "+91 98765 43217",
     email: "riya.mukherjee@carecore.com",
-    location: "CareCore Hospital",
     status: "Active",
-    avatar: null,
-    joiningDate: "11 November 2022",
   },
 ];
 
-// --------------------------------------------------
-// Schedule Data
-// --------------------------------------------------
+
+// ============================================================
+// WORKFORCE SCHEDULES
+// ============================================================
 
 export const workforceSchedules = [
   {
     id: "SCH-001",
     employeeId: "EMP-1001",
     date: "2026-09-10",
-    title: "Morning Shift",
-    type: "Regular Duty",
-    startTime: "08:00 AM",
-    endTime: "02:00 PM",
+    title: "Morning OPD",
+    type: "OPD",
+    startTime: "09:00 AM",
+    endTime: "01:00 PM",
     department: "General Medicine",
-    location: "OPD",
+    location: "OPD Room 101",
     status: "Scheduled",
   },
 
   {
     id: "SCH-002",
     employeeId: "EMP-1001",
-    date: "2026-09-11",
-    title: "OPD Duty",
-    type: "Regular Duty",
-    startTime: "09:00 AM",
-    endTime: "03:00 PM",
+    date: "2026-09-10",
+    title: "Patient Consultation",
+    type: "Consultation",
+    startTime: "02:00 PM",
+    endTime: "05:00 PM",
     department: "General Medicine",
-    location: "OPD",
+    location: "Consultation Room 2",
     status: "Scheduled",
   },
 
@@ -169,126 +144,127 @@ export const workforceSchedules = [
     id: "SCH-003",
     employeeId: "EMP-1002",
     date: "2026-09-10",
-    title: "Morning Shift",
-    type: "Nursing Duty",
+    title: "General Ward Duty",
+    type: "Ward Duty",
     startTime: "08:00 AM",
-    endTime: "02:00 PM",
+    endTime: "04:00 PM",
     department: "General Ward",
-    location: "Ward 2",
+    location: "Ward A",
     status: "Scheduled",
   },
 
   {
     id: "SCH-004",
-    employeeId: "EMP-1002",
-    date: "2026-09-11",
-    title: "Evening Shift",
-    type: "Nursing Duty",
-    startTime: "02:00 PM",
-    endTime: "08:00 PM",
-    department: "General Ward",
-    location: "Ward 2",
-    status: "Scheduled",
+    employeeId: "EMP-1005",
+    date: "2026-09-10",
+    title: "ICU Duty",
+    type: "ICU",
+    startTime: "08:00 AM",
+    endTime: "04:00 PM",
+    department: "ICU",
+    location: "ICU Unit",
+    status: "On Leave",
   },
 
   {
     id: "SCH-005",
-    employeeId: "EMP-1003",
+    employeeId: "EMP-1006",
     date: "2026-09-10",
-    title: "Patient Care Duty",
-    type: "Assigned Duty",
-    startTime: "08:00 AM",
-    endTime: "04:00 PM",
-    department: "Patient Care Services",
-    location: "Ward 1",
+    title: "Nursing Duty",
+    type: "Nursing",
+    startTime: "09:00 AM",
+    endTime: "05:00 PM",
+    department: "Nursing Services",
+    location: "Nursing Station",
     status: "Scheduled",
   },
 
   {
     id: "SCH-006",
+    employeeId: "EMP-1003",
+    date: "2026-09-10",
+    title: "Elder Care Assignment",
+    type: "Patient Care",
+    startTime: "09:00 AM",
+    endTime: "05:00 PM",
+    department: "Patient Care Services",
+    location: "Room 204",
+    status: "Scheduled",
+  },
+
+  {
+    id: "SCH-007",
     employeeId: "EMP-1004",
     date: "2026-09-10",
     title: "Baby Care Duty",
-    type: "Assigned Duty",
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
+    type: "Baby Care",
+    startTime: "08:30 AM",
+    endTime: "04:30 PM",
     department: "Baby Care",
     location: "Baby Care Unit",
     status: "Scheduled",
   },
 
   {
-    id: "SCH-007",
-    employeeId: "EMP-1005",
-    date: "2026-09-10",
-    title: "ICU Shift",
-    type: "Nursing Duty",
-    startTime: "08:00 AM",
-    endTime: "02:00 PM",
-    department: "ICU",
-    location: "ICU",
-    status: "On Leave",
-  },
-
-  {
     id: "SCH-008",
-    employeeId: "EMP-1006",
+    employeeId: "EMP-1007",
     date: "2026-09-10",
-    title: "Nursing Shift",
-    type: "Regular Duty",
-    startTime: "02:00 PM",
-    endTime: "08:00 PM",
-    department: "Nursing Services",
-    location: "Ward 3",
+    title: "Patient Assistance",
+    type: "Patient Care",
+    startTime: "10:00 AM",
+    endTime: "06:00 PM",
+    department: "Patient Care Services",
+    location: "Ward B",
     status: "Scheduled",
   },
 
   {
     id: "SCH-009",
-    employeeId: "EMP-1007",
-    date: "2026-09-10",
-    title: "Patient Assistance",
-    type: "Assigned Duty",
-    startTime: "08:00 AM",
-    endTime: "04:00 PM",
-    department: "Patient Care Services",
-    location: "Ward 1",
-    status: "Scheduled",
-  },
-
-  {
-    id: "SCH-010",
     employeeId: "EMP-1008",
     date: "2026-09-10",
     title: "Reception Duty",
-    type: "Regular Duty",
+    type: "Reception",
     startTime: "09:00 AM",
     endTime: "05:00 PM",
     department: "Reception",
     location: "Main Reception",
     status: "Scheduled",
   },
+
+  {
+    id: "SCH-010",
+    employeeId: "EMP-1001",
+    date: "2026-09-11",
+    title: "Morning OPD",
+    type: "OPD",
+    startTime: "09:00 AM",
+    endTime: "01:00 PM",
+    department: "General Medicine",
+    location: "OPD Room 101",
+    status: "Scheduled",
+  },
 ];
 
-// --------------------------------------------------
-// Appointments
-// --------------------------------------------------
+
+// ============================================================
+// APPOINTMENTS
+// ============================================================
 
 export const workforceAppointments = [
   {
-    id: "APT-1001",
+    id: "APT-001",
     employeeId: "EMP-1001",
     patientId: "PAT-001",
     patientName: "Rahul Sharma",
     date: "2026-09-10",
-    time: "10:00 AM",
+    time: "10:30 AM",
     type: "Consultation",
     department: "General Medicine",
     status: "Confirmed",
   },
 
   {
-    id: "APT-1002",
+    id: "APT-002",
     employeeId: "EMP-1001",
     patientId: "PAT-002",
     patientName: "Priya Das",
@@ -300,7 +276,7 @@ export const workforceAppointments = [
   },
 
   {
-    id: "APT-1003",
+    id: "APT-003",
     employeeId: "EMP-1002",
     patientId: "PAT-003",
     patientName: "Amit Roy",
@@ -312,91 +288,97 @@ export const workforceAppointments = [
   },
 
   {
-    id: "APT-1004",
-    employeeId: "EMP-1006",
+    id: "APT-004",
+    employeeId: "EMP-1005",
     patientId: "PAT-004",
-    patientName: "Sneha Paul",
-    date: "2026-09-11",
+    patientName: "Sanjay Kumar",
+    date: "2026-09-10",
     time: "03:00 PM",
-    type: "Nursing Review",
-    department: "Nursing Services",
-    status: "Confirmed",
+    type: "ICU Review",
+    department: "ICU",
+    status: "Cancelled",
   },
 ];
 
-// --------------------------------------------------
-// Patient Data
-// --------------------------------------------------
+
+// ============================================================
+// PATIENTS
+// ============================================================
 
 export const workforcePatients = [
   {
     id: "PAT-001",
     name: "Rahul Sharma",
-    age: 42,
+    age: 45,
     gender: "Male",
     bloodGroup: "B+",
-    phone: "+91 91234 56780",
-    room: "201",
-    ward: "General Ward",
+    phone: "+91 98765 10001",
     doctorId: "EMP-1001",
     nurseId: "EMP-1002",
-    status: "Admitted",
+    staffId: null,
+    department: "General Medicine",
+    room: "101",
+    status: "Under Treatment",
   },
 
   {
     id: "PAT-002",
     name: "Priya Das",
-    age: 35,
+    age: 32,
     gender: "Female",
     bloodGroup: "O+",
-    phone: "+91 91234 56781",
-    room: "203",
-    ward: "General Ward",
+    phone: "+91 98765 10002",
     doctorId: "EMP-1001",
-    nurseId: "EMP-1002",
-    status: "Admitted",
+    nurseId: "EMP-1006",
+    staffId: null,
+    department: "General Medicine",
+    room: "103",
+    status: "Under Treatment",
   },
 
   {
     id: "PAT-003",
     name: "Amit Roy",
-    age: 58,
+    age: 61,
     gender: "Male",
     bloodGroup: "A+",
-    phone: "+91 91234 56782",
-    room: "105",
-    ward: "General Ward",
+    phone: "+91 98765 10003",
     doctorId: "EMP-1001",
     nurseId: "EMP-1002",
     staffId: "EMP-1003",
-    status: "Under Care",
+    department: "General Ward",
+    room: "204",
+    status: "Under Observation",
   },
 
   {
     id: "PAT-004",
-    name: "Sneha Paul",
-    age: 29,
-    gender: "Female",
+    name: "Sanjay Kumar",
+    age: 58,
+    gender: "Male",
     bloodGroup: "AB+",
-    phone: "+91 91234 56783",
-    room: "302",
-    ward: "Nursing Ward",
+    phone: "+91 98765 10004",
     doctorId: "EMP-1001",
-    nurseId: "EMP-1006",
-    status: "Admitted",
+    nurseId: "EMP-1005",
+    staffId: "EMP-1007",
+    department: "ICU",
+    room: "ICU-04",
+    status: "Critical",
   },
 ];
 
-// --------------------------------------------------
-// Assignments
-// --------------------------------------------------
+
+// ============================================================
+// ASSIGNMENTS
+// ============================================================
 
 export const workforceAssignments = [
   {
     id: "ASN-001",
     employeeId: "EMP-1002",
-    title: "Patient Monitoring",
-    description: "Monitor assigned patients and update vital signs.",
+    title: "Monitor Patient Vital Signs",
+    description:
+      "Monitor assigned patients and update vital signs regularly.",
     patientId: "PAT-001",
     patientName: "Rahul Sharma",
     department: "General Ward",
@@ -408,11 +390,12 @@ export const workforceAssignments = [
   {
     id: "ASN-002",
     employeeId: "EMP-1003",
-    title: "Patient Assistance",
-    description: "Assist patient with daily activities and mobility.",
+    title: "Elder Patient Assistance",
+    description:
+      "Assist assigned elderly patient with daily care activities.",
     patientId: "PAT-003",
     patientName: "Amit Roy",
-    department: "General Ward",
+    department: "Patient Care Services",
     dueDate: "2026-09-10",
     priority: "Medium",
     status: "Pending",
@@ -421,168 +404,234 @@ export const workforceAssignments = [
   {
     id: "ASN-003",
     employeeId: "EMP-1004",
-    title: "Baby Care",
-    description: "Provide routine baby care and support to the family.",
-    patientId: "PAT-004",
-    patientName: "Sneha Paul",
+    title: "Baby Care Support",
+    description:
+      "Provide routine baby care and assist the patient's family.",
+    patientId: "PAT-002",
+    patientName: "Priya Das",
     department: "Baby Care",
-    dueDate: "2026-09-10",
-    priority: "High",
-    status: "In Progress",
+    dueDate: "2026-09-11",
+    priority: "Medium",
+    status: "Pending",
   },
 
   {
     id: "ASN-004",
     employeeId: "EMP-1007",
-    title: "Patient Mobility Assistance",
-    description: "Assist assigned patient with safe movement.",
-    patientId: "PAT-003",
-    patientName: "Amit Roy",
+    title: "Patient Room Assistance",
+    description:
+      "Assist patient with movement and room-related requirements.",
+    patientId: "PAT-004",
+    patientName: "Sanjay Kumar",
     department: "Patient Care Services",
-    dueDate: "2026-09-10",
-    priority: "Medium",
-    status: "Pending",
+    dueDate: "2026-09-09",
+    priority: "High",
+    status: "Completed",
   },
 ];
 
-// --------------------------------------------------
-// Attendance
-// --------------------------------------------------
+
+// ============================================================
+// ATTENDANCE
+// ============================================================
 
 export const workforceAttendance = [
+  // Doctor
   {
     id: "ATT-001",
     employeeId: "EMP-1001",
-    date: "2026-09-10",
-    checkIn: "07:55 AM",
-    checkOut: null,
-    workingHours: "In Progress",
-    status: "Present",
+    date: "2026-09-09",
+    checkIn: "09:08 AM",
+    checkOut: "05:31 PM",
+    status: "Completed",
   },
 
   {
     id: "ATT-002",
-    employeeId: "EMP-1002",
-    date: "2026-09-10",
-    checkIn: "07:52 AM",
-    checkOut: null,
-    workingHours: "In Progress",
-    status: "Present",
+    employeeId: "EMP-1001",
+    date: "2026-09-08",
+    checkIn: "09:15 AM",
+    checkOut: "05:20 PM",
+    status: "Completed",
   },
 
   {
     id: "ATT-003",
-    employeeId: "EMP-1003",
-    date: "2026-09-10",
-    checkIn: "07:58 AM",
-    checkOut: null,
-    workingHours: "In Progress",
-    status: "Present",
+    employeeId: "EMP-1001",
+    date: "2026-09-07",
+    checkIn: "09:04 AM",
+    checkOut: "05:12 PM",
+    status: "Completed",
   },
 
   {
     id: "ATT-004",
+    employeeId: "EMP-1001",
+    date: "2026-09-06",
+    checkIn: "09:10 AM",
+    checkOut: "05:25 PM",
+    status: "Completed",
+  },
+
+  // Nurse
+  {
+    id: "ATT-005",
+    employeeId: "EMP-1002",
+    date: "2026-09-09",
+    checkIn: "08:02 AM",
+    checkOut: "04:10 PM",
+    status: "Completed",
+  },
+
+  {
+    id: "ATT-006",
+    employeeId: "EMP-1002",
+    date: "2026-09-08",
+    checkIn: "08:07 AM",
+    checkOut: "04:05 PM",
+    status: "Completed",
+  },
+
+  // Nurse
+  {
+    id: "ATT-007",
+    employeeId: "EMP-1006",
+    date: "2026-09-09",
+    checkIn: "09:03 AM",
+    checkOut: "05:05 PM",
+    status: "Completed",
+  },
+
+  // Staff
+  {
+    id: "ATT-008",
+    employeeId: "EMP-1003",
+    date: "2026-09-09",
+    checkIn: "09:01 AM",
+    checkOut: "05:02 PM",
+    status: "Completed",
+  },
+
+  {
+    id: "ATT-009",
     employeeId: "EMP-1004",
-    date: "2026-09-10",
-    checkIn: "08:42 AM",
-    checkOut: null,
-    workingHours: "In Progress",
-    status: "Late",
+    date: "2026-09-09",
+    checkIn: "08:32 AM",
+    checkOut: "04:35 PM",
+    status: "Completed",
+  },
+
+  {
+    id: "ATT-010",
+    employeeId: "EMP-1007",
+    date: "2026-09-09",
+    checkIn: "09:55 AM",
+    checkOut: "06:04 PM",
+    status: "Completed",
+  },
+
+  {
+    id: "ATT-011",
+    employeeId: "EMP-1008",
+    date: "2026-09-09",
+    checkIn: "08:58 AM",
+    checkOut: "05:01 PM",
+    status: "Completed",
   },
 ];
 
-// --------------------------------------------------
-// Leave Requests
-// --------------------------------------------------
+
+// ============================================================
+// LEAVE REQUESTS
+// ============================================================
 
 export const workforceLeaves = [
   {
-    id: "LEV-001",
-    employeeId: "EMP-1001",
-    type: "Casual Leave",
-    fromDate: "2026-09-20",
-    toDate: "2026-09-21",
-    days: 2,
-    reason: "Personal work",
-    status: "Pending",
-  },
-
-  {
-    id: "LEV-002",
-    employeeId: "EMP-1002",
-    type: "Sick Leave",
-    fromDate: "2026-08-15",
-    toDate: "2026-08-16",
-    days: 2,
-    reason: "Health reasons",
+    id: "LV-001",
+    employeeId: "EMP-1005",
+    leaveType: "Sick Leave",
+    startDate: "2026-09-10",
+    endDate: "2026-09-11",
+    reason: "Medical rest",
     status: "Approved",
   },
 
   {
-    id: "LEV-003",
-    employeeId: "EMP-1003",
-    type: "Casual Leave",
-    fromDate: "2026-09-25",
-    toDate: "2026-09-26",
-    days: 2,
+    id: "LV-002",
+    employeeId: "EMP-1001",
+    leaveType: "Casual Leave",
+    startDate: "2026-09-18",
+    endDate: "2026-09-18",
     reason: "Personal work",
     status: "Pending",
   },
+
+  {
+    id: "LV-003",
+    employeeId: "EMP-1003",
+    leaveType: "Casual Leave",
+    startDate: "2026-09-22",
+    endDate: "2026-09-23",
+    reason: "Family function",
+    status: "Approved",
+  },
 ];
 
-// --------------------------------------------------
-// Notifications
-// --------------------------------------------------
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
 
 export const workforceNotifications = [
   {
     id: "NOT-001",
     employeeId: "EMP-1001",
-    title: "Schedule Updated",
-    message: "Your OPD schedule for tomorrow has been updated.",
-    type: "schedule",
-    date: "2026-09-10",
-    time: "09:15 AM",
+    title: "New Appointment",
+    message:
+      "A new patient consultation has been assigned to you.",
+    time: "10 minutes ago",
+    type: "appointment",
     read: false,
   },
 
   {
     id: "NOT-002",
     employeeId: "EMP-1001",
-    title: "New Appointment",
-    message: "A new patient appointment has been assigned to you.",
-    type: "appointment",
-    date: "2026-09-10",
-    time: "08:30 AM",
-    read: true,
+    title: "Schedule Updated",
+    message:
+      "Your schedule for September 11 has been updated.",
+    time: "1 hour ago",
+    type: "schedule",
+    read: false,
   },
 
   {
     id: "NOT-003",
-    employeeId: "EMP-1002",
-    title: "Duty Reminder",
-    message: "Your evening nursing duty starts at 02:00 PM.",
-    type: "schedule",
-    date: "2026-09-10",
-    time: "10:00 AM",
-    read: false,
+    employeeId: "EMP-1001",
+    title: "Leave Request",
+    message:
+      "Your casual leave request is awaiting approval.",
+    time: "3 hours ago",
+    type: "leave",
+    read: true,
   },
 
   {
     id: "NOT-004",
-    employeeId: "EMP-1003",
-    title: "Assignment Added",
-    message: "A new patient care assignment has been added.",
-    type: "assignment",
-    date: "2026-09-10",
-    time: "08:45 AM",
-    read: false,
+    employeeId: "EMP-1001",
+    title: "System Notification",
+    message:
+      "Please complete your daily attendance before leaving.",
+    time: "Yesterday",
+    type: "system",
+    read: true,
   },
 ];
 
-// --------------------------------------------------
-// Role Permissions
-// --------------------------------------------------
+
+// ============================================================
+// ROLE PERMISSIONS
+// ============================================================
 
 export const rolePermissions = {
   doctor: {
@@ -619,13 +668,21 @@ export const rolePermissions = {
   },
 };
 
-// --------------------------------------------------
-// Helper Functions
-// --------------------------------------------------
+
+// ============================================================
+// USER HELPERS
+// ============================================================
 
 export const getWorkforceUser = (employeeId) => {
-  return workforceUsers.find((user) => user.id === employeeId);
+  return workforceUsers.find(
+    (user) => user.employeeId === employeeId
+  );
 };
+
+
+// ============================================================
+// SCHEDULE HELPERS
+// ============================================================
 
 export const getUserSchedule = (employeeId) => {
   return workforceSchedules.filter(
@@ -633,11 +690,22 @@ export const getUserSchedule = (employeeId) => {
   );
 };
 
+
+// ============================================================
+// APPOINTMENT HELPERS
+// ============================================================
+
 export const getUserAppointments = (employeeId) => {
   return workforceAppointments.filter(
-    (appointment) => appointment.employeeId === employeeId
+    (appointment) =>
+      appointment.employeeId === employeeId
   );
 };
+
+
+// ============================================================
+// PATIENT HELPERS
+// ============================================================
 
 export const getUserPatients = (employeeId) => {
   return workforcePatients.filter(
@@ -648,17 +716,39 @@ export const getUserPatients = (employeeId) => {
   );
 };
 
+
+// ============================================================
+// ASSIGNMENT HELPERS
+// ============================================================
+
 export const getUserAssignments = (employeeId) => {
   return workforceAssignments.filter(
-    (assignment) => assignment.employeeId === employeeId
+    (assignment) =>
+      assignment.employeeId === employeeId
   );
 };
 
-export const getUserAttendance = (employeeId) => {
+
+// ============================================================
+// ATTENDANCE HELPERS
+// ============================================================
+
+export const getWorkforceAttendance = (employeeId) => {
   return workforceAttendance.filter(
-    (attendance) => attendance.employeeId === employeeId
+    (record) => record.employeeId === employeeId
   );
 };
+
+
+// Alias for compatibility with other pages
+export const getUserAttendance = (employeeId) => {
+  return getWorkforceAttendance(employeeId);
+};
+
+
+// ============================================================
+// LEAVE HELPERS
+// ============================================================
 
 export const getUserLeaves = (employeeId) => {
   return workforceLeaves.filter(
@@ -666,11 +756,22 @@ export const getUserLeaves = (employeeId) => {
   );
 };
 
+
+// ============================================================
+// NOTIFICATION HELPERS
+// ============================================================
+
 export const getUserNotifications = (employeeId) => {
   return workforceNotifications.filter(
-    (notification) => notification.employeeId === employeeId
+    (notification) =>
+      notification.employeeId === employeeId
   );
 };
+
+
+// ============================================================
+// ROLE PERMISSION HELPER
+// ============================================================
 
 export const getRolePermissions = (role) => {
   return (

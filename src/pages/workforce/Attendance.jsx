@@ -1,448 +1,1122 @@
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
+  Camera,
+  Check,
+  CheckCircle2,
+  Clock3,
   LogIn,
   LogOut,
+  RefreshCw,
+  ShieldCheck,
   UserCheck,
+  X,
+  AlertCircle,
 } from "lucide-react";
 
 import {
+  getWorkforceAttendance,
   getWorkforceUser,
-  getUserAttendance,
 } from "../../data/workforceData";
 
-const Attendance = ({ user }) => {
-  const employeeId = user?.id || "EMP-1001";
+const CURRENT_DATE = "2026-09-10";
 
-  const profile =
-    getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001");
+const Attendance = () => {
+  // --------------------------------------------------
+  // Current workforce user
+  // --------------------------------------------------
 
-  const attendance = getUserAttendance(employeeId);
+  const user = getWorkforceUser("EMP-1001");
 
-  const [monthFilter, setMonthFilter] = useState("All");
+  const employeeId = user?.employeeId || "EMP-1001";
 
-  const today = new Date().toISOString().split("T")[0];
+  // --------------------------------------------------
+  // Attendance data
+  // --------------------------------------------------
 
-  const todayAttendance = attendance.find(
-    (item) => item.date === today
-  );
+  const initialAttendance = getWorkforceAttendance(employeeId) || [];
+
+  const [attendanceRecords, setAttendanceRecords] =
+    useState(initialAttendance);
+
+  // --------------------------------------------------
+  // Today's attendance
+  // --------------------------------------------------
+
+  const [todayAttendance, setTodayAttendance] = useState(() => {
+    return (
+      initialAttendance.find(
+        (record) => record.date === CURRENT_DATE
+      ) || {
+        date: CURRENT_DATE,
+        employeeId,
+        checkIn: null,
+        checkOut: null,
+        status: "Not Marked",
+      }
+    );
+  });
+
+  // --------------------------------------------------
+  // Camera states
+  // --------------------------------------------------
+
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraMode, setCameraMode] = useState(null);
+  const [cameraError, setCameraError] = useState("");
+  const [cameraReady, setCameraReady] = useState(false);
+  const [processing, setProcessing] = useState(false);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // --------------------------------------------------
+  // Filter
+  // --------------------------------------------------
+
+  const [selectedMonth, setSelectedMonth] = useState("2026-09");
+
+  // --------------------------------------------------
+  // Notification
+  // --------------------------------------------------
+
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
+
+  // --------------------------------------------------
+  // Format time
+  // --------------------------------------------------
+
+  const formatTime = (time) => {
+    if (!time) {
+      return "--";
+    }
+
+    return time;
+  };
+
+  // --------------------------------------------------
+  // Calculate working hours
+  // --------------------------------------------------
+
+  const calculateWorkingHours = (checkIn, checkOut) => {
+    if (!checkIn || !checkOut) {
+      return "--";
+    }
+
+    const [inHour, inMinute] = convertTo24Hour(checkIn);
+    const [outHour, outMinute] = convertTo24Hour(checkOut);
+
+    const startMinutes = inHour * 60 + inMinute;
+    const endMinutes = outHour * 60 + outMinute;
+
+    let difference = endMinutes - startMinutes;
+
+    if (difference < 0) {
+      difference += 24 * 60;
+    }
+
+    const hours = Math.floor(difference / 60);
+    const minutes = difference % 60;
+
+    return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+  };
+
+  // --------------------------------------------------
+  // Convert 12 hour time to 24 hour
+  // --------------------------------------------------
+
+  const convertTo24Hour = (time) => {
+    const [value, modifier] = time.split(" ");
+
+    let [hours, minutes] = value.split(":").map(Number);
+
+    if (modifier === "PM" && hours !== 12) {
+      hours += 12;
+    }
+
+    if (modifier === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    return [hours, minutes];
+  };
+
+  // --------------------------------------------------
+  // Current date
+  // --------------------------------------------------
+
+  const formattedDate = new Date(
+    `${CURRENT_DATE}T00:00:00`
+  ).toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  // --------------------------------------------------
+  // Open camera
+  // --------------------------------------------------
+
+  const openCamera = async (mode) => {
+    setCameraMode(mode);
+    setCameraError("");
+    setCameraReady(false);
+    setCameraOpen(true);
+
+    try {
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: {
+              ideal: 1280,
+            },
+            height: {
+              ideal: 720,
+            },
+          },
+          audio: false,
+        });
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setCameraReady(true);
+      }
+    } catch (error) {
+      console.error("Camera error:", error);
+
+      setCameraError(
+        "Unable to access your camera. Please allow camera permission and try again."
+      );
+    }
+  };
+
+  // --------------------------------------------------
+  // Close camera
+  // --------------------------------------------------
+
+  const closeCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    setCameraOpen(false);
+    setCameraMode(null);
+    setCameraError("");
+    setCameraReady(false);
+    setProcessing(false);
+  };
+
+  // --------------------------------------------------
+  // Cleanup camera
+  // --------------------------------------------------
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
+      }
+    };
+  }, []);
+
+  // --------------------------------------------------
+  // Capture face
+  // --------------------------------------------------
+
+  const captureFace = async () => {
+    if (!videoRef.current || !cameraReady) {
+      return;
+    }
+
+    setProcessing(true);
+    setMessage("");
+
+    /*
+      Frontend demo:
+
+      The camera frame would normally be captured here
+      and sent to your FastAPI backend.
+
+      Example future flow:
+
+      video frame
+          ↓
+      canvas
+          ↓
+      image/blob
+          ↓
+      FastAPI
+          ↓
+      face verification
+          ↓
+      attendance saved
+    */
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1200);
+    });
+
+    const currentTime = new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    if (cameraMode === "check-in") {
+      handleCheckIn(currentTime);
+    }
+
+    if (cameraMode === "check-out") {
+      handleCheckOut(currentTime);
+    }
+
+    closeCamera();
+  };
+
+  // --------------------------------------------------
+  // Check In
+  // --------------------------------------------------
+
+  const handleCheckIn = (time) => {
+    if (todayAttendance.checkIn) {
+      showMessage(
+        "You have already checked in today.",
+        "error"
+      );
+
+      return;
+    }
+
+    const updatedRecord = {
+      ...todayAttendance,
+      date: CURRENT_DATE,
+      employeeId,
+      checkIn: time,
+      checkOut: null,
+      status: "Present",
+    };
+
+    setTodayAttendance(updatedRecord);
+
+    setAttendanceRecords((previous) => {
+      const existing = previous.find(
+        (record) => record.date === CURRENT_DATE
+      );
+
+      if (existing) {
+        return previous.map((record) =>
+          record.date === CURRENT_DATE
+            ? updatedRecord
+            : record
+        );
+      }
+
+      return [updatedRecord, ...previous];
+    });
+
+    showMessage(
+      `Face verified successfully. Check-in recorded at ${time}.`,
+      "success"
+    );
+  };
+
+  // --------------------------------------------------
+  // Check Out
+  // --------------------------------------------------
+
+  const handleCheckOut = (time) => {
+    if (!todayAttendance.checkIn) {
+      showMessage(
+        "Please complete your check-in first.",
+        "error"
+      );
+
+      return;
+    }
+
+    if (todayAttendance.checkOut) {
+      showMessage(
+        "You have already checked out today.",
+        "error"
+      );
+
+      return;
+    }
+
+    const updatedRecord = {
+      ...todayAttendance,
+      checkOut: time,
+      status: "Completed",
+    };
+
+    setTodayAttendance(updatedRecord);
+
+    setAttendanceRecords((previous) => {
+      return previous.map((record) =>
+        record.date === CURRENT_DATE
+          ? updatedRecord
+          : record
+      );
+    });
+
+    showMessage(
+      `Face verified successfully. Check-out recorded at ${time}.`,
+      "success"
+    );
+  };
+
+  // --------------------------------------------------
+  // Message
+  // --------------------------------------------------
+
+  const showMessage = (text, type = "success") => {
+    setMessage(text);
+    setMessageType(type);
+
+    setTimeout(() => {
+      setMessage("");
+    }, 4000);
+  };
+
+  // --------------------------------------------------
+  // Filter attendance
+  // --------------------------------------------------
 
   const filteredAttendance = useMemo(() => {
-    if (monthFilter === "All") {
-      return attendance;
+    return attendanceRecords.filter((record) => {
+      return record.date?.startsWith(selectedMonth);
+    });
+  }, [attendanceRecords, selectedMonth]);
+
+  // --------------------------------------------------
+  // Statistics
+  // --------------------------------------------------
+
+  const presentDays = filteredAttendance.filter(
+    (record) =>
+      record.status === "Present" ||
+      record.status === "Completed"
+  ).length;
+
+  const completedDays = filteredAttendance.filter(
+    (record) => record.checkIn && record.checkOut
+  ).length;
+
+  const totalWorkingMinutes = filteredAttendance.reduce(
+    (total, record) => {
+      if (!record.checkIn || !record.checkOut) {
+        return total;
+      }
+
+      const [inHour, inMinute] = convertTo24Hour(
+        record.checkIn
+      );
+
+      const [outHour, outMinute] = convertTo24Hour(
+        record.checkOut
+      );
+
+      let minutes =
+        outHour * 60 +
+        outMinute -
+        (inHour * 60 + inMinute);
+
+      if (minutes < 0) {
+        minutes += 24 * 60;
+      }
+
+      return total + minutes;
+    },
+    0
+  );
+
+  const totalWorkingHours = `${Math.floor(
+    totalWorkingMinutes / 60
+  )}h ${String(totalWorkingMinutes % 60).padStart(2, "0")}m`;
+
+  // --------------------------------------------------
+  // Status
+  // --------------------------------------------------
+
+  const getStatus = () => {
+    if (todayAttendance.checkOut) {
+      return {
+        label: "Completed",
+        className:
+          "bg-[#E8F8F6] text-[#087F7B]",
+      };
     }
 
-    return attendance.filter((item) =>
-      item.date?.startsWith(monthFilter)
-    );
-  }, [attendance, monthFilter]);
-
-  const presentCount = attendance.filter(
-    (item) => item.status?.toLowerCase() === "present"
-  ).length;
-
-  const absentCount = attendance.filter(
-    (item) => item.status?.toLowerCase() === "absent"
-  ).length;
-
-  const lateCount = attendance.filter(
-    (item) => item.status?.toLowerCase() === "late"
-  ).length;
-
-  const getStatusClasses = (status) => {
-    switch (status?.toLowerCase()) {
-      case "present":
-        return "bg-green-100 text-green-700";
-
-      case "late":
-        return "bg-yellow-100 text-yellow-700";
-
-      case "absent":
-        return "bg-red-100 text-red-700";
-
-      case "leave":
-        return "bg-blue-100 text-blue-700";
-
-      default:
-        return "bg-gray-100 text-gray-600";
+    if (todayAttendance.checkIn) {
+      return {
+        label: "Working",
+        className:
+          "bg-[#FFF7E6] text-[#A66B00]",
+      };
     }
+
+    return {
+      label: "Not Marked",
+      className:
+        "bg-[#F1F4F4] text-[#687A78]",
+    };
   };
 
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case "present":
-        return <CheckCircle size={15} />;
+  const todayStatus = getStatus();
 
-      case "late":
-        return <AlertCircle size={15} />;
-
-      case "absent":
-        return <XCircle size={15} />;
-
-      case "leave":
-        return <CalendarDays size={15} />;
-
-      default:
-        return <AlertCircle size={15} />;
-    }
-  };
+  // --------------------------------------------------
+  // Render
+  // --------------------------------------------------
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#073F42]">
-          Attendance
-        </h1>
+    <div className="space-y-5 sm:space-y-6">
+      {/* =========================================
+          PAGE HEADER
+      ========================================== */}
 
-        <p className="mt-1 text-sm text-gray-500">
-          Track your attendance, working hours, and attendance history.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-[#153B37] sm:text-2xl">
+            Attendance
+          </h2>
+
+          <p className="mt-1 text-sm text-[#6B7F7B]">
+            Mark your attendance using secure face verification.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-lg border border-[#DDEBE8] bg-white px-3 py-2 text-sm text-[#55716E] shadow-sm">
+          <CalendarDays className="h-4 w-4 text-[#08A6A0]" />
+
+          <span>{formattedDate}</span>
+        </div>
       </div>
 
-      {/* Today's Attendance */}
-      <section className="rounded-2xl bg-[#073F42] p-5 text-white shadow-sm sm:p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <UserCheck size={20} />
+      {/* =========================================
+          MESSAGE
+      ========================================== */}
 
-              <p className="text-sm font-medium text-[#B8CDCD]">
-                Today's Attendance
+      {message && (
+        <div
+          className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${
+            messageType === "error"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-[#BFE5E1] bg-[#E8F8F6] text-[#087F7B]"
+          }`}
+        >
+          {messageType === "error" ? (
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          ) : (
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+          )}
+
+          <span>{message}</span>
+        </div>
+      )}
+
+      {/* =========================================
+          TODAY ATTENDANCE
+      ========================================== */}
+
+      <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+        {/* Face Attendance Card */}
+
+        <div className="overflow-hidden rounded-2xl border border-[#DDEBE8] bg-white shadow-sm">
+          <div className="border-b border-[#E8EFEE] px-5 py-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+                <Camera className="h-5 w-5" />
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-[#153B37]">
+                  Face Attendance
+                </h3>
+
+                <p className="text-xs text-[#71837F]">
+                  Verify your identity using the camera
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 sm:p-6">
+            <div className="rounded-2xl bg-[#F4F9F8] p-5 text-center sm:p-8">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+                <UserCheck className="h-9 w-9" />
+              </div>
+
+              <h4 className="mt-5 text-lg font-semibold text-[#153B37]">
+                Mark your attendance
+              </h4>
+
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#71837F]">
+                Look directly at the camera and make sure
+                your face is clearly visible before verifying
+                your attendance.
               </p>
+
+              <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={
+                    Boolean(todayAttendance.checkIn)
+                  }
+                  onClick={() => openCamera("check-in")}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#078F8A] disabled:cursor-not-allowed disabled:bg-[#B8CDCD]"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Face Check-In
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    !todayAttendance.checkIn ||
+                    Boolean(todayAttendance.checkOut)
+                  }
+                  onClick={() => openCamera("check-out")}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-[#BFE5E1] bg-white px-5 py-3 text-sm font-semibold text-[#087F7B] transition hover:bg-[#E8F8F6] disabled:cursor-not-allowed disabled:border-[#DDEBE8] disabled:text-[#A7B7B4]"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Face Check-Out
+                </button>
+              </div>
             </div>
-
-            <h2 className="mt-2 text-2xl font-bold">
-              {profile?.name}
-            </h2>
-
-            <p className="mt-1 text-sm text-[#B8CDCD]">
-              {profile?.designation}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <AttendanceAction
-              icon={<LogIn size={18} />}
-              label="Check In"
-              value={todayAttendance?.checkIn || "Not checked in"}
-            />
-
-            <AttendanceAction
-              icon={<LogOut size={18} />}
-              label="Check Out"
-              value={todayAttendance?.checkOut || "Not checked out"}
-            />
           </div>
         </div>
-      </section>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <SummaryCard
-          title="Total Records"
-          value={attendance.length}
-          icon={<CalendarDays size={20} />}
-        />
+        {/* Today's Status */}
 
-        <SummaryCard
-          title="Present"
-          value={presentCount}
-          icon={<CheckCircle size={20} />}
-        />
-
-        <SummaryCard
-          title="Late"
-          value={lateCount}
-          icon={<Clock size={20} />}
-        />
-
-        <SummaryCard
-          title="Absent"
-          value={absentCount}
-          icon={<XCircle size={20} />}
-        />
-      </div>
-
-      {/* Attendance History */}
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-        {/* Section Header */}
-        <div className="flex flex-col gap-4 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-semibold text-[#073F42]">
-              Attendance History
-            </h2>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Your recent attendance records
-            </p>
-          </div>
-
-          <select
-            value={monthFilter}
-            onChange={(e) => setMonthFilter(e.target.value)}
-            className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-[#08A6A0]"
-          >
-            <option value="All">All Records</option>
-
-            <option value="2026-09">September 2026</option>
-            <option value="2026-08">August 2026</option>
-            <option value="2026-07">July 2026</option>
-          </select>
-        </div>
-
-        {/* Empty State */}
-        {filteredAttendance.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
-              <CalendarDays size={26} />
-            </div>
-
-            <h3 className="text-lg font-semibold text-[#073F42]">
-              No Attendance Records
+        <div className="rounded-2xl border border-[#DDEBE8] bg-white shadow-sm">
+          <div className="border-b border-[#E8EFEE] px-5 py-4 sm:px-6">
+            <h3 className="font-semibold text-[#153B37]">
+              Today's Attendance
             </h3>
 
-            <p className="mt-1 text-sm text-gray-500">
-              There are no attendance records for the selected period.
+            <p className="mt-1 text-xs text-[#71837F]">
+              {formattedDate}
             </p>
           </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[750px]">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Date
-                    </th>
 
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Check In
-                    </th>
+          <div className="space-y-5 p-5 sm:p-6">
+            {/* Status */}
 
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Check Out
-                    </th>
+            <div className="flex items-center justify-between rounded-xl bg-[#F7FAFA] p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-[#08A6A0] shadow-sm">
+                  <Clock3 className="h-5 w-5" />
+                </div>
 
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Working Hours
-                    </th>
+                <div>
+                  <p className="text-xs text-[#71837F]">
+                    Status
+                  </p>
 
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredAttendance.map((record) => (
-                    <AttendanceRow
-                      key={record.id || record.date}
-                      record={record}
-                      getStatusClasses={getStatusClasses}
-                      getStatusIcon={getStatusIcon}
-                    />
-                  ))}
-                </tbody>
-              </table>
+                  <span
+                    className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${todayStatus.className}`}
+                  >
+                    {todayStatus.label}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="space-y-3 p-4 lg:hidden">
-              {filteredAttendance.map((record) => (
-                <AttendanceCard
-                  key={record.id || record.date}
-                  record={record}
-                  getStatusClasses={getStatusClasses}
-                  getStatusIcon={getStatusIcon}
-                />
-              ))}
+            {/* Check In */}
+
+            <div className="flex items-center justify-between border-b border-[#EDF2F1] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
+                  <LogIn className="h-4 w-4" />
+                </div>
+
+                <div>
+                  <p className="text-xs text-[#71837F]">
+                    Check-In
+                  </p>
+
+                  <p className="mt-0.5 text-sm font-semibold text-[#153B37]">
+                    {formatTime(todayAttendance.checkIn)}
+                  </p>
+                </div>
+              </div>
+
+              {todayAttendance.checkIn && (
+                <CheckCircle2 className="h-5 w-5 text-[#08A6A0]" />
+              )}
             </div>
-          </>
-        )}
-      </section>
-    </div>
-  );
-};
 
-/* Attendance Action */
-const AttendanceAction = ({ icon, label, value }) => {
-  return (
-    <div className="min-w-[180px] rounded-xl bg-white/10 p-4">
-      <div className="flex items-center gap-2 text-[#B8CDCD]">
-        {icon}
+            {/* Check Out */}
 
-        <span className="text-xs font-medium">
-          {label}
-        </span>
+            <div className="flex items-center justify-between border-b border-[#EDF2F1] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F2F5F5] text-[#55716E]">
+                  <LogOut className="h-4 w-4" />
+                </div>
+
+                <div>
+                  <p className="text-xs text-[#71837F]">
+                    Check-Out
+                  </p>
+
+                  <p className="mt-0.5 text-sm font-semibold text-[#153B37]">
+                    {formatTime(todayAttendance.checkOut)}
+                  </p>
+                </div>
+              </div>
+
+              {todayAttendance.checkOut && (
+                <CheckCircle2 className="h-5 w-5 text-[#08A6A0]" />
+              )}
+            </div>
+
+            {/* Working Hours */}
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-[#71837F]">
+                  Working Hours
+                </p>
+
+                <p className="mt-1 text-lg font-semibold text-[#153B37]">
+                  {calculateWorkingHours(
+                    todayAttendance.checkIn,
+                    todayAttendance.checkOut
+                  )}
+                </p>
+              </div>
+
+              <ShieldCheck className="h-6 w-6 text-[#08A6A0]" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <p className="mt-2 text-sm font-semibold text-white">
-        {value}
-      </p>
-    </div>
-  );
-};
+      {/* =========================================
+          MONTHLY SUMMARY
+      ========================================== */}
 
-/* Desktop Row */
-const AttendanceRow = ({
-  record,
-  getStatusClasses,
-  getStatusIcon,
-}) => {
-  return (
-    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          <CalendarDays size={16} className="text-[#08A6A0]" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-[#DDEBE8] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#71837F]">
+            Present Days
+          </p>
 
-          <span className="text-sm font-medium text-[#073F42]">
-            {record.date}
-          </span>
+          <p className="mt-2 text-2xl font-semibold text-[#153B37]">
+            {presentDays}
+          </p>
         </div>
-      </td>
 
-      <td className="px-6 py-4">
-        <TimeValue value={record.checkIn} />
-      </td>
+        <div className="rounded-xl border border-[#DDEBE8] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#71837F]">
+            Completed Days
+          </p>
 
-      <td className="px-6 py-4">
-        <TimeValue value={record.checkOut} />
-      </td>
+          <p className="mt-2 text-2xl font-semibold text-[#153B37]">
+            {completedDays}
+          </p>
+        </div>
 
-      <td className="px-6 py-4">
-        <span className="text-sm font-medium text-gray-600">
-          {record.workingHours || record.hours || "N/A"}
-        </span>
-      </td>
+        <div className="rounded-xl border border-[#DDEBE8] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#71837F]">
+            Working Hours
+          </p>
 
-      <td className="px-6 py-4">
-        <StatusBadge
-          status={record.status}
-          getStatusClasses={getStatusClasses}
-          getStatusIcon={getStatusIcon}
-        />
-      </td>
-    </tr>
-  );
-};
+          <p className="mt-2 text-2xl font-semibold text-[#153B37]">
+            {totalWorkingHours}
+          </p>
+        </div>
 
-/* Mobile Card */
-const AttendanceCard = ({
-  record,
-  getStatusClasses,
-  getStatusIcon,
-}) => {
-  return (
-    <div className="rounded-xl border border-gray-100 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-            <CalendarDays size={17} />
-          </div>
+        <div className="rounded-xl border border-[#DDEBE8] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#71837F]">
+            Attendance Rate
+          </p>
 
+          <p className="mt-2 text-2xl font-semibold text-[#087F7B]">
+            {filteredAttendance.length
+              ? Math.round(
+                  (presentDays /
+                    filteredAttendance.length) *
+                    100
+                )
+              : 0}
+            %
+          </p>
+        </div>
+      </div>
+
+      {/* =========================================
+          ATTENDANCE HISTORY
+      ========================================== */}
+
+      <div className="overflow-hidden rounded-2xl border border-[#DDEBE8] bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-[#E8EFEE] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <p className="text-sm font-semibold text-[#073F42]">
-              {record.date}
-            </p>
+            <h3 className="font-semibold text-[#153B37]">
+              Attendance History
+            </h3>
 
-            <p className="text-xs text-gray-400">
-              {record.workingHours || record.hours || "Working hours unavailable"}
+            <p className="mt-1 text-xs text-[#71837F]">
+              Review your previous attendance records.
             </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-[#08A6A0]" />
+
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(event) =>
+                setSelectedMonth(event.target.value)
+              }
+              className="rounded-lg border border-[#DDEBE8] bg-white px-3 py-2 text-sm text-[#315A57] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+            />
           </div>
         </div>
 
-        <StatusBadge
-          status={record.status}
-          getStatusClasses={getStatusClasses}
-          getStatusIcon={getStatusIcon}
-        />
+        {/* Desktop Table */}
+
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[720px]">
+            <thead>
+              <tr className="border-b border-[#E8EFEE] bg-[#F8FAFA]">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#71837F]">
+                  Date
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#71837F]">
+                  Check-In
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#71837F]">
+                  Check-Out
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#71837F]">
+                  Working Hours
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#71837F]">
+                  Status
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredAttendance.length > 0 ? (
+                filteredAttendance.map((record) => (
+                  <tr
+                    key={`${record.employeeId}-${record.date}`}
+                    className="border-b border-[#EDF2F1] last:border-0 hover:bg-[#FAFCFC]"
+                  >
+                    <td className="px-6 py-4 text-sm font-medium text-[#153B37]">
+                      {new Date(
+                        `${record.date}T00:00:00`
+                      ).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-[#55716E]">
+                      {formatTime(record.checkIn)}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-[#55716E]">
+                      {formatTime(record.checkOut)}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm font-medium text-[#315A57]">
+                      {calculateWorkingHours(
+                        record.checkIn,
+                        record.checkOut
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          record.status === "Present"
+                            ? "bg-[#E8F8F6] text-[#087F7B]"
+                            : record.status === "Completed"
+                            ? "bg-[#E8F8F6] text-[#087F7B]"
+                            : record.status === "Absent"
+                            ? "bg-red-50 text-red-600"
+                            : "bg-[#F1F4F4] text-[#687A78]"
+                        }`}
+                      >
+                        {record.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="px-6 py-12 text-center"
+                  >
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F1F6F5] text-[#7A918E]">
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+
+                    <p className="mt-3 text-sm font-medium text-[#315A57]">
+                      No attendance records
+                    </p>
+
+                    <p className="mt-1 text-xs text-[#71837F]">
+                      There are no attendance records for
+                      this month.
+                    </p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards */}
+
+        <div className="space-y-3 p-4 md:hidden">
+          {filteredAttendance.length > 0 ? (
+            filteredAttendance.map((record) => (
+              <div
+                key={`${record.employeeId}-${record.date}`}
+                className="rounded-xl border border-[#E3EEEC] bg-[#FAFCFC] p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[#153B37]">
+                      {new Date(
+                        `${record.date}T00:00:00`
+                      ).toLocaleDateString("en-IN", {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      record.status === "Present" ||
+                      record.status === "Completed"
+                        ? "bg-[#E8F8F6] text-[#087F7B]"
+                        : record.status === "Absent"
+                        ? "bg-red-50 text-red-600"
+                        : "bg-[#F1F4F4] text-[#687A78]"
+                    }`}
+                  >
+                    {record.status}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-white p-3">
+                    <p className="text-[11px] text-[#71837F]">
+                      Check-In
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-[#315A57]">
+                      {formatTime(record.checkIn)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg bg-white p-3">
+                    <p className="text-[11px] text-[#71837F]">
+                      Check-Out
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-[#315A57]">
+                      {formatTime(record.checkOut)}
+                    </p>
+                  </div>
+
+                  <div className="col-span-2 rounded-lg bg-white p-3">
+                    <p className="text-[11px] text-[#71837F]">
+                      Working Hours
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-[#315A57]">
+                      {calculateWorkingHours(
+                        record.checkIn,
+                        record.checkOut
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F1F6F5] text-[#7A918E]">
+                <CalendarDays className="h-5 w-5" />
+              </div>
+
+              <p className="mt-3 text-sm font-medium text-[#315A57]">
+                No attendance records
+              </p>
+
+              <p className="mt-1 text-xs text-[#71837F]">
+                There are no attendance records for this
+                month.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <TimeBox
-          icon={<LogIn size={16} />}
-          label="Check In"
-          value={record.checkIn}
-        />
+      {/* =========================================
+          FACE CAMERA MODAL
+      ========================================== */}
 
-        <TimeBox
-          icon={<LogOut size={16} />}
-          label="Check Out"
-          value={record.checkOut}
-        />
-      </div>
-    </div>
-  );
-};
+      {cameraOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+            {/* Modal Header */}
 
-/* Time Value */
-const TimeValue = ({ value }) => {
-  return (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
-      <Clock size={15} className="text-[#08A6A0]" />
-      {value || "N/A"}
-    </div>
-  );
-};
+            <div className="flex items-center justify-between border-b border-[#E8EFEE] px-5 py-4">
+              <div>
+                <h3 className="font-semibold text-[#153B37]">
+                  Face{" "}
+                  {cameraMode === "check-in"
+                    ? "Check-In"
+                    : "Check-Out"}
+                </h3>
 
-/* Time Box */
-const TimeBox = ({ icon, label, value }) => {
-  return (
-    <div className="rounded-lg bg-gray-50 p-3">
-      <div className="flex items-center gap-2 text-gray-400">
-        {icon}
+                <p className="mt-1 text-xs text-[#71837F]">
+                  Position your face inside the frame
+                </p>
+              </div>
 
-        <span className="text-[11px] font-medium uppercase">
-          {label}
-        </span>
-      </div>
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#55716E] transition hover:bg-[#E8F8F6] hover:text-[#153B37]"
+                aria-label="Close camera"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-      <p className="mt-1 text-sm font-semibold text-[#073F42]">
-        {value || "N/A"}
-      </p>
-    </div>
-  );
-};
+            {/* Camera */}
 
-/* Status Badge */
-const StatusBadge = ({
-  status,
-  getStatusClasses,
-  getStatusIcon,
-}) => {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${getStatusClasses(
-        status
-      )}`}
-    >
-      {getStatusIcon(status)}
-      {status || "Unknown"}
-    </span>
-  );
-};
+            <div className="p-5">
+              {cameraError ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+                  <AlertCircle className="mx-auto h-10 w-10 text-red-500" />
 
-/* Summary Card */
-const SummaryCard = ({ title, value, icon }) => {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-        {icon}
-      </div>
+                  <p className="mt-4 text-sm font-medium text-red-700">
+                    Camera access required
+                  </p>
 
-      <p className="text-xs font-medium text-gray-500">
-        {title}
-      </p>
+                  <p className="mt-2 text-xs leading-5 text-red-600">
+                    {cameraError}
+                  </p>
 
-      <p className="mt-1 text-2xl font-bold text-[#073F42]">
-        {value}
-      </p>
+                  <button
+                    type="button"
+                    onClick={() => openCamera(cameraMode)}
+                    className="mt-5 flex mx-auto items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Try Again
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="relative aspect-video overflow-hidden rounded-2xl bg-[#102F31]">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover"
+                    />
+
+                    {/* Face Frame */}
+
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <div className="relative h-[65%] w-[48%] rounded-[45%] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.2)]">
+                        <div className="absolute left-1/2 top-2 h-1.5 w-20 -translate-x-1/2 rounded-full bg-[#08A6A0]" />
+                      </div>
+                    </div>
+
+                    {!cameraReady && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#102F31]/80">
+                        <div className="text-center text-white">
+                          <Camera className="mx-auto h-8 w-8 animate-pulse" />
+
+                          <p className="mt-3 text-sm">
+                            Starting camera...
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 rounded-xl bg-[#E8F8F6] px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#08A6A0]" />
+
+                      <div>
+                        <p className="text-sm font-medium text-[#087F7B]">
+                          Face verification
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-[#4D716D]">
+                          Keep your face clearly visible and
+                          look directly at the camera.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!cameraReady || processing}
+                    onClick={captureFace}
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#078F8A] disabled:cursor-not-allowed disabled:bg-[#AFC8C5]"
+                  >
+                    {processing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Verifying Face...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4" />
+                        Verify &{" "}
+                        {cameraMode === "check-in"
+                          ? "Check In"
+                          : "Check Out"}
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
