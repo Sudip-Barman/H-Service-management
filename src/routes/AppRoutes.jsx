@@ -53,7 +53,7 @@ import WorkforceAttendance from "../pages/workforce/Attendance";
 import WorkforceLeave from "../pages/workforce/Leave";
 import WorkforceNotifications from "../pages/workforce/Notifications";
 import WorkforceSettings from "../pages/workforce/Settings";
-
+import HelpSupport from "../pages/workforce/HelpSupport";
 
 const AppRoutes = () => {
   return (
@@ -180,6 +180,7 @@ const AppRoutes = () => {
 
         {/* Settings */}
         <Route path="settings" element={<WorkforceSettings />} />
+        <Route path="help" element={<HelpSupport />} />
         </Route>
         {/* ================= FALLBACK ================= */}
       
