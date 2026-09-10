@@ -66,7 +66,7 @@ const menuSections = [
       },
       {
         label: "Rooms & Beds",
-        path: "/admin/rooms-beds",
+        path: "/admin/rooms",
         icon: Bed,
       },
     ],
@@ -128,11 +128,6 @@ const menuSections = [
         label: "Attendance",
         path: "/admin/attendance",
         icon: UserCog,
-      },
-      {
-        label: "Staff Documents",
-        path: "/admin/staff-documents",
-        icon: FileText,
       },
     ],
   },

@@ -15,7 +15,7 @@ import Doctors from "../pages/admin/doctors/Doctors";
 import Nurses from "../pages/admin/nurses/Nurses";
 import Staff from "../pages/admin/staff/Staff";
 import Services from "../pages/admin/services/Services";
-import ServiceRequests from "../pages/admin/requests/ServiceRequests";
+// import ServiceRequests from "../pages/admin/requests/ServiceRequests";
 import Attendance from "../pages/admin/attendance/Attendance";
 import Bookings from "../pages/admin/bookings/Booking";
 import Appointments from "../pages/admin/appointment/Appointments";
@@ -32,7 +32,13 @@ import Feedback from "../pages/admin/feedback/Feedback";
 import Settings from "../pages/admin/setting/Settings";
 
 
+import Medicines from "../pages/admin/medicine/Medicine";
+import Admission from "../pages/admin/admissions/Admissions";
 import User from "../pages/admin/User/User";
+import RoomBed from "../pages/admin/roombed/RoomBed";
+import LabTests from "../pages/admin/labtests/LabTests";
+import Request from "../pages/admin/requests/Requests";
+import Billings from "../pages/admin/billings/Billings";
 
 const AppRoutes = () => {
   return (
@@ -89,15 +95,24 @@ const AppRoutes = () => {
         <Route path="reception" element={<AdminModulePage />} />
         <Route path="billing" element={<AdminModulePage />} />
         <Route path="notifications" element={<Notification />} />
+        <Route path="medicine" element={<Medicines />} />
+        <Route path="food" element={<Food/>} />
+        <Route path="emergency" element={<Emergency />} />
+
+        {/* Hospital Operations */}
+        <Route path="lab-tests" element={<LabTests />} />
+        <Route path="billing" element={<Billings />} />
+        <Route path="notifications" element={<AdminModulePage />} />
 
         {/* Clinical / Hospital Management */}
-        <Route path="admissions" element={<AdminModulePage />} />
-        <Route path="rooms" element={<AdminModulePage />} />
+        <Route path="admissions" element={<Admission />} />
+        <Route path="rooms" element={<RoomBed />} />
         <Route path="beds" element={<AdminModulePage />} />
         <Route path="medical-records" element={<AdminModulePage />} />
         <Route path="laboratory" element={<AdminModulePage />} />
         <Route path="pharmacy" element={<Medicine />} />
         <Route path="inventory" element={<Inventory />} />
+        <Route path="inventory" element={<AdminModulePage />} />
 
         {/* Finance */}
         <Route path="payments" element={<AdminModulePage />} />
@@ -107,9 +122,10 @@ const AppRoutes = () => {
         <Route path="complaints" element={<AdminModulePage />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="documents" element={<AdminModulePage />} />
+        <Route path="requests" element={<Request />} />
 
         {/* Reports */}
-        <Route path="reports" element={<ServiceRequests />} />
+        {/* <Route path="reports" element={<ServiceRequests />} /> */}
 
         {/* System */}
         <Route path="roles" element={<AdminModulePage />} />
@@ -122,7 +138,7 @@ const AppRoutes = () => {
 
       <Route
         path="*"
-        element={<Navigate to="/" replace />}
+        element={<Navigate to="/admin" replace />}
       />
     </Routes>
   );
