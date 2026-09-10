@@ -32,6 +32,8 @@ import User from "../pages/admin/User/User";
 import RoomBed from "../pages/admin/roombed/RoomBed";
 import LabTests from "../pages/admin/labtests/LabTests";
 import Request from "../pages/admin/requests/Requests";
+import Billings from "../pages/admin/billings/Billings";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -85,7 +87,7 @@ const AppRoutes = () => {
 
         {/* Hospital Operations */}
         <Route path="lab-tests" element={<LabTests />} />
-        <Route path="billing" element={<AdminModulePage />} />
+        <Route path="billing" element={<Billings />} />
         <Route path="notifications" element={<AdminModulePage />} />
 
         {/* Clinical / Hospital Management */}
