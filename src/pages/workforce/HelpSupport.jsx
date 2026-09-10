@@ -153,99 +153,99 @@ export default function HelpSupport({ user }) {
           </div>
         </div>
 
-       <div className="rounded-2xl border border-[#DCE7E6] bg-white p-5 shadow-sm sm:p-6">
-  {/* Form Fields */}
-  <div className="grid gap-5 md:grid-cols-2">
+        <div className="rounded-2xl border border-[#DCE7E6] bg-white p-5 shadow-sm sm:p-6">
+          {/* Form Fields */}
+          <div className="grid gap-5 md:grid-cols-2">
 
-    {/* Full Name */}
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-[#173F41]">
-        Full Name
-      </label>
+            {/* Full Name */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#173F41]">
+              Full Name
+              </label>
 
-      <input
-        type="text"
-        placeholder="Enter your name"
-        className="h-12 w-full rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 text-sm text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
-      />
-    </div>
+              <input
+                type="text"
+                placeholder="Enter your name"
+                className="h-12 w-full rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 text-sm text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
+              />
+            </div>
 
-    {/* Email */}
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-[#173F41]">
-        Email Address
-      </label>
+            {/* Email */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#173F41]">
+              Email Address
+              </label>
 
-      <input
-        type="email"
-        placeholder="you@example.com"
-        className="h-12 w-full rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 text-sm text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
-      />
-    </div>
+              <input
+              type="email"
+              placeholder="you@example.com"
+              className="h-12 w-full rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 text-sm text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
+              />
+            </div>
 
-    {/* Phone */}
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-[#173F41]">
-        Phone Number
-      </label>
+            {/* Phone */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#173F41]">
+              Phone Number
+              </label>
 
-      <input
-        type="tel"
-        placeholder="+91 XXXXX XXXXX"
-        className="h-12 w-full rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 text-sm text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
-      />
-    </div>
+              <input
+              type="tel"
+              placeholder="+91 XXXXX XXXXX"
+              className="h-12 w-full rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 text-sm text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
+              />
+            </div>
 
-    {/* Subject */}
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-[#173F41]">
-        Subject
-      </label>
+            {/* Subject */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#173F41]">
+              Subject
+              </label>
 
-      <div className="relative">
-        <select
-          defaultValue=""
-          className="h-12 w-full appearance-none rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 pr-10 text-sm text-[#7A8D8D] outline-none transition-all focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
-        >
-          <option value="" disabled hidden>
-            Select a subject
-          </option>
-          <option>Schedule issue</option>
-          <option>Patient care support</option>
-          <option>Attendance problem</option>
-          <option>Technical problem</option>
-          <option>Other</option>
-        </select>
+              <div className="relative">
+                <select
+                defaultValue=""
+                className="h-12 w-full appearance-none rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 pr-10 text-sm text-[#7A8D8D] outline-none transition-all focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
+                >
+                 <option value="" disabled hidden>
+                 Select a subject
+                 </option>
+                 <option>Schedule issue</option>
+                 <option>Patient care support</option>
+                 <option>Attendance problem</option>
+                 <option>Technical problem</option>
+                 <option>Other</option>
+                </select>
 
-        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[#5E7979]">
-          ▼
-        </span>
-      </div>
-    </div>
-  </div>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[#5E7979]">
+               ▼
+              </span>
+            </div>
+          </div>
+        </div>
 
-  {/* Message */}
-  <div className="mt-5">
-    <label className="mb-2 block text-sm font-semibold text-[#173F41]">
-      Message
-    </label>
+            {/* Message */}
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-semibold text-[#173F41]">
+              Message
+              </label>
 
-    <textarea
-      rows="6"
-      placeholder="Tell us how we can help..."
-      className="w-full resize-none rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 py-3 text-sm leading-6 text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
-    />
-  </div>
+              <textarea
+              rows="6"
+              placeholder="Tell us how we can help..."
+              className="w-full resize-none rounded-lg border border-[#D7E3E2] bg-[#FAFCFC] px-4 py-3 text-sm leading-6 text-[#1d2d2d] outline-none transition-all placeholder:text-[#9AA9A9] focus:border-[#08A6A0] focus:bg-white focus:ring-4 focus:ring-[#08A6A0]/10"
+              />
+            </div>
 
-  {/* Button */}
-  <button
-    type="button"
-    className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_5px_14px_rgba(8,166,160,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#078F8A] hover:shadow-[0_7px_18px_rgba(8,166,160,0.30)]"
-  >
-    <Send size={16} />
-    Send Message
-  </button>
-</div>
+            {/* Button */}
+            <button
+             type="button"
+             className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_5px_14px_rgba(8,166,160,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#078F8A] hover:shadow-[0_7px_18px_rgba(8,166,160,0.30)]"
+            >
+            <Send size={16} />
+             Send Message
+            </button>
+        </div>
       </div>
     </div>
   );
