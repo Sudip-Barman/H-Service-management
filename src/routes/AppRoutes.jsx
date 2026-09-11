@@ -21,7 +21,7 @@ import Bookings from "../pages/admin/bookings/Booking";
 import Appointments from "../pages/admin/appointment/Appointments";
 import Schedules from "../pages/admin/schedules/Schedules";
 import StaffShifts from "../pages/admin/shifts/StaffShifts";
-import Assignments from "../pages/admin/Assignments/Assignments";
+// import Assignments from "../pages/admin/assignments/Assignments";
 import BloodBank from "../pages/admin/bloods/BloodBank";
 import Medicine from "../pages/admin/medicine/Medicine";
 import Food from "../pages/admin/food/Food"; 
@@ -97,7 +97,7 @@ const AppRoutes = () => {
 
         {/* Workforce */}
         <Route path="shifts" element={<StaffShifts />} />
-        <Route path="assignments" element={<Assignments />} />
+        {/* <Route path="assignments" element={<Assignments />} /> */}
         <Route path="attendance" element={<Attendance/>} />
 
         {/* Hospital Services */}
