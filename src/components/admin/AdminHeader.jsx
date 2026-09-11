@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   Menu,
@@ -11,6 +11,27 @@ import {
 
 const AdminHeader = ({ onMenuClick }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Reference for the complete profile area
+  const profileRef = useRef(null);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#E2EFED] bg-white">
@@ -58,11 +79,12 @@ const AdminHeader = ({ onMenuClick }) => {
             </div>
           </div>
 
-          {/* Mobile title */}
+          {/* Mobile Title */}
           <div className="sm:hidden">
             <p className="text-sm font-bold text-[#073F42]">
               Admin Portal
             </p>
+
             <p className="text-[10px] text-[#819596]">
               CareCore
             </p>
@@ -88,7 +110,7 @@ const AdminHeader = ({ onMenuClick }) => {
           >
             <Bell className="h-5 w-5" />
 
-            {/* Notification count */}
+            {/* Notification Count */}
             <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#08A6A0] px-1 text-[9px] font-bold text-white">
               3
             </span>
@@ -98,12 +120,17 @@ const AdminHeader = ({ onMenuClick }) => {
           <div className="mx-1 hidden h-8 w-px bg-[#E2EFED] sm:block" />
 
           {/* Profile */}
-          <div className="relative">
+          <div
+            ref={profileRef}
+            className="relative"
+          >
+            {/* Profile Button */}
             <button
               type="button"
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              onClick={() => setShowProfileMenu((prev) => !prev)}
               className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-[#F4FAF9]"
               aria-expanded={showProfileMenu}
+              aria-haspopup="true"
             >
               {/* Avatar */}
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D7F4F1] text-sm font-bold text-[#087F7A]">
@@ -121,6 +148,7 @@ const AdminHeader = ({ onMenuClick }) => {
                 </p>
               </div>
 
+              {/* Arrow */}
               <ChevronDown
                 className={`hidden h-4 w-4 text-[#819596] transition-transform md:block ${
                   showProfileMenu ? "rotate-180" : ""
@@ -144,6 +172,7 @@ const AdminHeader = ({ onMenuClick }) => {
 
                 {/* Menu */}
                 <div className="py-1">
+                  {/* My Profile */}
                   <button
                     type="button"
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#31585A] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
@@ -152,6 +181,7 @@ const AdminHeader = ({ onMenuClick }) => {
                     My Profile
                   </button>
 
+                  {/* Settings */}
                   <button
                     type="button"
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#31585A] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
