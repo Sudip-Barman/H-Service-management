@@ -1,473 +1,618 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Bell,
-  Lock,
-  ShieldCheck,
-  UserRound,
+  Check,
+  ChevronRight,
+  KeyRound,
+  LogOut,
   Mail,
+  Moon,
+  Monitor,
+  Palette,
+  ShieldCheck,
   Smartphone,
-  Save,
-  Eye,
-  EyeOff,
-  CheckCircle2,
+  Sun,
+  UserRound,
+  Volume2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { getWorkforceUser } from "../../data/workforceData";
 
-export default function Settings({ user }) {
-  const employeeId = user?.id || "EMP-1001";
-  const profile = getWorkforceUser(employeeId);
+const Settings = ({ user }) => {
+  const navigate = useNavigate();
 
-  const [notifications, setNotifications] = useState({
-    appointments: true,
-    attendance: true,
-    assignments: true,
-    system: true,
-  });
+  const employeeId =
+    user?.employeeId ||
+    user?.id ||
+    localStorage.getItem("employeeId") ||
+    "EMP-1001";
 
-  const [privacy, setPrivacy] = useState({
-    showPhone: true,
-    showEmail: true,
-  });
+  const profile =
+    getWorkforceUser(employeeId) ||
+    getWorkforceUser("EMP-1001");
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const [preferences, setPreferences] = useState({
+    email:
+      localStorage.getItem(
+        "workforce_email_notifications"
+      ) !== "false",
 
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false,
+    push:
+      localStorage.getItem(
+        "workforce_push_notifications"
+      ) !== "false",
+
+    appointment:
+      localStorage.getItem(
+        "workforce_appointment_notifications"
+      ) !== "false",
+
+    sound:
+      localStorage.getItem(
+        "workforce_notification_sound"
+      ) !== "false",
+
+    theme:
+      localStorage.getItem(
+        "workforce_theme"
+      ) || "light",
   });
 
   const [saved, setSaved] = useState(false);
 
-  const handlePasswordChange = (event) => {
-    const { name, value } = event.target;
+  useEffect(() => {
+    localStorage.setItem(
+      "workforce_email_notifications",
+      String(preferences.email)
+    );
 
-    setPasswordData((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  };
+    localStorage.setItem(
+      "workforce_push_notifications",
+      String(preferences.push)
+    );
 
-  const handleSave = () => {
+    localStorage.setItem(
+      "workforce_appointment_notifications",
+      String(preferences.appointment)
+    );
+
+    localStorage.setItem(
+      "workforce_notification_sound",
+      String(preferences.sound)
+    );
+
+    localStorage.setItem(
+      "workforce_theme",
+      preferences.theme
+    );
+
     setSaved(true);
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setSaved(false);
-    }, 2500);
-  };
+    }, 1000);
 
-  const toggleNotification = (key) => {
-    setNotifications((current) => ({
+    return () => clearTimeout(timer);
+  }, [preferences]);
+
+  const updatePreference = (key, value) => {
+    setPreferences((current) => ({
       ...current,
-      [key]: !current[key],
+      [key]: value,
     }));
   };
 
-  const togglePrivacy = (key) => {
-    setPrivacy((current) => ({
-      ...current,
-      [key]: !current[key],
-    }));
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user");
+    localStorage.removeItem("employeeId");
+
+    window.dispatchEvent(
+      new Event("auth-change")
+    );
+
+    navigate("/login");
   };
+
+  const fullName =
+    profile?.name ||
+    user?.name ||
+    "Workforce User";
+
+  const role =
+    profile?.role ||
+    user?.role ||
+    "Staff";
+
+  const department =
+    profile?.department ||
+    "Hospital Services";
+
+  const initials =
+    fullName
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part.charAt(0))
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "WU";
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#073F42]">Settings</h1>
+    <div className="mx-auto w-full max-w-5xl">
+      {/* ================================================================ */}
+      {/* Header                                                           */}
+      {/* ================================================================ */}
 
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your account, notifications, privacy, and security settings.
-        </p>
-      </div>
+      <div className="flex flex-col gap-3 border-b border-[#DCEBE9] pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#08A6A0]" />
 
-      {/* Save Message */}
-      {saved && (
-        <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle2 size={18} />
-          <span>Your settings have been saved successfully.</span>
-        </div>
-      )}
-
-      {/* Account Information */}
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-              <UserRound size={20} />
-            </div>
-
-            <div>
-              <h2 className="font-semibold text-[#073F42]">
-                Account Information
-              </h2>
-
-              <p className="text-sm text-gray-500">
-                Basic information connected to your workforce account.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-              <UserRound size={17} className="text-gray-400" />
-
-              <span className="text-sm text-gray-700">
-                {profile?.name || "Workforce User"}
-              </span>
-            </div>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#08A6A0]">
+              Account Settings
+            </span>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Employee ID
-            </label>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#073F42] sm:text-3xl">
+            Settings
+          </h1>
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700">
-              {profile?.id || employeeId}
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Email
-            </label>
-
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-              <Mail size={17} className="text-gray-400" />
-
-              <span className="truncate text-sm text-gray-700">
-                {profile?.email || "Not available"}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Phone
-            </label>
-
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-              <Smartphone size={17} className="text-gray-400" />
-
-              <span className="text-sm text-gray-700">
-                {profile?.phone || "Not available"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Notification Settings */}
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-              <Bell size={20} />
-            </div>
-
-            <div>
-              <h2 className="font-semibold text-[#073F42]">
-                Notification Settings
-              </h2>
-
-              <p className="text-sm text-gray-500">
-                Choose which updates you want to receive.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="divide-y divide-gray-100">
-          {[
-            {
-              key: "appointments",
-              title: "Appointments",
-              description:
-                "Receive notifications about new and updated appointments.",
-            },
-            {
-              key: "attendance",
-              title: "Attendance",
-              description:
-                "Receive reminders and updates related to attendance.",
-            },
-            {
-              key: "assignments",
-              title: "Assignments",
-              description:
-                "Receive notifications when work assignments are created or changed.",
-            },
-            {
-              key: "system",
-              title: "System Notifications",
-              description:
-                "Receive important CareCore system announcements.",
-            },
-          ].map((item) => (
-            <div
-              key={item.key}
-              className="flex items-center justify-between gap-4 p-5"
-            >
-              <div>
-                <h3 className="text-sm font-medium text-gray-800">
-                  {item.title}
-                </h3>
-
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  {item.description}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => toggleNotification(item.key)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                  notifications[item.key]
-                    ? "bg-[#08A6A0]"
-                    : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
-                    notifications[item.key]
-                      ? "left-6"
-                      : "left-1"
-                  }`}
-                />
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Privacy Settings */}
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-              <ShieldCheck size={20} />
-            </div>
-
-            <div>
-              <h2 className="font-semibold text-[#073F42]">
-                Privacy Settings
-              </h2>
-
-              <p className="text-sm text-gray-500">
-                Control what contact information is visible to authorized
-                workforce users.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="divide-y divide-gray-100">
-          {[
-            {
-              key: "showPhone",
-              title: "Show Phone Number",
-              description:
-                "Allow authorized hospital staff to view your phone number.",
-            },
-            {
-              key: "showEmail",
-              title: "Show Email Address",
-              description:
-                "Allow authorized hospital staff to view your email address.",
-            },
-          ].map((item) => (
-            <div
-              key={item.key}
-              className="flex items-center justify-between gap-4 p-5"
-            >
-              <div>
-                <h3 className="text-sm font-medium text-gray-800">
-                  {item.title}
-                </h3>
-
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  {item.description}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => togglePrivacy(item.key)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                  privacy[item.key]
-                    ? "bg-[#08A6A0]"
-                    : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
-                    privacy[item.key] ? "left-6" : "left-1"
-                  }`}
-                />
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Change Password */}
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-              <Lock size={20} />
-            </div>
-
-            <div>
-              <h2 className="font-semibold text-[#073F42]">
-                Change Password
-              </h2>
-
-              <p className="text-sm text-gray-500">
-                Update your workforce account password.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-3">
-          {/* Current Password */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Current Password
-            </label>
-
-            <div className="relative">
-              <input
-                type={showPassword.current ? "text" : "password"}
-                name="currentPassword"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-                placeholder="Enter current password"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-              />
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPassword((current) => ({
-                    ...current,
-                    current: !current.current,
-                  }))
-                }
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword.current ? (
-                  <EyeOff size={17} />
-                ) : (
-                  <Eye size={17} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* New Password */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              New Password
-            </label>
-
-            <div className="relative">
-              <input
-                type={showPassword.new ? "text" : "password"}
-                name="newPassword"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                placeholder="Enter new password"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-              />
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPassword((current) => ({
-                    ...current,
-                    new: !current.new,
-                  }))
-                }
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword.new ? (
-                  <EyeOff size={17} />
-                ) : (
-                  <Eye size={17} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Confirm Password
-            </label>
-
-            <div className="relative">
-              <input
-                type={showPassword.confirm ? "text" : "password"}
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                placeholder="Confirm new password"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
-              />
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPassword((current) => ({
-                    ...current,
-                    confirm: !current.confirm,
-                  }))
-                }
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword.confirm ? (
-                  <EyeOff size={17} />
-                ) : (
-                  <Eye size={17} />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-100 px-5 py-4">
-          <p className="text-xs text-gray-500">
-            Use a strong password containing a combination of letters,
-            numbers, and special characters.
+          <p className="mt-1.5 text-sm text-[#6B7F7B]">
+            Manage your account, notifications and
+            preferences.
           </p>
         </div>
-      </section>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={handleSave}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#08A6A0] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#078f8a]"
+        <div
+          className={`flex items-center gap-1.5 text-xs font-medium transition-opacity ${
+            saved
+              ? "opacity-100 text-[#16834A]"
+              : "opacity-0"
+          }`}
         >
-          <Save size={17} />
-          Save Changes
-        </button>
+          <Check className="h-3.5 w-3.5" />
+          Saved
+        </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* Account                                                          */}
+      {/* ================================================================ */}
+
+      <SettingsGroup
+        title="Account"
+        description="Your CareCore workforce account."
+      >
+        <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-base font-semibold text-[#087F7A]">
+              {initials}
+            </div>
+
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-semibold text-[#073F42]">
+                {fullName}
+              </h2>
+
+              <p className="mt-1 text-xs capitalize text-[#819596]">
+                {role} · {department}
+              </p>
+
+              <p className="mt-1 text-[11px] text-[#9AAEAF]">
+                Employee ID:{" "}
+                <span className="font-medium text-[#55716E]">
+                  {profile?.id || employeeId}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/workforce/profile")
+            }
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[#DCEBE9] px-4 text-xs font-semibold text-[#31585A] transition hover:border-[#B9DAD6] hover:bg-[#F5FAF9] hover:text-[#087F7A]"
+          >
+            <UserRound className="h-3.5 w-3.5" />
+            View profile
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </SettingsGroup>
+
+      {/* ================================================================ */}
+      {/* Notifications                                                     */}
+      {/* ================================================================ */}
+
+      <SettingsGroup
+        icon={<Bell className="h-4 w-4" />}
+        title="Notifications"
+        description="Control how CareCore keeps you informed."
+      >
+        <PreferenceRow
+          icon={<Mail className="h-4 w-4" />}
+          title="Email notifications"
+          description="Receive important workforce updates by email."
+          value={preferences.email}
+          onChange={(value) =>
+            updatePreference("email", value)
+          }
+        />
+
+        <PreferenceRow
+          icon={<Smartphone className="h-4 w-4" />}
+          title="Push notifications"
+          description="Receive notifications while using the workforce portal."
+          value={preferences.push}
+          onChange={(value) =>
+            updatePreference("push", value)
+          }
+        />
+
+        <PreferenceRow
+          icon={<Bell className="h-4 w-4" />}
+          title="Appointment notifications"
+          description="Get notified about upcoming or changed appointments."
+          value={preferences.appointment}
+          onChange={(value) =>
+            updatePreference(
+              "appointment",
+              value
+            )
+          }
+        />
+
+        <PreferenceRow
+          icon={<Volume2 className="h-4 w-4" />}
+          title="Notification sounds"
+          description="Play a sound when a new notification is received."
+          value={preferences.sound}
+          onChange={(value) =>
+            updatePreference("sound", value)
+          }
+          last
+        />
+      </SettingsGroup>
+
+      {/* ================================================================ */}
+      {/* Appearance                                                        */}
+      {/* ================================================================ */}
+
+      <SettingsGroup
+        icon={<Palette className="h-4 w-4" />}
+        title="Appearance"
+        description="Choose how the workforce portal appears."
+      >
+        <div className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-[#073F42]">
+                Theme
+              </p>
+
+              <p className="mt-1 text-xs text-[#819596]">
+                Select the interface appearance you prefer.
+              </p>
+            </div>
+
+            <div className="flex rounded-lg border border-[#DCEBE9] bg-[#F8FCFB] p-1">
+              <ThemeOption
+                icon={
+                  <Sun className="h-3.5 w-3.5" />
+                }
+                label="Light"
+                active={
+                  preferences.theme === "light"
+                }
+                onClick={() =>
+                  updatePreference(
+                    "theme",
+                    "light"
+                  )
+                }
+              />
+
+              <ThemeOption
+                icon={
+                  <Moon className="h-3.5 w-3.5" />
+                }
+                label="Dark"
+                active={
+                  preferences.theme === "dark"
+                }
+                onClick={() =>
+                  updatePreference(
+                    "theme",
+                    "dark"
+                  )
+                }
+              />
+
+              <ThemeOption
+                icon={
+                  <Monitor className="h-3.5 w-3.5" />
+                }
+                label="System"
+                active={
+                  preferences.theme === "system"
+                }
+                onClick={() =>
+                  updatePreference(
+                    "theme",
+                    "system"
+                  )
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </SettingsGroup>
+
+      {/* ================================================================ */}
+      {/* Security                                                         */}
+      {/* ================================================================ */}
+
+      <SettingsGroup
+        icon={<ShieldCheck className="h-4 w-4" />}
+        title="Security"
+        description="Manage your account security."
+      >
+        <SettingsAction
+          icon={<KeyRound className="h-4 w-4" />}
+          title="Password"
+          description="Change your CareCore account password."
+          action="Change password"
+          onClick={() => {}}
+        />
+
+        <SettingsAction
+          icon={<ShieldCheck className="h-4 w-4" />}
+          title="Account security"
+          description="Your account is protected by your hospital login credentials."
+          action="View details"
+          onClick={() => {}}
+          last
+        />
+      </SettingsGroup>
+
+      {/* ================================================================ */}
+      {/* Session                                                          */}
+      {/* ================================================================ */}
+
+      <SettingsGroup
+        title="Session"
+        description="Manage your current login session."
+      >
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FFF5F5] text-[#A34A4A]">
+              <LogOut className="h-4 w-4" />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-[#073F42]">
+                Sign out
+              </p>
+
+              <p className="mt-1 text-xs text-[#819596]">
+                Sign out from this device and return to the
+                login page.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="h-9 rounded-lg border border-[#E5CCCC] px-4 text-xs font-semibold text-[#A34A4A] transition hover:bg-[#FFF7F7]"
+          >
+            Sign out
+          </button>
+        </div>
+      </SettingsGroup>
+
+      {/* ================================================================ */}
+      {/* Footer Note                                                      */}
+      {/* ================================================================ */}
+
+      <div className="flex items-start gap-3 rounded-xl border border-[#DCEBE9] bg-[#F8FCFB] p-4">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#08A6A0]" />
+
+        <p className="text-[11px] leading-5 text-[#819596]">
+          Your workforce settings are stored for this
+          device. Hospital-level configuration and staff
+          administration are managed from the Admin Portal.
+        </p>
       </div>
     </div>
   );
-}
+};
+
+export default Settings;
+
+/* ========================================================================== */
+/* Settings Group                                                             */
+/* ========================================================================== */
+
+const SettingsGroup = ({
+  icon,
+  title,
+  description,
+  children,
+}) => {
+  return (
+    <section className="mt-5 overflow-hidden rounded-xl border border-[#DCEBE9] bg-white">
+      <div className="flex items-start gap-3 border-b border-[#E8F0EF] px-5 py-4">
+        {icon && (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#087F7A]">
+            {icon}
+          </div>
+        )}
+
+        <div>
+          <h2 className="text-sm font-semibold text-[#073F42]">
+            {title}
+          </h2>
+
+          <p className="mt-0.5 text-xs text-[#819596]">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      {children}
+    </section>
+  );
+};
+
+/* ========================================================================== */
+/* Preference Row                                                             */
+/* ========================================================================== */
+
+const PreferenceRow = ({
+  icon,
+  title,
+  description,
+  value,
+  onChange,
+  last = false,
+}) => {
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 px-5 py-4 ${
+        !last
+          ? "border-b border-[#E8F0EF]"
+          : ""
+      }`}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#F5F9F8] text-[#55716E]">
+          {icon}
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-[#073F42]">
+            {title}
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-[#819596]">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      <Toggle
+        checked={value}
+        onChange={onChange}
+      />
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Settings Action                                                            */
+/* ========================================================================== */
+
+const SettingsAction = ({
+  icon,
+  title,
+  description,
+  action,
+  onClick,
+  last = false,
+}) => {
+  return (
+    <div
+      className={`flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between ${
+        !last
+          ? "border-b border-[#E8F0EF]"
+          : ""
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#F5F9F8] text-[#55716E]">
+          {icon}
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-[#073F42]">
+            {title}
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-[#819596]">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-[#DCEBE9] px-3 text-xs font-medium text-[#55716E] transition hover:border-[#B9DAD6] hover:bg-[#F5FAF9] hover:text-[#087F7A]"
+      >
+        {action}
+        <ChevronRight className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Toggle                                                                     */
+/* ========================================================================== */
+
+const Toggle = ({
+  checked,
+  onChange,
+}) => {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-10 shrink-0 rounded-full transition ${
+        checked
+          ? "bg-[#08A6A0]"
+          : "bg-[#C7D6D4]"
+      }`}
+    >
+      <span
+        className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+          checked
+            ? "translate-x-5"
+            : "translate-x-1"
+        }`}
+      />
+    </button>
+  );
+};
+
+/* ========================================================================== */
+/* Theme Option                                                               */
+/* ========================================================================== */
+
+const ThemeOption = ({
+  icon,
+  label,
+  active,
+  onClick,
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition ${
+        active
+          ? "bg-white text-[#073F42] shadow-sm"
+          : "text-[#819596] hover:text-[#31585A]"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+};

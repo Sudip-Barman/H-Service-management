@@ -830,25 +830,24 @@ const Appointments = () => {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#08A6A0]">
-            APPOINTMENT MANAGEMENT
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
+              <CalendarDays className="h-5 w-5" />
+            </div>
+            <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl">
+              Appointments
+            </h1>
+          </div>
 
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#073F42] sm:text-3xl">
-            Appointments
-          </h1>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#789092]">
-            Schedule and manage patient appointments,
-            doctors, services, priorities and appointment
-            status.
+          <p className="mt-1 text-xs text-[#819596] sm:text-sm">
+            Schedule and manage patient appointments, doctors, services, and priorities.
           </p>
         </div>
 
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-5 text-sm font-semibold text-white shadow-lg shadow-[#08A6A0]/15 transition hover:bg-[#078F8A]"
+          className="inline-flex h-10 sm:h-11 items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
         >
           <Plus className="h-4 w-4" />
           New Appointment
@@ -859,7 +858,7 @@ const Appointments = () => {
           STATS
       =================================================== */}
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         <StatCard
           icon={CalendarDays}
           label="Total Appointments"
@@ -964,24 +963,8 @@ const Appointments = () => {
           APPOINTMENT LIST
       =================================================== */}
 
-      <div className="overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#EAF2F0] px-5 py-4">
-          <div>
-            <h2 className="font-bold text-[#073F42]">
-              Appointment Schedule
-            </h2>
-
-            <p className="mt-1 text-xs text-[#819596]">
-              {filteredAppointments.length} appointment
-              {filteredAppointments.length !== 1
-                ? "s"
-                : ""}{" "}
-              found
-            </p>
-          </div>
-        </div>
-
-        {filteredAppointments.length === 0 ? (
+      {filteredAppointments.length === 0 ? (
+        <div className="overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
           <EmptyState
             onClear={() => {
               setSearch("");
@@ -990,90 +973,64 @@ const Appointments = () => {
               setDateFilter("");
             }}
           />
-        ) : (
-          <>
-            {/* DESKTOP */}
+        </div>
+      ) : (
+        <>
+          {/* DESKTOP TABLE */}
+          <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm md:block">
+            <div className="flex items-center justify-between border-b border-[#EAF2F0] px-5 py-4">
+              <div>
+                <h2 className="font-bold text-[#073F42]">
+                  Appointment Schedule
+                </h2>
 
-            <div className="hidden overflow-x-auto lg:block">
+                <p className="mt-1 text-xs text-[#819596]">
+                  {filteredAppointments.length} appointment
+                  {filteredAppointments.length !== 1 ? "s" : ""} found
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[1250px]">
                 <thead>
                   <tr className="border-b border-[#EAF2F0] bg-[#FAFDFC] text-left">
-                    <TableHeader>
-                      Appointment
-                    </TableHeader>
-
-                    <TableHeader>
-                      Patient
-                    </TableHeader>
-
-                    <TableHeader>
-                      Doctor
-                    </TableHeader>
-
-                    <TableHeader>
-                      Service
-                    </TableHeader>
-
-                    <TableHeader>
-                      Date & Time
-                    </TableHeader>
-
-                    <TableHeader>
-                      Priority
-                    </TableHeader>
-
-                    <TableHeader>
-                      Status
-                    </TableHeader>
-
-                    <TableHeader align="right">
-                      Action
-                    </TableHeader>
+                    <TableHeader>Appointment</TableHeader>
+                    <TableHeader>Patient</TableHeader>
+                    <TableHeader>Doctor</TableHeader>
+                    <TableHeader>Service</TableHeader>
+                    <TableHeader>Date & Time</TableHeader>
+                    <TableHeader>Priority</TableHeader>
+                    <TableHeader>Status</TableHeader>
+                    <TableHeader align="right">Action</TableHeader>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredAppointments.map(
-                    (appointment) => (
-                      <AppointmentRow
-                        key={
-                          appointment.appointment_id
-                        }
-                        appointment={appointment}
-                        onView={() =>
-                          setSelectedAppointment(
-                            appointment
-                          )
-                        }
-                      />
-                    )
-                  )}
+                  {filteredAppointments.map((appointment) => (
+                    <AppointmentRow
+                      key={appointment.appointment_id}
+                      appointment={appointment}
+                      onView={() => setSelectedAppointment(appointment)}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* MOBILE */}
-
-            <div className="divide-y divide-[#EAF2F0] lg:hidden">
-              {filteredAppointments.map(
-                (appointment) => (
-                  <AppointmentMobileCard
-                    key={
-                      appointment.appointment_id
-                    }
-                    appointment={appointment}
-                    onView={() =>
-                      setSelectedAppointment(
-                        appointment
-                      )
-                    }
-                  />
-                )
-              )}
-            </div>
-          </>
-        )}
-      </div>
+          {/* MOBILE CARDS */}
+          <div className="space-y-3 md:hidden">
+            {filteredAppointments.map((appointment) => (
+              <AppointmentMobileCard
+                key={appointment.appointment_id}
+                appointment={appointment}
+                onView={() => setSelectedAppointment(appointment)}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* ===================================================
           DETAILS MODAL
@@ -1123,20 +1080,20 @@ const StatCard = ({
   value,
 }) => {
   return (
-    <div className="rounded-2xl border border-[#E2EFED] bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F8F6]">
-          <Icon className="h-5 w-5 text-[#08A6A0]" />
+    <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm">
+      <div className="flex items-center justify-between gap-1 sm:gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+            {label}
+          </p>
+          <p className="mt-0.5 sm:mt-1 md:mt-2 text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
+            {value}
+          </p>
         </div>
-
-        <span className="text-2xl font-bold text-[#073F42]">
-          {value}
-        </span>
+        <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+          <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-5 md:w-5" />
+        </div>
       </div>
-
-      <p className="mt-3 text-xs font-semibold text-[#819596]">
-        {label}
-      </p>
     </div>
   );
 };
@@ -1274,64 +1231,79 @@ const AppointmentMobileCard = ({
   onView,
 }) => {
   return (
-    <button
-      type="button"
-      onClick={onView}
-      className="flex w-full items-start gap-3 p-4 text-left transition hover:bg-[#FAFDFC]"
-    >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6]">
-        <CalendarDays className="h-5 w-5 text-[#08A6A0]" />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-[#173F41]">
+    <div className="rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-sm font-bold text-[#073F42]">
+            <CalendarDays size={18} className="text-[#08A6A0]" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-[#173F41]">
               {appointment.patient}
             </p>
-
-            <p className="mt-1 text-xs text-[#819596]">
-              {appointment.appointment_number}
+            <p className="mt-0.5 text-xs text-[#819596]">
+              {appointment.appointment_number} • {appointment.patient_registration_number}
             </p>
           </div>
-
-          <StatusBadge
-            status={appointment.status}
-          />
         </div>
+        <StatusBadge status={appointment.status} />
+      </div>
 
-        <div className="mt-3">
-          <p className="text-sm font-semibold text-[#31585A]">
-            {appointment.service ||
-              "No service"}
+      {/* Information Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Doctor / Spec
           </p>
-
-          <p className="mt-1 text-xs text-[#819596]">
+          <p className="mt-1 truncate text-xs sm:text-sm font-semibold text-[#31585A]">
             {appointment.doctor}
           </p>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <PriorityBadge
-            priority={appointment.priority}
-          />
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Service / Fee
+          </p>
+          <p className="mt-1 truncate text-xs sm:text-sm font-semibold text-[#31585A]">
+            {appointment.service || "General"} • ₹{Number(appointment.consultation_fee || 0).toFixed(0)}
+          </p>
+        </div>
 
-          <span className="text-xs text-[#819596]">
-            {formatDate(
-              appointment.appointment_date
-            )}
-          </span>
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Date & Time
+          </p>
+          <p className="mt-1 text-xs sm:text-sm font-semibold text-[#31585A]">
+            {formatDate(appointment.appointment_date)} {formatTime(appointment.appointment_time)}
+          </p>
+        </div>
 
-          <span className="text-xs text-[#819596]">
-            {formatTime(
-              appointment.appointment_time
-            )}
-          </span>
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Priority / Type
+          </p>
+          <div className="mt-1 flex items-center justify-between">
+            <PriorityBadge priority={appointment.priority} />
+            <span className="text-xs font-semibold text-[#819596]">
+              {appointment.appointment_type}
+            </span>
+          </div>
         </div>
       </div>
 
-      <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#9AAEAF]" />
-    </button>
+      {/* Actions */}
+      <div className="mt-3 flex gap-2 border-t border-[#EAF2F0] pt-3">
+        <button
+          type="button"
+          onClick={onView}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E8F8F6] px-3 py-2 text-xs font-semibold text-[#073F42] transition hover:bg-[#DDF3F0]"
+        >
+          <Eye size={14} />
+          View Details
+        </button>
+      </div>
+    </div>
   );
 };
 

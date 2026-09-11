@@ -224,14 +224,14 @@ const Admission = () => {
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-[#173F41] sm:text-2xl">Admissions</h1>
-          <p className="mt-1 text-sm text-[#819596]">Manage patient admissions, beds, and discharge records.</p>
+          <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">Manage patient admissions, beds, and discharge records.</p>
         </div>
-        <button onClick={openAddForm} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#078E89] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#067A76]">
+        <button onClick={openAddForm} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]">
           <Plus className="h-4 w-4" /> Add Admission
         </button>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
         <Stat icon={Users} label="Total Admissions" value={stats.total} />
         <Stat icon={BedDouble} label="Currently Admitted" value={stats.admitted} />
         <Stat icon={CheckCircle2} label="Discharged" value={stats.discharged} />
@@ -257,8 +257,10 @@ const Admission = () => {
           </div>
         )}
 
-        <div className="mb-2 mt-4 text-sm text-[#819596]">Showing {filteredAdmissions.length} of {admissions.length} admissions</div>
-        <div className="overflow-x-auto rounded-lg border border-[#E2EFED]">
+        <div className="mb-2 mt-4 text-xs sm:text-sm text-[#819596]">Showing {filteredAdmissions.length} of {admissions.length} admissions</div>
+        
+        {/* Desktop Table */}
+        <div className="hidden overflow-x-auto rounded-lg border border-[#E2EFED] md:block">
           <table className="min-w-full divide-y divide-[#EAF2F1] text-left">
             <thead className="bg-[#F7FBFA] text-xs font-semibold uppercase tracking-wide text-[#6E8081]"><tr><th className="px-4 py-3">Admission</th><th className="px-4 py-3">Patient</th><th className="px-4 py-3">Doctor & Ward</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
             <tbody className="divide-y divide-[#EAF2F1] bg-white">
@@ -266,6 +268,26 @@ const Admission = () => {
               {!filteredAdmissions.length && <tr><td colSpan="6" className="px-4 py-10 text-center text-sm text-[#819596]">No admissions match your search or filters.</td></tr>}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="space-y-3 md:hidden">
+          {filteredAdmissions.length > 0 ? (
+            filteredAdmissions.map((item) => (
+              <AdmissionMobileCard
+                key={item.admission_id}
+                item={item}
+                onView={setDetails}
+                onEdit={(ad) => { setEditingAdmission(ad); setFormOpen(true); }}
+                onDischarge={dischargeAdmission}
+                onDelete={setAdmissionToDelete}
+              />
+            ))
+          ) : (
+            <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-10 text-center text-sm text-[#819596]">
+              No admissions match your search or filters.
+            </div>
+          )}
         </div>
       </div>
 
@@ -276,18 +298,182 @@ const Admission = () => {
   );
 };
 
-const Stat = ({ icon: Icon, label, value }) => <div className="min-w-0 rounded-xl border border-[#E2EFED] bg-white px-3 py-3 shadow-sm"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6]"><Icon className="h-4 w-4 text-[#08A6A0]" /></span><span className="text-xl font-bold text-[#073F42]">{value}</span></div><p className="mt-2 truncate text-xs font-semibold text-[#819596]">{label}</p></div>;
+const AdmissionMobileCard = ({ item, onView, onEdit, onDischarge, onDelete }) => (
+  <div className="rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-xs font-bold text-[#08A6A0]">
+          <BedDouble size={18} />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-[#173F41]">{item.patient_name}</p>
+          <p className="mt-0.5 text-xs text-[#819596]">{item.patient_id} • {item.admission_number}</p>
+        </div>
+      </div>
+      <StatusBadge status={item.status} />
+    </div>
+
+    <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+      <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Doctor / Dept</p>
+        <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">{item.doctor_name}</p>
+      </div>
+
+      <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Ward / Bed</p>
+        <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">{item.ward} · Bed {item.bed_number}</p>
+      </div>
+
+      <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Admission Date</p>
+        <p className="mt-1 text-xs font-semibold text-[#31585A] sm:text-sm">{formatDate(item.admission_date)}</p>
+      </div>
+
+      <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Type</p>
+        <p className="mt-1 text-xs font-semibold text-[#31585A] sm:text-sm">{item.admission_type}</p>
+      </div>
+    </div>
+
+    <div className="mt-3 flex gap-2 border-t border-[#EAF2F0] pt-3">
+      <button type="button" onClick={() => onView(item)} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E8F8F6] px-3 py-2 text-xs font-semibold text-[#073F42] transition hover:bg-[#DDF3F0]">
+        <Eye size={14} /> View
+      </button>
+      <button type="button" onClick={() => onEdit(item)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600" title="Edit">
+        <Edit3 size={15} />
+      </button>
+      {item.status === "Admitted" && (
+        <button type="button" onClick={() => onDischarge(item)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#08A6A0] transition hover:bg-[#E8F8F6]" title="Discharge">
+          <LogOut size={15} />
+        </button>
+      )}
+      <button type="button" onClick={() => onDelete(item)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600" title="Delete">
+        <Trash2 size={15} />
+      </button>
+    </div>
+  </div>
+);
+
+const Stat = ({ icon: Icon, label, value }) => (
+  <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm">
+    <div className="flex items-center justify-between gap-1 sm:gap-2">
+      <div className="min-w-0">
+        <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">{label}</p>
+        <p className="mt-0.5 sm:mt-1 md:mt-2 text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">{value}</p>
+      </div>
+      <span className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+        <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-5 md:w-5" />
+      </span>
+    </div>
+  </div>
+);
 const IconButton = ({ children, label, onClick, danger = false }) => <button aria-label={label} title={label} onClick={onClick} className={`rounded-md p-2 transition ${danger ? "text-[#C85A5A] hover:bg-[#FFF1F1]" : "text-[#507173] hover:bg-[#E8F8F6] hover:text-[#078E89]"}`}>{cloneElement(children, { className: "h-4 w-4" })}</button>;
 const Select = ({ label, value, onChange, options }) => <label className="text-xs font-semibold text-[#507173]">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 block w-full rounded-lg border border-[#DDE9E7] bg-white px-3 py-2 text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]">{options.map((option) => <option key={option}>{option}</option>)}</select></label>;
 
 const AdmissionForm = ({ admission, onClose, onSubmit }) => {
   const data = { ...emptyAdmission, ...admission };
-  return <Modal title={admission ? "Edit Admission" : "Add Admission"} subtitle={admission ? "Update the patient admission record." : "Register a patient admission and bed allocation."} onClose={onClose}><form onSubmit={onSubmit} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Admission Number" name="admission_number" defaultValue={data.admission_number} placeholder="Auto-generated if empty" /><Field label="Patient Name" name="patient_name" defaultValue={data.patient_name} required /><Field label="Patient ID" name="patient_id" defaultValue={data.patient_id} required /><Field label="Admitting Doctor" name="doctor_name" defaultValue={data.doctor_name} required /><Field label="Department" name="department" defaultValue={data.department} required /><Field label="Ward" name="ward" defaultValue={data.ward} required /><Field label="Bed Number" name="bed_number" defaultValue={data.bed_number} required /><Field label="Admission Date" name="admission_date" type="date" defaultValue={data.admission_date} required /><SelectField label="Admission Type" name="admission_type" defaultValue={data.admission_type} options={["Planned", "Emergency"]} /><SelectField label="Status" name="status" defaultValue={data.status} options={["Admitted", "Discharged"]} /></div><Field label="Diagnosis / Reason for Admission" name="diagnosis" defaultValue={data.diagnosis} textarea required /><div className="flex justify-end gap-2 border-t border-[#EAF2F1] pt-4"><button type="button" onClick={onClose} className="rounded-lg border border-[#DDE9E7] px-4 py-2 text-sm font-semibold text-[#31585A]">Cancel</button><button className="rounded-lg bg-[#078E89] px-4 py-2 text-sm font-semibold text-white hover:bg-[#067A76]">{admission ? "Update Admission" : "Save Admission"}</button></div></form></Modal>;
+  return (
+    <Modal
+      title={admission ? "Edit Admission" : "Add Admission"}
+      subtitle={admission ? "Update the patient admission record." : "Register a patient admission and bed allocation."}
+      onClose={onClose}
+    >
+      <form onSubmit={onSubmit} className="space-y-3.5 sm:space-y-4">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+          <Field label="Admission Number" name="admission_number" defaultValue={data.admission_number} placeholder="Auto-generated if empty" />
+          <Field label="Patient Name" name="patient_name" defaultValue={data.patient_name} required />
+          <Field label="Patient ID" name="patient_id" defaultValue={data.patient_id} required />
+          <Field label="Admitting Doctor" name="doctor_name" defaultValue={data.doctor_name} required />
+          <Field label="Department" name="department" defaultValue={data.department} required />
+          <Field label="Ward" name="ward" defaultValue={data.ward} required />
+          <Field label="Bed Number" name="bed_number" defaultValue={data.bed_number} required />
+          <Field label="Admission Date" name="admission_date" type="date" defaultValue={data.admission_date} required />
+          <SelectField label="Admission Type" name="admission_type" defaultValue={data.admission_type} options={["Planned", "Emergency"]} />
+          <SelectField label="Status" name="status" defaultValue={data.status} options={["Admitted", "Discharged"]} />
+        </div>
+        <Field label="Diagnosis / Reason for Admission" name="diagnosis" defaultValue={data.diagnosis} textarea required />
+        <div className="flex justify-end gap-2 sm:gap-3 border-t border-[#EAF2F1] pt-3 sm:pt-4">
+          <button type="button" onClick={onClose} className="h-10 sm:h-11 rounded-xl border border-[#DDE9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A]">
+            Cancel
+          </button>
+          <button className="h-10 sm:h-11 rounded-xl bg-[#078E89] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#067A76]">
+            {admission ? "Update Admission" : "Save Admission"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
 };
-const Field = ({ label, textarea, ...props }) => <label className={`block text-xs font-semibold text-[#507173] ${textarea ? "sm:col-span-2" : ""}`}>{label}{textarea ? <textarea {...props} className="mt-1 block min-h-20 w-full rounded-lg border border-[#DDE9E7] px-3 py-2 text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]" /> : <input {...props} className="mt-1 block w-full rounded-lg border border-[#DDE9E7] px-3 py-2 text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]" />}</label>;
-const SelectField = ({ label, options, ...props }) => <label className="block text-xs font-semibold text-[#507173]">{label}<select {...props} className="mt-1 block w-full rounded-lg border border-[#DDE9E7] bg-white px-3 py-2 text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]">{options.map((option) => <option key={option}>{option}</option>)}</select></label>;
-const Modal = ({ title, subtitle, children, onClose }) => <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-4 backdrop-blur-sm"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl"><div className="flex items-start justify-between border-b border-[#E2EFED] px-5 py-4"><div><h2 className="text-lg font-bold text-[#173F41]">{title}</h2><p className="mt-1 text-sm text-[#819596]">{subtitle}</p></div><button onClick={onClose} className="rounded-lg p-2 text-[#819596] hover:bg-[#E8F8F6]"><X className="h-4 w-4" /></button></div><div className="p-5">{children}</div></div></div>;
-const Details = ({ admission, onClose }) => <Modal title="Admission Details" subtitle={admission.admission_number} onClose={onClose}><div className="grid gap-4 sm:grid-cols-2">{[["Patient", admission.patient_name], ["Patient ID", admission.patient_id], ["Doctor", admission.doctor_name], ["Department", admission.department], ["Ward / Bed", `${admission.ward} · ${admission.bed_number}`], ["Admission Date", formatDate(admission.admission_date)], ["Admission Type", admission.admission_type], ["Status", admission.status], ["Diagnosis", admission.diagnosis], ["Discharge Date", formatDate(admission.discharge_date)]].map(([label, value]) => <div key={label} className="rounded-lg bg-[#F7FBFA] p-3"><p className="text-xs font-semibold text-[#819596]">{label}</p><p className="mt-1 text-sm font-medium text-[#31585A]">{value || "—"}</p></div>)}</div></Modal>;
-const Confirm = ({ title, message, onCancel, onConfirm }) => <Modal title={title} subtitle={message} onClose={onCancel}><div className="flex justify-end gap-2"><button onClick={onCancel} className="rounded-lg border border-[#DDE9E7] px-4 py-2 text-sm font-semibold text-[#31585A]">Cancel</button><button onClick={onConfirm} className="rounded-lg bg-[#C85A5A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B74747]">Delete</button></div></Modal>;
+const Field = ({ label, textarea, ...props }) => (
+  <label className={`block text-xs font-semibold text-[#507173] ${textarea ? "sm:col-span-2" : ""}`}>
+    {label}
+    {textarea ? (
+      <textarea {...props} className="mt-1 block min-h-20 w-full rounded-xl border border-[#DDE9E7] px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]" />
+    ) : (
+      <input {...props} className="mt-1 block h-10 sm:h-11 w-full rounded-xl border border-[#DDE9E7] px-3 sm:px-3.5 text-xs sm:text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]" />
+    )}
+  </label>
+);
+const SelectField = ({ label, options, ...props }) => (
+  <label className="block text-xs font-semibold text-[#507173]">
+    {label}
+    <select {...props} className="mt-1 block h-10 sm:h-11 w-full rounded-xl border border-[#DDE9E7] bg-white px-3 sm:px-3.5 text-xs sm:text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]">
+      {options.map((option) => (
+        <option key={option}>{option}</option>
+      ))}
+    </select>
+  </label>
+);
+const Modal = ({ title, subtitle, children, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
+    <div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
+      <div className="flex items-start justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-6 sm:py-4">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-[#173F41]">{title}</h2>
+          <p className="mt-0.5 text-xs text-[#819596]">{subtitle}</p>
+        </div>
+        <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-xl p-1 text-[#819596] hover:bg-[#E8F8F6]">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="p-4 sm:p-6">{children}</div>
+    </div>
+  </div>
+);
+const Details = ({ admission, onClose }) => (
+  <Modal title="Admission Details" subtitle={admission.admission_number} onClose={onClose}>
+    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+      {[
+        ["Patient", admission.patient_name],
+        ["Patient ID", admission.patient_id],
+        ["Doctor", admission.doctor_name],
+        ["Department", admission.department],
+        ["Ward / Bed", `${admission.ward} · ${admission.bed_number}`],
+        ["Admission Date", formatDate(admission.admission_date)],
+        ["Admission Type", admission.admission_type],
+        ["Status", admission.status],
+        ["Diagnosis", admission.diagnosis],
+        ["Discharge Date", formatDate(admission.discharge_date)],
+      ].map(([label, value]) => (
+        <div key={label} className="rounded-xl bg-[#F7FBFA] p-3">
+          <p className="text-[11px] sm:text-xs font-semibold text-[#819596]">{label}</p>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-[#31585A]">{value || "—"}</p>
+        </div>
+      ))}
+    </div>
+  </Modal>
+);
+const Confirm = ({ title, message, onCancel, onConfirm }) => (
+  <Modal title={title} subtitle={message} onClose={onCancel}>
+    <div className="flex justify-end gap-2">
+      <button onClick={onCancel} className="h-10 sm:h-11 rounded-xl border border-[#DDE9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A]">
+        Cancel
+      </button>
+      <button onClick={onConfirm} className="h-10 sm:h-11 rounded-xl bg-[#C85A5A] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#B74747]">
+        Delete
+      </button>
+    </div>
+  </Modal>
+);
 
 export default Admission;

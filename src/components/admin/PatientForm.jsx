@@ -487,19 +487,19 @@ export default function PatientForm({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
+      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
         {/* ---------------------------------------------------------------- */}
         {/* Header */}
         {/* ---------------------------------------------------------------- */}
 
-        <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-6 sm:py-4">
           <div>
-            <h2 className="text-xl font-semibold text-[#173F41]">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-[#173F41]">
               {isEdit ? "Edit Patient" : "Register New Patient"}
             </h2>
 
-            <p className="mt-1 text-sm text-[#819596]">
+            <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">
               {isEdit
                 ? "Update patient information and services"
                 : "Enter patient information for registration"}
@@ -509,9 +509,9 @@ export default function PatientForm({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#078E89]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#078E89]"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -1078,20 +1078,24 @@ export default function PatientForm({
           {/* Footer */}
           {/* ---------------------------------------------------------------- */}
 
-          <div className="sticky bottom-0 flex shrink-0 items-center justify-end gap-3 border-t border-[#E2EFED] bg-white px-6 py-4">
+          {/* ---------------------------------------------------------------- */}
+          {/* Footer */}
+          {/* ---------------------------------------------------------------- */}
+
+          <div className="sticky bottom-0 flex shrink-0 items-center justify-end gap-2.5 sm:gap-3 border-t border-[#E2EFED] bg-white px-4 py-3 sm:px-6 sm:py-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-[#E2EFED] bg-white px-5 py-2.5 text-sm font-medium text-[#31585A] transition hover:bg-[#E8F8F6]"
+              className="h-10 sm:h-11 rounded-xl border border-[#E2EFED] bg-white px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:bg-[#E8F8F6]"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#08A6A0] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#078E89]"
+              className="inline-flex h-10 sm:h-11 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white transition hover:bg-[#078E89]"
             >
-              <Check size={17} />
+              <Check size={16} />
 
               {isEdit ? "Update Patient" : "Register Patient"}
             </button>
@@ -1104,15 +1108,15 @@ export default function PatientForm({
       {/* ================================================================== */}
 
       {cameraOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#E2EFED] px-5 py-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4">
               <div>
-                <h3 className="font-semibold text-[#173F41]">
+                <h3 className="text-sm sm:text-base font-bold text-[#173F41]">
                   Take Patient Photo
                 </h3>
 
-                <p className="mt-1 text-xs text-[#819596]">
+                <p className="mt-0.5 text-[10px] sm:text-xs text-[#819596]">
                   Position the patient inside the camera frame.
                 </p>
               </div>
@@ -1120,13 +1124,13 @@ export default function PatientForm({
               <button
                 type="button"
                 onClick={stopCamera}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#819596] hover:bg-[#E8F8F6] hover:text-[#078E89]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] hover:bg-[#E8F8F6] hover:text-[#078E89]"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="bg-black p-4">
+            <div className="bg-black p-3 sm:p-4">
               <video
                 ref={videoRef}
                 autoPlay
@@ -1136,11 +1140,11 @@ export default function PatientForm({
               />
             </div>
 
-            <div className="flex justify-end gap-3 border-t border-[#E2EFED] px-5 py-4">
+            <div className="flex justify-end gap-2.5 sm:gap-3 border-t border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4">
               <button
                 type="button"
                 onClick={stopCamera}
-                className="rounded-lg border border-[#E2EFED] px-4 py-2 text-sm font-medium text-[#31585A] hover:bg-[#E8F8F6]"
+                className="h-9 sm:h-10 rounded-xl border border-[#E2EFED] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-[#31585A] hover:bg-[#E8F8F6]"
               >
                 Cancel
               </button>
@@ -1148,9 +1152,9 @@ export default function PatientForm({
               <button
                 type="button"
                 onClick={capturePhoto}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#08A6A0] px-4 py-2 text-sm font-medium text-white hover:bg-[#078E89]"
+                className="inline-flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white hover:bg-[#078E89]"
               >
-                <Camera size={17} />
+                <Camera size={16} />
                 Capture Photo
               </button>
             </div>
@@ -1169,12 +1173,12 @@ export default function PatientForm({
 
 function SectionTitle({ icon, title }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[#E2EFED] pb-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
+    <div className="flex items-center gap-2 border-b border-[#E2EFED] pb-2.5 sm:pb-3">
+      <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
         {icon}
       </div>
 
-      <h3 className="text-base font-semibold text-[#173F41]">
+      <h3 className="text-sm sm:text-base font-bold text-[#173F41]">
         {title}
       </h3>
     </div>
@@ -1188,10 +1192,10 @@ function SectionTitle({ icon, title }) {
 function InputField({
   label,
   name,
+  type = "text",
   value,
   onChange,
-  type = "text",
-  placeholder,
+  placeholder = "",
   required = false,
   min,
   max,
@@ -1200,7 +1204,7 @@ function InputField({
     <div>
       <label
         htmlFor={name}
-        className="mb-1.5 block text-sm font-medium text-[#31585A]"
+        className="mb-1.5 block text-xs sm:text-sm font-semibold text-[#31585A]"
       >
         {label}
 
@@ -1219,7 +1223,7 @@ function InputField({
         required={required}
         min={min}
         max={max}
-        className="w-full rounded-lg border border-[#E2EFED] bg-[#FAFDFC] px-3.5 py-2.5 text-sm text-[#173F41] outline-none transition placeholder:text-[#A0B1B1] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+        className="h-10 sm:h-11 w-full rounded-xl border border-[#E2EFED] bg-[#FAFDFC] px-3 sm:px-3.5 text-xs sm:text-sm text-[#173F41] outline-none transition placeholder:text-[#A0B1B1] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
       />
     </div>
   );
@@ -1241,7 +1245,7 @@ function SelectField({
     <div>
       <label
         htmlFor={name}
-        className="mb-1.5 block text-sm font-medium text-[#31585A]"
+        className="mb-1.5 block text-xs sm:text-sm font-semibold text-[#31585A]"
       >
         {label}
 
@@ -1256,7 +1260,7 @@ function SelectField({
         value={value ?? ""}
         onChange={onChange}
         required={required}
-        className="w-full rounded-lg border border-[#E2EFED] bg-[#FAFDFC] px-3.5 py-2.5 text-sm text-[#173F41] outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+        className="h-10 sm:h-11 w-full rounded-xl border border-[#E2EFED] bg-[#FAFDFC] px-3 sm:px-3.5 text-xs sm:text-sm text-[#173F41] outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
       >
         <option value="">Select {label.toLowerCase()}</option>
 
@@ -1290,7 +1294,7 @@ function TextAreaField({
     <div>
       <label
         htmlFor={name}
-        className="mb-1.5 block text-sm font-medium text-[#31585A]"
+        className="mb-1.5 block text-xs sm:text-sm font-semibold text-[#31585A]"
       >
         {label}
 
@@ -1307,7 +1311,7 @@ function TextAreaField({
         placeholder={placeholder}
         rows={rows}
         required={required}
-        className="w-full resize-none rounded-lg border border-[#E2EFED] bg-[#FAFDFC] px-3.5 py-2.5 text-sm text-[#173F41] outline-none transition placeholder:text-[#A0B1B1] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+        className="w-full resize-none rounded-xl border border-[#E2EFED] bg-[#FAFDFC] px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-[#173F41] outline-none transition placeholder:text-[#A0B1B1] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
       />
     </div>
   );

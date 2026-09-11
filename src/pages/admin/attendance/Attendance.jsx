@@ -1030,18 +1030,18 @@ const Stat = ({
   label,
   value,
 }) => (
-  <div className="rounded-xl border border-[#E2EFED] bg-white px-3 py-3 shadow-sm">
-    <div className="flex items-center justify-between">
-      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E8F8F6]">
-        <Icon className="h-4 w-4 text-[#08A6A0]" />
+  <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+    <div className="flex items-center justify-between gap-1.5">
+      <span className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+        <Icon className="text-[#08A6A0]" />
       </span>
 
-      <strong className="text-xl text-[#073F42]">
+      <strong className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
         {value}
       </strong>
     </div>
 
-    <p className="mt-2 text-xs font-semibold text-[#819596]">
+    <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
       {label}
     </p>
   </div>

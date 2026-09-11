@@ -23,19 +23,19 @@ const ServiceForm = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-5">
-      <div className="flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
+      <div className="flex max-h-[92vh] sm:max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
         {/* =========================
             Header
         ========================= */}
 
-        <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-4 py-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
               {isEditing ? (
-                <Save className="h-5 w-5" />
+                <Save className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <UserPlus className="h-5 w-5" />
+                <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </div>
 
@@ -46,7 +46,7 @@ const ServiceForm = ({
                   : "Add New Service"}
               </h2>
 
-              <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">
+              <p className="mt-0.5 text-[11px] text-[#819596] sm:text-xs">
                 {isEditing
                   ? "Update service information, pricing and availability."
                   : "Create a new hospital care service."}
@@ -57,10 +57,10 @@ const ServiceForm = ({
           <button
             type="button"
             onClick={onClose}
-            className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+            className="ml-2 flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
             aria-label="Close service form"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
@@ -72,10 +72,10 @@ const ServiceForm = ({
           onSubmit={onSubmit}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             {/* Error */}
             {formError && (
-              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              <div className="mb-4 sm:mb-5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-red-600">
                 {formError}
               </div>
             )}
@@ -85,16 +85,16 @@ const ServiceForm = ({
             ========================= */}
 
             <div>
-              <h3 className="text-sm font-bold text-[#073F42]">
+              <h3 className="text-xs sm:text-sm font-bold text-[#073F42]">
                 Basic Information
               </h3>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3.5 sm:gap-4 sm:grid-cols-2">
                 {/* Service Name */}
                 <div className="sm:col-span-2">
                   <label
                     htmlFor="service-name"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Service Name <span className="text-red-500">*</span>
                   </label>
@@ -107,14 +107,14 @@ const ServiceForm = ({
                     onChange={handleChange}
                     placeholder="e.g. Patient Caretaker"
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -130,7 +130,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-category"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Service Category <span className="text-red-500">*</span>
                   </label>
@@ -141,14 +141,14 @@ const ServiceForm = ({
                     value={form.category || ""}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -191,7 +191,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-icon"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Service Icon
                   </label>
@@ -202,14 +202,14 @@ const ServiceForm = ({
                     value={form.icon || "Stethoscope"}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -260,7 +260,7 @@ const ServiceForm = ({
                 <div className="sm:col-span-2">
                   <label
                     htmlFor="service-description"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Description <span className="text-red-500">*</span>
                   </label>
@@ -279,10 +279,10 @@ const ServiceForm = ({
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      py-2.5
-                      text-sm
-                      leading-6
+                      px-3 sm:px-3.5
+                      py-2 sm:py-2.5
+                      text-xs sm:text-sm
+                      leading-5 sm:leading-6
                       text-[#073F42]
                       outline-none
                       transition
@@ -300,17 +300,17 @@ const ServiceForm = ({
                 Pricing & Duration
             ========================= */}
 
-            <div className="mt-7 border-t border-[#EAF2F0] pt-6">
-              <h3 className="text-sm font-bold text-[#073F42]">
+            <div className="mt-5 sm:mt-7 border-t border-[#EAF2F0] pt-4 sm:pt-6">
+              <h3 className="text-xs sm:text-sm font-bold text-[#073F42]">
                 Pricing & Duration
               </h3>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3.5 sm:gap-4 sm:grid-cols-3">
                 {/* Price */}
                 <div>
                   <label
                     htmlFor="service-price"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Price <span className="text-red-500">*</span>
                   </label>
@@ -327,15 +327,15 @@ const ServiceForm = ({
                       onChange={handleChange}
                       placeholder="900"
                       className="
-                        h-10
+                        h-10 sm:h-11
                         w-full
                         rounded-xl
                         border
                         border-[#D9E9E7]
                         bg-[#FAFDFC]
                         pl-9
-                        pr-3
-                        text-sm
+                        pr-3 sm:pr-3.5
+                        text-xs sm:text-sm
                         text-[#073F42]
                         outline-none
                         transition
@@ -351,7 +351,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-price-unit"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Price Unit <span className="text-red-500">*</span>
                   </label>
@@ -362,14 +362,14 @@ const ServiceForm = ({
                     value={form.priceUnit || ""}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -408,7 +408,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-duration"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Duration <span className="text-red-500">*</span>
                   </label>
@@ -424,15 +424,15 @@ const ServiceForm = ({
                       onChange={handleChange}
                       placeholder="12 Hours"
                       className="
-                        h-10
+                        h-10 sm:h-11
                         w-full
                         rounded-xl
                         border
                         border-[#D9E9E7]
                         bg-[#FAFDFC]
                         pl-9
-                        pr-3
-                        text-sm
+                        pr-3 sm:pr-3.5
+                        text-xs sm:text-sm
                         text-[#073F42]
                         outline-none
                         transition
@@ -451,17 +451,17 @@ const ServiceForm = ({
                 Workforce
             ========================= */}
 
-            <div className="mt-7 border-t border-[#EAF2F0] pt-6">
-              <h3 className="text-sm font-bold text-[#073F42]">
+            <div className="mt-5 sm:mt-7 border-t border-[#EAF2F0] pt-4 sm:pt-6">
+              <h3 className="text-xs sm:text-sm font-bold text-[#073F42]">
                 Workforce
               </h3>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3.5 sm:gap-4 sm:grid-cols-2">
                 {/* Staff Required */}
                 <div>
                   <label
                     htmlFor="service-staff-required"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Staff Required <span className="text-red-500">*</span>
                   </label>
@@ -478,15 +478,15 @@ const ServiceForm = ({
                       onChange={handleChange}
                       placeholder="1"
                       className="
-                        h-10
+                        h-10 sm:h-11
                         w-full
                         rounded-xl
                         border
                         border-[#D9E9E7]
                         bg-[#FAFDFC]
                         pl-9
-                        pr-3
-                        text-sm
+                        pr-3 sm:pr-3.5
+                        text-xs sm:text-sm
                         text-[#073F42]
                         outline-none
                         transition
@@ -502,7 +502,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-available-staff"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Available Staff <span className="text-red-500">*</span>
                   </label>
@@ -519,15 +519,15 @@ const ServiceForm = ({
                       onChange={handleChange}
                       placeholder="5"
                       className="
-                        h-10
+                        h-10 sm:h-11
                         w-full
                         rounded-xl
                         border
                         border-[#D9E9E7]
                         bg-[#FAFDFC]
                         pl-9
-                        pr-3
-                        text-sm
+                        pr-3 sm:pr-3.5
+                        text-xs sm:text-sm
                         text-[#073F42]
                         outline-none
                         transition
@@ -545,17 +545,17 @@ const ServiceForm = ({
                 Availability & Status
             ========================= */}
 
-            <div className="mt-7 border-t border-[#EAF2F0] pt-6">
-              <h3 className="text-sm font-bold text-[#073F42]">
+            <div className="mt-5 sm:mt-7 border-t border-[#EAF2F0] pt-4 sm:pt-6">
+              <h3 className="text-xs sm:text-sm font-bold text-[#073F42]">
                 Availability & Status
               </h3>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3.5 sm:gap-4 sm:grid-cols-2">
                 {/* Availability */}
                 <div>
                   <label
                     htmlFor="service-availability-form"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Availability <span className="text-red-500">*</span>
                   </label>
@@ -566,14 +566,14 @@ const ServiceForm = ({
                     value={form.availability || ""}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -604,7 +604,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-status-form"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Status <span className="text-red-500">*</span>
                   </label>
@@ -615,14 +615,14 @@ const ServiceForm = ({
                     value={form.status || ""}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -651,17 +651,17 @@ const ServiceForm = ({
                 Performance
             ========================= */}
 
-            <div className="mt-7 border-t border-[#EAF2F0] pt-6">
-              <h3 className="text-sm font-bold text-[#073F42]">
+            <div className="mt-5 sm:mt-7 border-t border-[#EAF2F0] pt-4 sm:pt-6">
+              <h3 className="text-xs sm:text-sm font-bold text-[#073F42]">
                 Service Performance
               </h3>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3.5 sm:gap-4 sm:grid-cols-2">
                 {/* Bookings */}
                 <div>
                   <label
                     htmlFor="service-bookings"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Total Bookings
                   </label>
@@ -674,14 +674,14 @@ const ServiceForm = ({
                     value={form.bookings ?? 0}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -696,7 +696,7 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-rating"
-                    className="mb-2 block text-xs font-medium text-[#31585A] sm:text-sm"
+                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
                   >
                     Patient Rating
                   </label>
@@ -711,14 +711,14 @@ const ServiceForm = ({
                     value={form.rating ?? 0}
                     onChange={handleChange}
                     className="
-                      h-10
+                      h-10 sm:h-11
                       w-full
                       rounded-xl
                       border
                       border-[#D9E9E7]
                       bg-[#FAFDFC]
-                      px-3
-                      text-sm
+                      px-3 sm:px-3.5
+                      text-xs sm:text-sm
                       text-[#073F42]
                       outline-none
                       transition
@@ -728,7 +728,7 @@ const ServiceForm = ({
                     "
                   />
 
-                  <p className="mt-1.5 text-[11px] text-[#819596]">
+                  <p className="mt-1 text-[11px] text-[#819596]">
                     Rating must be between 0 and 5.
                   </p>
                 </div>
@@ -740,20 +740,20 @@ const ServiceForm = ({
               Footer
           ========================= */}
 
-          <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-[#E2EFED] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+          <div className="flex shrink-0 justify-end gap-2 sm:gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-4 py-3 sm:px-6 sm:py-4">
             <button
               type="button"
               onClick={onClose}
               className="
                 inline-flex
-                h-10
+                h-10 sm:h-11
                 items-center
                 justify-center
                 rounded-xl
                 border
                 border-[#D9E9E7]
-                px-5
-                text-sm
+                px-4 sm:px-5
+                text-xs sm:text-sm
                 font-semibold
                 text-[#31585A]
                 transition
@@ -768,14 +768,14 @@ const ServiceForm = ({
               type="submit"
               className="
                 inline-flex
-                h-10
+                h-10 sm:h-11
                 items-center
                 justify-center
-                gap-2
+                gap-1.5 sm:gap-2
                 rounded-xl
                 bg-[#08A6A0]
-                px-5
-                text-sm
+                px-4 sm:px-5
+                text-xs sm:text-sm
                 font-semibold
                 text-white
                 transition

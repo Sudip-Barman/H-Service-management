@@ -303,129 +303,105 @@ function Assignments() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
 
       {/* PAGE HEADER */}
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
 
         <div>
-          <h1 className="text-2xl font-bold text-[#073F42]">
+          <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl lg:text-3xl">
             Assignments
           </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
             Manage doctor, nurse and patient assignments
           </p>
         </div>
 
         <button
           onClick={openNewAssignmentModal}
-          className="flex items-center justify-center gap-2 rounded-lg bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
+          className="flex h-10 sm:h-11 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
         >
-          <Plus size={18} />
+          <Plus size={16} className="sm:size-[18px]" />
           New Assignment
         </button>
       </div>
 
       {/* STATISTICS */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
 
         {/* TOTAL */}
-        <div className="rounded-xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Total Assignments
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#073F42]">
-                {totalAssignments}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <Users />
             </div>
-
-            <div className="rounded-lg bg-[#E8F8F6] p-3 text-[#08A6A0]">
-              <Users size={22} />
-            </div>
-
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
+              {totalAssignments}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-gray-500">
+            Total Assignments
+          </p>
         </div>
 
         {/* ASSIGNED */}
-        <div className="rounded-xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Assigned
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#073F42]">
-                {assignedAssignments}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-green-50 text-green-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <CheckCircle2 />
             </div>
-
-            <div className="rounded-lg bg-green-50 p-3 text-green-600">
-              <CheckCircle2 size={22} />
-            </div>
-
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
+              {assignedAssignments}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-gray-500">
+            Assigned
+          </p>
         </div>
 
         {/* PENDING */}
-        <div className="rounded-xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Pending
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#073F42]">
-                {pendingAssignments}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-yellow-50 text-yellow-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <Clock3 />
             </div>
-
-            <div className="rounded-lg bg-yellow-50 p-3 text-yellow-600">
-              <Clock3 size={22} />
-            </div>
-
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
+              {pendingAssignments}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-gray-500">
+            Pending
+          </p>
         </div>
 
         {/* COMPLETED */}
-        <div className="rounded-xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Completed
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#073F42]">
-                {completedAssignments}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-blue-50 text-blue-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <CheckCircle2 />
             </div>
-
-            <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
-              <CheckCircle2 size={22} />
-            </div>
-
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
+              {completedAssignments}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-gray-500">
+            Completed
+          </p>
         </div>
 
       </div>
 
       {/* FILTER CARD */}
-      <div className="mb-6 rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+      <div className="mb-4 sm:mb-6 rounded-xl border border-[#E2EFED] bg-white p-3.5 sm:p-4 shadow-sm">
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-5">
 
           {/* SEARCH */}
           <div className="relative md:col-span-2">
 
             <Search
-              size={18}
+              size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
 
@@ -436,7 +412,7 @@ function Assignments() {
                 setSearch(e.target.value)
               }
               placeholder="Search assignment, patient, doctor..."
-              className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+              className="h-9 sm:h-10 w-full rounded-lg border border-gray-300 pl-9 pr-3 text-xs sm:text-sm outline-none transition focus:border-[#08A6A0]"
             />
 
           </div>
@@ -445,7 +421,7 @@ function Assignments() {
           <div className="relative">
 
             <Filter
-              size={17}
+              size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
 
@@ -454,7 +430,7 @@ function Assignments() {
               onChange={(e) =>
                 setStatusFilter(e.target.value)
               }
-              className="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+              className="h-9 sm:h-10 w-full appearance-none rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-xs sm:text-sm outline-none focus:border-[#08A6A0]"
             >
               <option value="All">
                 All Status
@@ -487,7 +463,7 @@ function Assignments() {
               onChange={(e) =>
                 setPriorityFilter(e.target.value)
               }
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+              className="h-9 sm:h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs sm:text-sm outline-none focus:border-[#08A6A0]"
             >
               <option value="All">
                 All Priority
@@ -512,7 +488,7 @@ function Assignments() {
           <div className="relative">
 
             <CalendarDays
-              size={17}
+              size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
 
@@ -522,7 +498,7 @@ function Assignments() {
               onChange={(e) =>
                 setDateFilter(e.target.value)
               }
-              className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+              className="h-9 sm:h-10 w-full rounded-lg border border-gray-300 pl-9 pr-3 text-xs sm:text-sm outline-none focus:border-[#08A6A0]"
             />
 
           </div>
@@ -533,7 +509,8 @@ function Assignments() {
       {/* TABLE */}
       <div className="overflow-hidden rounded-xl border border-[#E2EFED] bg-white shadow-sm">
 
-        <div className="overflow-x-auto">
+        {/* DESKTOP TABLE */}
+        <div className="hidden overflow-x-auto md:block">
 
           <table className="min-w-[1200px] w-full">
 
@@ -804,6 +781,77 @@ function Assignments() {
 
         </div>
 
+        {/* MOBILE CARD LIST */}
+        <div className="space-y-3 p-3 md:hidden">
+          {filteredAssignments.length > 0 ? (
+            filteredAssignments.map((assignment) => (
+              <div key={assignment.id} className="rounded-xl border border-[#E2EFED] bg-white p-3.5 shadow-sm">
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+                      <UserRound size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-gray-900">{assignment.patient}</h3>
+                      <p className="text-xs text-gray-500">{assignment.id} · {assignment.service}</p>
+                    </div>
+                  </div>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[assignment.status]}`}>
+                    {assignment.status}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Doctor</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{assignment.doctor}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Nurse</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{assignment.nurse}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Date & Time</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{formatDate(assignment.date)} · {assignment.time}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Priority</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{assignment.priority}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-2 border-t border-[#EAF2F0] pt-2.5">
+                  <button
+                    onClick={() => setSelectedAssignment(assignment)}
+                    className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                  >
+                    <Eye size={15} />
+                  </button>
+                  {assignment.status !== "Completed" && assignment.status !== "Cancelled" && (
+                    <button
+                      onClick={() => handleCompleteAssignment(assignment.id)}
+                      className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:border-green-200 hover:bg-green-50 hover:text-green-600"
+                    >
+                      <CheckCircle2 size={15} />
+                    </button>
+                  )}
+                  {assignment.status !== "Cancelled" && assignment.status !== "Completed" && (
+                    <button
+                      onClick={() => handleCancelAssignment(assignment.id)}
+                      className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <XCircle size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-xl border border-[#E2EFED] bg-white p-6 text-center text-xs text-gray-500">
+              No assignments found. Try changing your search or filters.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ========================= */}

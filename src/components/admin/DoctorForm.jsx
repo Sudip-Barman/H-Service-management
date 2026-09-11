@@ -740,14 +740,14 @@ const DoctorForm = ({
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+                className="h-10 sm:h-11 rounded-xl border border-[#D9E9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
+                className="inline-flex h-10 sm:h-11 items-center justify-center rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
               >
                 {isEditing
                   ? "Update Doctor"
@@ -763,17 +763,17 @@ const DoctorForm = ({
       {/* ====================================================================== */}
 
       {cameraOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#173F41]/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#173F41]/70 p-3 backdrop-blur-sm sm:p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
 
             {/* Camera Header */}
-            <div className="flex items-center justify-between border-b border-[#E2EFED] px-5 py-4">
+            <div className="flex items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4">
               <div>
-                <h3 className="text-base font-bold text-[#173F41]">
+                <h3 className="text-sm sm:text-base font-bold text-[#173F41]">
                   Take Doctor Photo
                 </h3>
 
-                <p className="mt-0.5 text-xs text-[#819596]">
+                <p className="mt-0.5 text-[10px] sm:text-xs text-[#819596]">
                   Position the doctor inside the frame
                 </p>
               </div>
@@ -791,47 +791,41 @@ const DoctorForm = ({
             {/* Camera Preview */}
             <div className="relative bg-[#173F41] p-3">
               {cameraError ? (
-                <div className="flex min-h-[320px] flex-col items-center justify-center px-6 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white">
-                    <Camera className="h-7 w-7" />
+                <div className="flex min-h-[300px] sm:min-h-[320px] flex-col items-center justify-center px-4 sm:px-6 text-center">
+                  <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white/10 text-white">
+                    <Camera className="h-6 w-6 sm:h-7 sm:w-7" />
                   </div>
 
-                  <p className="mt-4 max-w-sm text-sm font-semibold text-white">
+                  <p className="mt-3 sm:mt-4 max-w-sm text-xs sm:text-sm font-semibold text-white">
                     Camera Access Failed
                   </p>
 
-                  <p className="mt-2 max-w-sm text-xs leading-5 text-white/70">
+                  <p className="mt-1 max-w-sm text-xs text-white/70">
                     {cameraError}
                   </p>
                 </div>
               ) : (
-                <div className="relative overflow-hidden rounded-xl bg-black">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black">
                   <video
                     ref={videoRef}
                     autoPlay
-                    muted
                     playsInline
-                    className="aspect-square w-full object-cover"
-                    style={{
-                      transform: "scaleX(-1)",
-                    }}
+                    muted
+                    className="h-full w-full object-cover scale-x-[-1]"
                   />
 
-                  {/* Camera Guide */}
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div className="h-[65%] w-[55%] rounded-[35%] border-2 border-white/70" />
-                  </div>
+                  {/* Frame Overlay */}
+                  <div className="pointer-events-none absolute inset-4 rounded-full border-2 border-dashed border-white/60 sm:inset-6" />
                 </div>
               )}
             </div>
 
-            {/* Camera Footer */}
-            <div className="flex items-center justify-between gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-5 py-4">
-
+            {/* Camera Actions */}
+            <div className="flex items-center justify-between border-t border-[#E2EFED] bg-white px-4 py-3 sm:px-5 sm:py-4">
               <button
                 type="button"
                 onClick={closeCamera}
-                className="rounded-xl border border-[#D9E9E7] px-4 py-2.5 text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+                className="h-9 sm:h-10 rounded-xl border border-[#D9E9E7] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:bg-[#FAFDFC]"
               >
                 Cancel
               </button>
@@ -840,7 +834,7 @@ const DoctorForm = ({
                 <button
                   type="button"
                   onClick={openCamera}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#08A6A0] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#078E89]"
+                  className="inline-flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white transition hover:bg-[#078E89]"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Try Again
@@ -849,7 +843,7 @@ const DoctorForm = ({
                 <button
                   type="button"
                   onClick={capturePhoto}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
+                  className="inline-flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
                 >
                   <Camera className="h-4 w-4" />
                   Capture Photo
@@ -868,7 +862,7 @@ const DoctorForm = ({
 /* ========================================================================== */
 
 const SectionTitle = ({ children }) => (
-  <h3 className="mb-3 text-sm font-bold text-[#173F41]">
+  <h3 className="mb-2.5 sm:mb-3 text-xs sm:text-sm font-bold text-[#173F41]">
     {children}
   </h3>
 );
@@ -905,12 +899,12 @@ const InputField = ({
       min={min}
       step={step}
       className="
-        h-10 w-full
+        h-10 sm:h-11 w-full
         rounded-xl
         border border-[#D9E9E7]
         bg-[#FAFDFC]
-        px-3
-        text-sm
+        px-3 sm:px-3.5
+        text-xs sm:text-sm
         text-[#173F41]
         outline-none
         transition
@@ -940,12 +934,12 @@ const SelectField = ({
       value={value ?? ""}
       onChange={onChange}
       className="
-        h-10 w-full
+        h-10 sm:h-11 w-full
         rounded-xl
         border border-[#D9E9E7]
         bg-[#FAFDFC]
-        px-3
-        text-sm
+        px-3 sm:px-3.5
+        text-xs sm:text-sm
         text-[#173F41]
         outline-none
         transition
@@ -990,9 +984,9 @@ const TextareaField = ({
         rounded-xl
         border border-[#D9E9E7]
         bg-[#FAFDFC]
-        px-3
-        py-2.5
-        text-sm
+        px-3 sm:px-3.5
+        py-2 sm:py-2.5
+        text-xs sm:text-sm
         text-[#173F41]
         outline-none
         transition

@@ -387,22 +387,22 @@ const NurseForm = ({
       {/* Main Form Modal                                                        */}
       {/* ====================================================================== */}
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-3 backdrop-blur-sm sm:p-5">
-        <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
+        <div className="flex max-h-[92vh] sm:max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
 
           {/* ---------------------------------------------------------------- */}
           {/* Header                                                           */}
           {/* ---------------------------------------------------------------- */}
 
-          <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-5 py-4 sm:px-6">
+          <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-6 sm:py-4">
             <div>
-              <h2 className="text-lg font-bold text-[#173F41]">
+              <h2 className="text-base sm:text-lg font-bold text-[#173F41]">
                 {isEditing
                   ? "Edit Nurse"
                   : "Add Nurse"}
               </h2>
 
-              <p className="mt-0.5 text-xs text-[#819596]">
+              <p className="mt-0.5 text-[11px] sm:text-xs text-[#819596]">
                 {isEditing
                   ? "Update nurse information"
                   : "Register a new nurse in the hospital"}
@@ -412,7 +412,7 @@ const NurseForm = ({
             <button
               type="button"
               onClick={handleClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
               aria-label="Close"
             >
               <X className="h-4 w-4" />
@@ -427,7 +427,7 @@ const NurseForm = ({
             onSubmit={handleSubmit}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="overflow-y-auto px-5 py-5 sm:px-6">
+            <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
 
               {/* ============================================================ */}
               {/* Profile Photo                                                 */}
@@ -820,19 +820,19 @@ const NurseForm = ({
             {/* Footer                                                           */}
             {/* ---------------------------------------------------------------- */}
 
-            <div className="flex shrink-0 justify-end gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-5 py-4 sm:px-6">
+            <div className="flex shrink-0 justify-end gap-2 sm:gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-4 py-3 sm:px-6 sm:py-4">
 
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+                className="rounded-xl border border-[#D9E9E7] px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
+                className="rounded-xl bg-[#08A6A0] px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
               >
                 {isEditing
                   ? "Update Nurse"
@@ -849,18 +849,18 @@ const NurseForm = ({
       {/* ====================================================================== */}
 
       {cameraOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#173F41]/70 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#173F41]/70 p-3 sm:p-4 backdrop-blur-sm">
 
           <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-            <div className="flex items-center justify-between border-b border-[#E2EFED] px-5 py-4">
+            <div className="flex items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4">
 
               <div>
-                <h3 className="text-base font-bold text-[#173F41]">
+                <h3 className="text-sm sm:text-base font-bold text-[#173F41]">
                   Capture Nurse Photo
                 </h3>
 
-                <p className="mt-0.5 text-xs text-[#819596]">
+                <p className="mt-0.5 text-[11px] sm:text-xs text-[#819596]">
                   Position the face inside the frame
                 </p>
               </div>
@@ -875,9 +875,9 @@ const NurseForm = ({
 
             </div>
 
-            <div className="relative bg-[#173F41] p-4">
+            <div className="relative bg-[#173F41] p-3 sm:p-4">
 
-              <div className="relative mx-auto aspect-[3/4] max-h-[55vh] overflow-hidden rounded-2xl">
+              <div className="relative mx-auto aspect-[3/4] max-h-[50vh] sm:max-h-[55vh] overflow-hidden rounded-2xl">
 
                 <video
                   ref={videoRef}
@@ -901,12 +901,12 @@ const NurseForm = ({
 
             </div>
 
-            <div className="flex justify-center gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-5 py-4">
+            <div className="flex justify-center gap-2 sm:gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-4 py-3 sm:px-5 sm:py-4">
 
               <button
                 type="button"
                 onClick={stopCamera}
-                className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+                className="rounded-xl border border-[#D9E9E7] px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
               >
                 Cancel
               </button>
@@ -914,7 +914,7 @@ const NurseForm = ({
               <button
                 type="button"
                 onClick={capturePhoto}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#08A6A0] px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
               >
                 <Camera className="h-4 w-4" />
                 Capture Photo
@@ -939,7 +939,7 @@ const NurseForm = ({
 /* ========================================================================== */
 
 const SectionTitle = ({ children }) => (
-  <h3 className="mb-3 text-sm font-bold text-[#173F41]">
+  <h3 className="mb-2 sm:mb-3 text-xs sm:text-sm font-bold text-[#173F41]">
     {children}
   </h3>
 );
@@ -956,7 +956,7 @@ const InputField = ({
   step,
 }) => (
   <label className="block">
-    <span className="mb-1.5 block text-xs font-semibold text-[#31585A]">
+    <span className="mb-1 sm:mb-1.5 block text-xs font-semibold text-[#31585A]">
       {label}
 
       {required && (
@@ -976,12 +976,12 @@ const InputField = ({
       min={min}
       step={step}
       className="
-        h-10 w-full
+        h-10 sm:h-11 w-full
         rounded-xl
         border border-[#D9E9E7]
         bg-[#FAFDFC]
-        px-3
-        text-sm
+        px-3 sm:px-3.5
+        text-xs sm:text-sm
         text-[#173F41]
         outline-none
         transition
@@ -1002,7 +1002,7 @@ const SelectField = ({
   options,
 }) => (
   <label className="block">
-    <span className="mb-1.5 block text-xs font-semibold text-[#31585A]">
+    <span className="mb-1 sm:mb-1.5 block text-xs font-semibold text-[#31585A]">
       {label}
     </span>
 
@@ -1011,12 +1011,12 @@ const SelectField = ({
       value={value ?? ""}
       onChange={onChange}
       className="
-        h-10 w-full
+        h-10 sm:h-11 w-full
         rounded-xl
         border border-[#D9E9E7]
         bg-[#FAFDFC]
-        px-3
-        text-sm
+        px-3 sm:px-3.5
+        text-xs sm:text-sm
         text-[#173F41]
         outline-none
         transition

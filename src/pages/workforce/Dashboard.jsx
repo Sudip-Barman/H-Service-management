@@ -245,32 +245,27 @@ export default function Dashboard({ user }) {
       </section>
 
       {/* Summary Stats */}
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
 
           return (
             <div
               key={stat.label}
-              className="rounded-2xl border border-[#DDEBEA] bg-white px-5 py-4 shadow-sm"
+              className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
                     {stat.label}
                   </p>
-
-                  <p className="mt-2 text-2xl font-bold text-[#073F42]">
+                  <p className="mt-0.5 sm:mt-1 text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
                     {stat.value}
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-400">
-                    {stat.description}
                   </p>
                 </div>
 
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-                  <Icon size={19} />
+                <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+                  <Icon />
                 </div>
               </div>
             </div>

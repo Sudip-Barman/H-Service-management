@@ -700,7 +700,7 @@ const Nurses = () => {
 
 
 {/* Statistics */}
-<div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+<div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
   <StatCard
     icon={Users}
     label="Total Nurses"
@@ -849,9 +849,8 @@ const Nurses = () => {
         </div>
       </SearchFilter>
 
-      {/* Nurse Table */}
-
-      <div className="overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
+      {/* Desktop Nurse Table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm md:block">
         <div className="flex flex-col gap-1 border-b border-[#EAF2F0] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div>
             <h2 className="text-sm font-bold text-[#173F41] sm:text-base">
@@ -859,50 +858,39 @@ const Nurses = () => {
             </h2>
 
             <p className="mt-0.5 text-xs text-[#819596]">
-              Showing {filteredNurses.length} of{" "}
-              {nurses.length} nurses
+              Showing {filteredNurses.length} of {nurses.length} nurses
             </p>
           </div>
         </div>
 
-        {/* Desktop */}
-
-        <div className="hidden overflow-x-auto md:block">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
             <thead>
               <tr className="border-b border-[#EAF2F0] bg-[#FAFDFC]">
                 <th className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Nurse
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Staff ID
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Registration
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Department
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Qualification
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Experience
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Shift
                 </th>
-
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Status
                 </th>
-
                 <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-wide text-[#819596]">
                   Actions
                 </th>
@@ -911,12 +899,8 @@ const Nurses = () => {
 
             <tbody>
               {filteredNurses.map((nurse) => {
-                const nurseName =
-                  getNurseName(nurse);
-
-                const photoUrl = getPhotoUrl(
-                  nurse.photo
-                );
+                const nurseName = getNurseName(nurse);
+                const photoUrl = getPhotoUrl(nurse.photo);
 
                 return (
                   <tr
@@ -930,15 +914,12 @@ const Nurses = () => {
                           name={nurseName}
                           size="h-10 w-10"
                         />
-
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-[#173F41]">
                             {nurseName}
                           </p>
-
                           <p className="mt-0.5 truncate text-xs text-[#819596]">
-                            Nurse ID:{" "}
-                            {nurse.nurse_id}
+                            Nurse ID: {nurse.nurse_id}
                           </p>
                         </div>
                       </div>
@@ -952,8 +933,7 @@ const Nurses = () => {
 
                     <td className="px-4 py-4">
                       <span className="text-sm font-medium text-[#31585A]">
-                        {nurse.registration_number ||
-                          "—"}
+                        {nurse.registration_number || "—"}
                       </span>
                     </td>
 
@@ -962,7 +942,6 @@ const Nurses = () => {
                         <p className="text-sm text-[#31585A]">
                           {nurse.department || "—"}
                         </p>
-
                         <p className="mt-0.5 text-xs text-[#819596]">
                           {nurse.ward || "—"}
                         </p>
@@ -978,11 +957,7 @@ const Nurses = () => {
                     <td className="px-4 py-4">
                       <span className="text-sm text-[#31585A]">
                         {nurse.experience_years || 0}{" "}
-                        {Number(
-                          nurse.experience_years
-                        ) === 1
-                          ? "year"
-                          : "years"}
+                        {Number(nurse.experience_years) === 1 ? "year" : "years"}
                       </span>
                     </td>
 
@@ -993,27 +968,15 @@ const Nurses = () => {
                     </td>
 
                     <td className="px-4 py-4">
-                      <StatusBadge
-                        status={nurse.status}
-                      />
+                      <StatusBadge status={nurse.status} />
                     </td>
 
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-1">
                         <button
                           type="button"
-                          onClick={() =>
-                            setSelectedNurse(
-                              nurse
-                            )
-                          }
-                          className="
-                            flex h-8 w-8 items-center justify-center
-                            rounded-lg text-[#819596]
-                            transition
-                            hover:bg-[#E8F8F6]
-                            hover:text-[#08A6A0]
-                          "
+                          onClick={() => setSelectedNurse(nurse)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
                           title="View Nurse"
                         >
                           <Eye className="h-4 w-4" />
@@ -1021,18 +984,8 @@ const Nurses = () => {
 
                         <button
                           type="button"
-                          onClick={() =>
-                            handleEditNurse(
-                              nurse
-                            )
-                          }
-                          className="
-                            flex h-8 w-8 items-center justify-center
-                            rounded-lg text-[#819596]
-                            transition
-                            hover:bg-[#E8F8F6]
-                            hover:text-[#08A6A0]
-                          "
+                          onClick={() => handleEditNurse(nurse)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
                           title="Edit Nurse"
                         >
                           <Pencil className="h-4 w-4" />
@@ -1040,18 +993,8 @@ const Nurses = () => {
 
                         <button
                           type="button"
-                          onClick={() =>
-                            setDeleteNurse(
-                              nurse
-                            )
-                          }
-                          className="
-                            flex h-8 w-8 items-center justify-center
-                            rounded-lg text-[#819596]
-                            transition
-                            hover:bg-[#FDECEC]
-                            hover:text-[#C53D3D]
-                          "
+                          onClick={() => setDeleteNurse(nurse)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#FDECEC] hover:text-[#C53D3D]"
                           title="Delete Nurse"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1064,153 +1007,27 @@ const Nurses = () => {
             </tbody>
           </table>
 
-          {filteredNurses.length === 0 && (
-            <EmptyState />
-          )}
+          {filteredNurses.length === 0 && <EmptyState />}
         </div>
+      </div>
 
-        {/* Mobile */}
-
-        <div className="divide-y divide-[#EEF4F2] md:hidden">
-          {filteredNurses.map((nurse) => {
-            const nurseName =
-              getNurseName(nurse);
-
-            const photoUrl = getPhotoUrl(
-              nurse.photo
-            );
-
-            return (
-              <div
-                key={nurse.nurse_id}
-                className="p-4"
-              >
-                <div className="flex items-start gap-3">
-                  <PhotoAvatar
-                    photo={photoUrl}
-                    name={nurseName}
-                    size="h-11 w-11"
-                  />
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-sm font-bold text-[#173F41]">
-                          {nurseName}
-                        </h3>
-
-                        <p className="mt-0.5 text-xs text-[#819596]">
-                          Staff ID:{" "}
-                          {nurse.staff_id || "—"}
-                        </p>
-                      </div>
-
-                      <StatusBadge
-                        status={nurse.status}
-                      />
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
-                      <MobileInfo
-                        label="Registration"
-                        value={
-                          nurse.registration_number
-                        }
-                      />
-
-                      <MobileInfo
-                        label="Department"
-                        value={nurse.department}
-                      />
-
-                      <MobileInfo
-                        label="Qualification"
-                        value={nurse.qualification}
-                      />
-
-                      <MobileInfo
-                        label="Experience"
-                        value={`${nurse.experience_years || 0} years`}
-                      />
-
-                      <MobileInfo
-                        label="Ward"
-                        value={nurse.ward}
-                      />
-
-                      <MobileInfo
-                        label="Shift"
-                        value={nurse.shift_type}
-                      />
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-end gap-1 border-t border-[#EEF4F2] pt-3">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedNurse(
-                            nurse
-                          )
-                        }
-                        className="
-                          inline-flex h-8 items-center gap-1.5
-                          rounded-lg px-2.5
-                          text-xs font-semibold text-[#31585A]
-                          hover:bg-[#E8F8F6]
-                          hover:text-[#08A6A0]
-                        "
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleEditNurse(
-                            nurse
-                          )
-                        }
-                        className="
-                          inline-flex h-8 items-center gap-1.5
-                          rounded-lg px-2.5
-                          text-xs font-semibold text-[#31585A]
-                          hover:bg-[#E8F8F6]
-                          hover:text-[#08A6A0]
-                        "
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setDeleteNurse(
-                            nurse
-                          )
-                        }
-                        className="
-                          inline-flex h-8 items-center gap-1.5
-                          rounded-lg px-2.5
-                          text-xs font-semibold text-[#C53D3D]
-                          hover:bg-[#FDECEC]
-                        "
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {filteredNurses.length === 0 && (
+      {/* Mobile Nurse Cards */}
+      <div className="space-y-3 md:hidden">
+        {filteredNurses.length > 0 ? (
+          filteredNurses.map((nurse) => (
+            <NurseMobileCard
+              key={nurse.nurse_id}
+              nurse={nurse}
+              onView={setSelectedNurse}
+              onEdit={handleEditNurse}
+              onDelete={setDeleteNurse}
+            />
+          ))
+        ) : (
+          <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-12 text-center shadow-sm">
             <EmptyState />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Nurse Form */}
@@ -1251,6 +1068,113 @@ const Nurses = () => {
           }
         />
       )}
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*                              Nurse Mobile Card                             */
+/* -------------------------------------------------------------------------- */
+
+const NurseMobileCard = ({
+  nurse,
+  onView,
+  onEdit,
+  onDelete,
+}) => {
+  const nurseName = getNurseName(nurse);
+  const photoUrl = getPhotoUrl(nurse.photo);
+
+  return (
+    <div className="rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <PhotoAvatar
+            photo={photoUrl}
+            name={nurseName}
+            size="h-10 w-10"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-[#173F41]">
+              {nurseName}
+            </p>
+            <p className="mt-0.5 text-xs text-[#819596]">
+              Staff ID: {nurse.staff_id || "—"} • {nurse.registration_number || "—"}
+            </p>
+          </div>
+        </div>
+        <StatusBadge status={nurse.status} />
+      </div>
+
+      {/* Information Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Department / Ward
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">
+            {nurse.department || "—"} • {nurse.ward || "—"}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Qualification
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">
+            {nurse.qualification || "—"}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Experience
+          </p>
+          <p className="mt-1 text-xs font-semibold text-[#31585A] sm:text-sm">
+            {nurse.experience_years || 0} {Number(nurse.experience_years) === 1 ? "year" : "years"} exp
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Shift
+          </p>
+          <p className="mt-1 text-xs font-semibold text-[#31585A] sm:text-sm">
+            {nurse.shift_type || "—"}
+          </p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-3 flex gap-2 border-t border-[#EAF2F0] pt-3">
+        <button
+          type="button"
+          onClick={() => onView(nurse)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E8F8F6] px-3 py-2 text-xs font-semibold text-[#073F42] transition hover:bg-[#DDF3F0]"
+        >
+          <Eye size={14} />
+          View Profile
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onEdit(nurse)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+          title="Edit Nurse"
+        >
+          <Pencil size={15} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(nurse)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          title="Delete Nurse"
+        >
+          <Trash2 size={15} />
+        </button>
+      </div>
     </div>
   );
 };

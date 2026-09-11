@@ -438,29 +438,28 @@ const Food = () => {
   ========================================================= */
 
   return (
-    <div className="min-h-screen bg-[#F7FBFA] p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#F7FBFA] p-3 sm:p-6 lg:p-8">
 
       {/* =====================================================
           HEADER
       ===================================================== */}
 
-      <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+      <div className="mb-4 sm:mb-7 flex flex-col justify-between gap-3 sm:gap-4 lg:flex-row lg:items-center">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8F8F6]">
+          <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-[#E8F8F6]">
             <Utensils
-              size={25}
-              className="text-[#08A6A0]"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-[#08A6A0]"
             />
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-[#073F42] md:text-3xl">
+            <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl lg:text-3xl">
               Hospital Food & Diet
             </h1>
 
-            <p className="mt-1 text-sm text-[#789092]">
+            <p className="mt-0.5 text-xs text-[#789092] sm:text-sm">
               Manage patient meals, diets, kitchen operations and food delivery
             </p>
           </div>
@@ -469,9 +468,9 @@ const Food = () => {
 
         <button
           onClick={() => setShowAddFood(true)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
+          className="flex h-10 sm:h-11 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
         >
-          <Plus size={18} />
+          <Plus size={16} className="sm:size-[18px]" />
           Add Food Item
         </button>
 
@@ -481,42 +480,42 @@ const Food = () => {
           DASHBOARD CARDS
       ===================================================== */}
 
-      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="mb-4 sm:mb-7 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-6">
 
         <StatCard
           title="Food Menu"
           value={statistics.totalFood}
-          icon={<Apple size={21} />}
+          icon={<Apple />}
         />
 
         <StatCard
           title="Available"
           value={statistics.availableFood}
-          icon={<CheckCircle2 size={21} />}
+          icon={<CheckCircle2 />}
         />
 
         <StatCard
           title="Low Stock"
           value={statistics.lowStockFood}
-          icon={<Package size={21} />}
+          icon={<Package />}
         />
 
         <StatCard
           title="Diet Plans"
           value={statistics.activeDietPlans}
-          icon={<UserRound size={21} />}
+          icon={<UserRound />}
         />
 
         <StatCard
           title="Active Orders"
           value={statistics.pendingOrders}
-          icon={<ShoppingBag size={21} />}
+          icon={<ShoppingBag />}
         />
 
         <StatCard
           title="Delivered"
           value={statistics.deliveredOrders}
-          icon={<Truck size={21} />}
+          icon={<Truck />}
         />
 
       </div>
@@ -678,13 +677,11 @@ const Food = () => {
               </p>
             </div>
 
-            <div className="overflow-x-auto">
-
+            {/* DESKTOP TABLE */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[1000px]">
-
                 <thead className="bg-[#F7FBFA]">
                   <tr className="border-b border-[#EAF2F0]">
-
                     <TableHead>Food Item</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Meal</TableHead>
@@ -693,23 +690,17 @@ const Food = () => {
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Action</TableHead>
-
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-[#EAF2F0]">
-
                   {filteredFood.map((food) => (
-
                     <tr
                       key={food.id}
                       className="transition hover:bg-[#FBFEFD]"
                     >
-
                       <td className="px-5 py-4">
-
                         <div className="flex items-center gap-3">
-
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F8F6]">
                             <Soup
                               size={18}
@@ -726,9 +717,7 @@ const Food = () => {
                               {food.code}
                             </p>
                           </div>
-
                         </div>
-
                       </td>
 
                       <td className="px-5 py-4 text-sm text-[#31585A]">
@@ -740,11 +729,9 @@ const Food = () => {
                       </td>
 
                       <td className="px-5 py-4">
-
                         <span className="rounded-full bg-[#E8F8F6] px-3 py-1 text-xs font-semibold text-[#078F8A]">
                           {food.diet}
                         </span>
-
                       </td>
 
                       <td className="px-5 py-4 text-sm text-[#31585A]">
@@ -760,7 +747,6 @@ const Food = () => {
                       </td>
 
                       <td className="px-5 py-4">
-
                         <button
                           onClick={() => {
                             setSelectedFood(food);
@@ -770,17 +756,64 @@ const Food = () => {
                         >
                           <Eye size={16} />
                         </button>
-
                       </td>
-
                     </tr>
-
                   ))}
-
                 </tbody>
-
               </table>
+            </div>
 
+            {/* MOBILE CARD LIST */}
+            <div className="space-y-3 p-3 md:hidden">
+              {filteredFood.map((food) => (
+                <div key={food.id} className="rounded-xl border border-[#E2EFED] bg-white p-3.5 shadow-sm">
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+                        <Soup size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-bold text-[#073F42]">{food.name}</h3>
+                        <p className="text-xs text-[#819596]">{food.code} · {food.category}</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-[#E8F8F6] px-2.5 py-1 text-[11px] font-semibold text-[#078F8A]">
+                      {food.diet}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-[#FAFDFC] p-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Meal</span>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{food.meal}</p>
+                    </div>
+                    <div className="rounded-lg bg-[#FAFDFC] p-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Calories</span>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{food.calories} kcal</p>
+                    </div>
+                    <div className="rounded-lg bg-[#FAFDFC] p-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Price</span>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-[#173F41]">₹{food.price}</p>
+                    </div>
+                    <div className="rounded-lg bg-[#FAFDFC] p-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Stock</span>
+                      <div className="mt-0.5">{getStockBadge(food.stock)}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex justify-end border-t border-[#EAF2F0] pt-2.5">
+                    <button
+                      onClick={() => {
+                        setSelectedFood(food);
+                        setShowViewFood(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9E9E7] px-3 py-1.5 text-xs font-semibold text-[#31585A] hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                    >
+                      <Eye size={14} /> View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
 
           </div>
@@ -1276,42 +1309,30 @@ const DietPlans = ({ dietPlans }) => {
       title="Patient Diet Plans"
       subtitle="Dietician assigned diet plans for admitted patients"
     >
-
-      <div className="overflow-x-auto">
-
+      {/* DESKTOP TABLE */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[850px]">
-
           <thead className="bg-[#F7FBFA]">
-
             <tr className="border-b border-[#EAF2F0]">
-
               <TableHead>Patient</TableHead>
               <TableHead>Room</TableHead>
               <TableHead>Diet</TableHead>
               <TableHead>Meals</TableHead>
               <TableHead>Dietician</TableHead>
               <TableHead>Status</TableHead>
-
             </tr>
-
           </thead>
 
           <tbody className="divide-y divide-[#EAF2F0]">
-
             {dietPlans.map((plan) => (
-
               <tr key={plan.id} className="hover:bg-[#FBFEFD]">
-
                 <td className="px-5 py-4">
-
                   <p className="font-semibold text-[#173F41]">
                     {plan.patientName}
                   </p>
-
                   <p className="text-xs text-[#819596]">
                     {plan.patientId}
                   </p>
-
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[#31585A]">
@@ -1319,11 +1340,9 @@ const DietPlans = ({ dietPlans }) => {
                 </td>
 
                 <td className="px-5 py-4">
-
                   <span className="rounded-full bg-[#E8F8F6] px-3 py-1 text-xs font-semibold text-[#078F8A]">
                     {plan.diet}
                   </span>
-
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[#31585A]">
@@ -1335,7 +1354,6 @@ const DietPlans = ({ dietPlans }) => {
                 </td>
 
                 <td className="px-5 py-4">
-
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
                       plan.status === "Active"
@@ -1345,19 +1363,51 @@ const DietPlans = ({ dietPlans }) => {
                   >
                     {plan.status}
                   </span>
-
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
-
       </div>
 
+      {/* MOBILE CARD LIST */}
+      <div className="space-y-3 md:hidden">
+        {dietPlans.map((plan) => (
+          <div key={plan.id} className="rounded-xl border border-[#E2EFED] bg-white p-3.5 shadow-sm">
+            <div className="flex items-start justify-between gap-2.5">
+              <div>
+                <h3 className="text-sm font-bold text-[#073F42]">{plan.patientName}</h3>
+                <p className="text-xs text-[#819596]">{plan.patientId} · Room {plan.room}</p>
+              </div>
+              <span
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                  plan.status === "Active"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-yellow-50 text-yellow-700"
+                }`}
+              >
+                {plan.status}
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-[#FAFDFC] p-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Diet</span>
+                <p className="mt-0.5 truncate text-xs font-semibold text-[#078F8A]">{plan.diet}</p>
+              </div>
+              <div className="rounded-lg bg-[#FAFDFC] p-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Dietician</span>
+                <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{plan.dietician}</p>
+              </div>
+            </div>
+
+            <div className="mt-2.5 rounded-lg bg-[#FAFDFC] p-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Meals Included</span>
+              <p className="mt-0.5 text-xs font-medium text-[#31585A]">{plan.meals}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </SectionCard>
   );
 };
@@ -1376,15 +1426,11 @@ const FoodOrders = ({
       title="Food Orders"
       subtitle="Manage patient meal orders and kitchen status"
     >
-
-      <div className="overflow-x-auto">
-
+      {/* DESKTOP TABLE */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1000px]">
-
           <thead className="bg-[#F7FBFA]">
-
             <tr className="border-b border-[#EAF2F0]">
-
               <TableHead>Order</TableHead>
               <TableHead>Patient</TableHead>
               <TableHead>Meal</TableHead>
@@ -1392,34 +1438,26 @@ const FoodOrders = ({
               <TableHead>Items</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
-
             </tr>
-
           </thead>
 
           <tbody className="divide-y divide-[#EAF2F0]">
-
             {orders.map((order) => (
-
               <tr
                 key={order.id}
                 className="hover:bg-[#FBFEFD]"
               >
-
                 <td className="px-5 py-4 font-semibold text-[#173F41]">
                   {order.id}
                 </td>
 
                 <td className="px-5 py-4">
-
                   <p className="text-sm font-semibold text-[#173F41]">
                     {order.patient}
                   </p>
-
                   <p className="text-xs text-[#819596]">
                     Room {order.room}
                   </p>
-
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[#31585A]">
@@ -1427,11 +1465,9 @@ const FoodOrders = ({
                 </td>
 
                 <td className="px-5 py-4">
-
                   <span className="rounded-full bg-[#E8F8F6] px-3 py-1 text-xs font-semibold text-[#08A6A0]">
                     {order.diet}
                   </span>
-
                 </td>
 
                 <td className="max-w-[220px] px-5 py-4 text-sm text-[#31585A]">
@@ -1443,9 +1479,7 @@ const FoodOrders = ({
                 </td>
 
                 <td className="px-5 py-4">
-
                   <div className="flex gap-2">
-
                     <button
                       onClick={() => onView(order)}
                       className="rounded-lg border border-[#D9E9E7] p-2 text-[#31585A] hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
@@ -1480,21 +1514,71 @@ const FoodOrders = ({
                         Ready
                       </button>
                     )}
-
                   </div>
-
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
-
       </div>
 
+      {/* MOBILE CARD LIST */}
+      <div className="space-y-3 md:hidden">
+        {orders.map((order) => (
+          <div key={order.id} className="rounded-xl border border-[#E2EFED] bg-white p-3.5 shadow-sm">
+            <div className="flex items-start justify-between gap-2.5">
+              <div>
+                <h3 className="text-sm font-bold text-[#073F42]">{order.id}</h3>
+                <p className="text-xs text-[#819596]">{order.patient} · Room {order.room}</p>
+              </div>
+              {getOrderStatusBadge(order.status)}
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-[#FAFDFC] p-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Meal / Diet</span>
+                <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{order.meal} · {order.diet}</p>
+              </div>
+              <div className="rounded-lg bg-[#FAFDFC] p-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Order Time</span>
+                <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{order.orderTime}</p>
+              </div>
+            </div>
+
+            <div className="mt-2.5 rounded-lg bg-[#FAFDFC] p-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Items</span>
+              <p className="mt-0.5 text-xs text-[#31585A]">{order.items}</p>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#EAF2F0] pt-2.5">
+              <button
+                onClick={() => onView(order)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9E9E7] px-3 py-1.5 text-xs font-semibold text-[#31585A] hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+              >
+                <Eye size={14} /> View
+              </button>
+
+              {order.status === "Pending" && (
+                <button
+                  onClick={() => onStatusChange(order.id, "Preparing")}
+                  className="rounded-lg bg-[#08A6A0] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#078F8A]"
+                >
+                  Prepare
+                </button>
+              )}
+
+              {order.status === "Preparing" && (
+                <button
+                  onClick={() => onStatusChange(order.id, "Ready")}
+                  className="rounded-lg bg-[#E8F8F6] px-3 py-1.5 text-xs font-semibold text-[#08A6A0]"
+                >
+                  Ready
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </SectionCard>
   );
 };
@@ -1518,9 +1602,7 @@ const KitchenManagement = ({ orders }) => {
 
   return (
     <div>
-
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-
+      <div className="mb-4 sm:mb-6 grid grid-cols-1 gap-2.5 sm:gap-4 md:grid-cols-3">
         <KitchenCard
           title="Pending Orders"
           value={pending}
@@ -1538,16 +1620,13 @@ const KitchenManagement = ({ orders }) => {
           value={ready}
           icon={<CheckCircle2 size={21} />}
         />
-
       </div>
 
       <SectionCard
         title="Kitchen Management"
         subtitle="Monitor meal preparation and kitchen workload"
       >
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
           <KitchenStation
             title="Breakfast"
             orders="45"
@@ -1571,11 +1650,8 @@ const KitchenManagement = ({ orders }) => {
             orders="71"
             time="07:30 PM"
           />
-
         </div>
-
       </SectionCard>
-
     </div>
   );
 };
@@ -1590,35 +1666,26 @@ const FoodStock = ({ stock, getStockBadge }) => {
       title="Food Stock"
       subtitle="Kitchen raw material and food inventory"
     >
-
-      <div className="overflow-x-auto">
-
+      {/* DESKTOP TABLE */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[750px]">
-
           <thead className="bg-[#F7FBFA]">
-
             <tr className="border-b border-[#EAF2F0]">
-
               <TableHead>Item</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Unit</TableHead>
               <TableHead>Current Stock</TableHead>
               <TableHead>Reorder Level</TableHead>
               <TableHead>Status</TableHead>
-
             </tr>
-
           </thead>
 
           <tbody className="divide-y divide-[#EAF2F0]">
-
             {stock.map((item) => (
-
               <tr
                 key={item.id}
                 className="hover:bg-[#FBFEFD]"
               >
-
                 <td className="px-5 py-4 font-semibold text-[#173F41]">
                   {item.item}
                 </td>
@@ -1645,47 +1712,58 @@ const FoodStock = ({ stock, getStockBadge }) => {
                     item.reorderLevel
                   )}
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
-
       </div>
 
+      {/* MOBILE CARD LIST */}
+      <div className="space-y-3 md:hidden">
+        {stock.map((item) => (
+          <div key={item.id} className="rounded-xl border border-[#E2EFED] bg-white p-3.5 shadow-sm">
+            <div className="flex items-start justify-between gap-2.5">
+              <div>
+                <h3 className="text-sm font-bold text-[#073F42]">{item.item}</h3>
+                <p className="text-xs text-[#819596]">{item.category}</p>
+              </div>
+              <div>{getStockBadge(item.quantity, item.reorderLevel)}</div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-[#FAFDFC] p-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Current Stock</span>
+                <p className="mt-0.5 truncate text-xs font-bold text-[#173F41]">{item.quantity} {item.unit}</p>
+              </div>
+              <div className="rounded-lg bg-[#FAFDFC] p-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Reorder Level</span>
+                <p className="mt-0.5 truncate text-xs font-semibold text-[#819596]">{item.reorderLevel} {item.unit}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </SectionCard>
   );
 };
-
 
 /* =========================================================
    REUSABLE COMPONENTS
 ========================================================= */
 
 const StatCard = ({ title, value, icon }) => (
-  <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-
-    <div className="flex items-center justify-between">
-
-      <div>
-        <p className="text-sm font-medium text-[#819596]">
-          {title}
-        </p>
-
-        <p className="mt-2 text-2xl font-bold text-[#073F42]">
-          {value}
-        </p>
-      </div>
-
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+  <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+    <div className="flex items-center justify-between gap-1.5">
+      <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
         {icon}
       </div>
-
+      <p className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
+        {value}
+      </p>
     </div>
-
+    <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+      {title}
+    </p>
   </div>
 );
 

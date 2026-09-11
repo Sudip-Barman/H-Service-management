@@ -510,19 +510,19 @@ const Medicines = () => {
           HEADER
       ===================================================== */}
 
-      <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+      <div className="mb-5 sm:mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8F8F6]">
-              <Pill className="text-[#08A6A0]" size={25} />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-[#E8F8F6]">
+              <Pill className="text-[#08A6A0]" size={20} />
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold text-[#073F42] md:text-3xl">
+              <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl md:text-3xl">
                 Medicine / Pharmacy
               </h1>
 
-              <p className="text-sm text-[#789092]">
+              <p className="mt-0.5 text-xs text-[#789092] sm:text-sm">
                 Manage medicines, inventory, sales and pharmacy stock
               </p>
             </div>
@@ -534,9 +534,9 @@ const Medicines = () => {
             setForm(emptyForm);
             setShowAddModal(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
         >
-          <Plus size={18} />
+          <Plus size={16} />
           Add Medicine
         </button>
       </div>
@@ -545,36 +545,36 @@ const Medicines = () => {
           STAT CARDS
       ===================================================== */}
 
-      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mb-5 sm:mb-7 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-5">
 
         <StatCard
           title="Total Medicines"
           value={stats.total}
-          icon={<Package size={22} />}
+          icon={<Package size={20} />}
         />
 
         <StatCard
           title="Available"
           value={stats.available}
-          icon={<CheckCircle2 size={22} />}
+          icon={<CheckCircle2 size={20} />}
         />
 
         <StatCard
           title="Low Stock"
           value={stats.lowStock}
-          icon={<AlertCircle size={22} />}
+          icon={<AlertCircle size={20} />}
         />
 
         <StatCard
           title="Out of Stock"
           value={stats.outOfStock}
-          icon={<ShoppingCart size={22} />}
+          icon={<ShoppingCart size={20} />}
         />
 
         <StatCard
           title="Expiring Soon"
           value={stats.expiringSoon}
-          icon={<AlertCircle size={22} />}
+          icon={<AlertCircle size={20} />}
         />
 
       </div>
@@ -677,10 +677,10 @@ const Medicines = () => {
       </div>
 
       {/* =====================================================
-          MEDICINE TABLE
+          DESKTOP MEDICINE TABLE
       ===================================================== */}
 
-      <div className="overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm md:block">
 
         <div className="flex flex-col justify-between gap-3 border-b border-[#EAF2F0] px-5 py-5 md:flex-row md:items-center">
 
@@ -931,6 +931,41 @@ const Medicines = () => {
       </div>
 
       {/* =====================================================
+          MOBILE MEDICINE CARDS
+      ===================================================== */}
+
+      <div className="space-y-3 md:hidden">
+        {filteredMedicines.length > 0 ? (
+          filteredMedicines.map((medicine) => (
+            <MedicineMobileCard
+              key={medicine.medicine_id}
+              medicine={medicine}
+              onView={handleView}
+              onAddStock={(m) => openStockModal(m, "add")}
+              onRemoveStock={(m) => openStockModal(m, "remove")}
+              formatDate={formatDate}
+              stockBadge={stockBadge}
+              expiryBadge={expiryBadge}
+            />
+          ))
+        ) : (
+          <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-12 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
+              <Pill size={22} />
+            </div>
+
+            <p className="mt-3 text-sm font-bold text-[#31585A]">
+              No medicines found
+            </p>
+
+            <p className="mt-1 text-xs text-[#819596]">
+              Try changing your search or filter.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* =====================================================
           ADD MEDICINE MODAL
       ===================================================== */}
 
@@ -1100,19 +1135,19 @@ const Medicines = () => {
 
             </label>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-5 sm:mt-6 flex justify-end gap-2 sm:gap-3">
 
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="rounded-xl border border-[#D9E9E7] px-5 py-3 text-sm font-semibold text-[#31585A] hover:bg-[#F7FBFA]"
+                className="h-10 sm:h-11 rounded-xl border border-[#D9E9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A] hover:bg-[#F7FBFA]"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="rounded-xl bg-[#08A6A0] px-5 py-3 text-sm font-semibold text-white hover:bg-[#078F8A]"
+                className="h-10 sm:h-11 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#078F8A]"
               >
                 Add Medicine
               </button>
@@ -1316,31 +1351,136 @@ const Medicines = () => {
 };
 
 /* =========================================================
+   MOBILE MEDICINE CARD
+========================================================= */
+
+const MedicineMobileCard = ({
+  medicine,
+  onView,
+  onAddStock,
+  onRemoveStock,
+  formatDate,
+  stockBadge,
+  expiryBadge,
+}) => {
+  return (
+    <div className="rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+            <Pill size={18} />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-[#173F41]">
+              {medicine.medicine_name}
+            </p>
+            <p className="mt-0.5 text-xs text-[#819596]">
+              {medicine.medicine_code} • {medicine.generic_name}
+            </p>
+          </div>
+        </div>
+        {stockBadge(medicine)}
+      </div>
+
+      {/* Information Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Type / Category
+          </p>
+          <p className="mt-1 text-xs font-semibold text-[#31585A] sm:text-sm">
+            {medicine.medicine_type} • {medicine.category}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Stock / Reorder
+          </p>
+          <p className="mt-1 text-xs font-bold text-[#173F41] sm:text-sm">
+            {medicine.quantity} {medicine.unit}{" "}
+            <span className="text-[11px] font-normal text-[#819596]">
+              (Min: {medicine.reorder_level})
+            </span>
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Batch / Location
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">
+            {medicine.batch_number} • {medicine.storage_location || "N/A"}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Price / Expiry
+          </p>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-xs font-bold text-[#08A6A0] sm:text-sm">
+              ₹{medicine.selling_price?.toFixed(2)}
+            </span>
+            {expiryBadge(medicine.expiry_date)}
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-3 flex gap-2 border-t border-[#EAF2F0] pt-3">
+        <button
+          type="button"
+          onClick={() => onView(medicine)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E8F8F6] px-3 py-2 text-xs font-semibold text-[#073F42] transition hover:bg-[#DDF3F0]"
+        >
+          <Eye size={14} />
+          View Details
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onAddStock(medicine)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0] transition hover:bg-[#08A6A0] hover:text-white"
+          title="Add Stock"
+        >
+          <ArrowUp size={15} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onRemoveStock(medicine)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-600 hover:text-white"
+          title="Remove Stock"
+        >
+          <ArrowDown size={15} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* =========================================================
    STAT CARD
 ========================================================= */
 
 const StatCard = ({ title, value, icon }) => {
   return (
-    <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-          <p className="text-sm font-medium text-[#819596]">
+    <div className="min-w-0 rounded-lg border border-[#E2EFED] bg-white px-2 py-1.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-xl sm:px-2.5 sm:py-2.5 md:rounded-2xl md:p-4">
+      <div className="flex items-center justify-between gap-1 sm:gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[9px] font-semibold text-[#819596] sm:text-[10px] md:text-xs">
             {title}
           </p>
-
-          <p className="mt-2 text-2xl font-bold text-[#073F42]">
+          <p className="mt-0.5 text-base font-bold leading-none text-[#073F42] sm:mt-1 sm:text-lg md:mt-2 md:text-2xl">
             {value}
           </p>
         </div>
-
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#E8F8F6] text-[#08A6A0] sm:h-7 sm:w-7 sm:rounded-lg md:h-10 md:w-10 md:rounded-xl [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
           {icon}
         </div>
-
       </div>
-
     </div>
   );
 };
@@ -1361,7 +1501,7 @@ const Input = ({
 }) => {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#31585A]">
+      <label className="mb-1.5 block text-xs font-semibold text-[#31585A]">
         {label}
       </label>
 
@@ -1372,7 +1512,7 @@ const Input = ({
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[#D9E9E7] bg-white px-4 py-3 text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+        className="h-10 sm:h-11 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 sm:px-4 text-xs sm:text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
       />
     </div>
   );
@@ -1391,7 +1531,7 @@ const Select = ({
 }) => {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#31585A]">
+      <label className="mb-1.5 block text-xs font-semibold text-[#31585A]">
         {label}
       </label>
 
@@ -1399,7 +1539,7 @@ const Select = ({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl border border-[#D9E9E7] bg-white px-4 py-3 text-sm text-[#173F41] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+        className="h-10 sm:h-11 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 sm:px-4 text-xs sm:text-sm text-[#173F41] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -1417,13 +1557,13 @@ const Select = ({
 
 const Detail = ({ label, value }) => {
   return (
-    <div className="rounded-xl border border-[#EAF2F0] bg-[#FBFEFD] p-4">
+    <div className="rounded-xl border border-[#EAF2F0] bg-[#FBFEFD] p-3 sm:p-4">
 
-      <p className="text-xs font-medium text-[#819596]">
+      <p className="text-[11px] sm:text-xs font-medium text-[#819596]">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-semibold text-[#173F41]">
+      <p className="mt-1 text-xs sm:text-sm font-semibold text-[#173F41]">
         {value || "-"}
       </p>
 
@@ -1437,26 +1577,26 @@ const Detail = ({ label, value }) => {
 
 const Modal = ({ title, children, onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
 
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-4xl overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
 
-        <div className="flex items-center justify-between border-b border-[#EAF2F0] px-6 py-5">
+        <div className="flex items-center justify-between border-b border-[#EAF2F0] px-4 py-3 sm:px-6 sm:py-4">
 
-          <h2 className="text-xl font-bold text-[#073F42]">
+          <h2 className="text-base sm:text-xl font-bold text-[#073F42]">
             {title}
           </h2>
 
           <button
             onClick={onClose}
-            className="rounded-xl p-2 text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#073F42]"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#073F42]"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
 
         </div>
 
-        <div className="max-h-[calc(92vh-80px)] overflow-y-auto p-6">
+        <div className="max-h-[calc(92vh-70px)] overflow-y-auto p-4 sm:p-6">
           {children}
         </div>
 

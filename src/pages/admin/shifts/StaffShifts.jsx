@@ -418,30 +418,30 @@ function StaffShifts() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6FBFA] p-4 md:p-6">
+    <div className="min-h-screen bg-[#F6FBFA] p-3 sm:p-4 md:p-6">
 
       {/* =========================
           PAGE HEADER
       ========================= */}
 
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
 
         <div>
-          <div className="mb-1 flex items-center gap-2">
-            <div className="rounded-lg bg-[#E8F8F6] p-2 text-[#08A6A0]">
-              <Users size={20} />
+          <div className="mb-1 flex items-center gap-1.5 sm:gap-2">
+            <div className="rounded-lg bg-[#E8F8F6] p-1.5 sm:p-2 text-[#08A6A0]">
+              <Users size={16} className="sm:size-5" />
             </div>
 
-            <span className="text-sm font-semibold text-[#08A6A0]">
+            <span className="text-xs sm:text-sm font-semibold text-[#08A6A0]">
               ADMINISTRATION
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold text-[#173F41]">
+          <h1 className="text-xl font-bold text-[#173F41] sm:text-2xl lg:text-3xl">
             Staff Shifts
           </h1>
 
-          <p className="mt-1 text-sm text-[#789092]">
+          <p className="mt-0.5 text-xs text-[#789092] sm:text-sm">
             Manage staff duty schedules, working hours
             and shift assignments.
           </p>
@@ -450,9 +450,9 @@ function StaffShifts() {
         <button
           type="button"
           onClick={openCreateModal}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
+          className="flex h-10 sm:h-11 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
         >
-          <Plus size={18} />
+          <Plus size={16} className="sm:size-[18px]" />
           Add Staff Shift
         </button>
       </div>
@@ -461,82 +461,62 @@ function StaffShifts() {
           STATISTICS
       ========================= */}
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
 
-        <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-[#819596]">
-                Total Shifts
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#173F41]">
-                {totalShifts}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <CalendarDays />
             </div>
-
-            <div className="rounded-xl bg-[#E8F8F6] p-3 text-[#08A6A0]">
-              <CalendarDays size={22} />
-            </div>
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#173F41]">
+              {totalShifts}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+            Total Shifts
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-[#819596]">
-                Scheduled
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#173F41]">
-                {scheduledShifts}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <Clock3 />
             </div>
-
-            <div className="rounded-xl bg-[#E8F8F6] p-3 text-[#08A6A0]">
-              <Clock3 size={22} />
-            </div>
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#173F41]">
+              {scheduledShifts}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+            Scheduled
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-[#819596]">
-                Completed
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#173F41]">
-                {completedShifts}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-green-50 text-green-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <CheckCircle2 />
             </div>
-
-            <div className="rounded-xl bg-green-50 p-3 text-green-600">
-              <CheckCircle2 size={22} />
-            </div>
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#173F41]">
+              {completedShifts}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+            Completed
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-
-            <div>
-              <p className="text-sm text-[#819596]">
-                Off / Leave
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-[#173F41]">
-                {offShifts}
-              </h2>
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-gray-100 text-gray-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <UserRound />
             </div>
-
-            <div className="rounded-xl bg-gray-100 p-3 text-gray-600">
-              <UserRound size={22} />
-            </div>
+            <h2 className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#173F41]">
+              {offShifts}
+            </h2>
           </div>
+          <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+            Off / Leave
+          </p>
         </div>
 
       </div>
@@ -545,25 +525,25 @@ function StaffShifts() {
           FILTER CARD
       ========================= */}
 
-      <div className="mb-6 rounded-2xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+      <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl border border-[#E2EFED] bg-white p-3.5 sm:p-4 shadow-sm">
 
-        <div className="mb-4 flex items-center gap-2">
-          <div className="rounded-lg bg-[#E8F8F6] p-2 text-[#08A6A0]">
-            <Filter size={17} />
+        <div className="mb-3 flex items-center gap-2">
+          <div className="rounded-lg bg-[#E8F8F6] p-1.5 sm:p-2 text-[#08A6A0]">
+            <Filter size={16} />
           </div>
 
-          <h3 className="text-sm font-semibold text-[#173F41]">
+          <h3 className="text-xs sm:text-sm font-semibold text-[#173F41]">
             Filter Staff Shifts
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
 
           {/* SEARCH */}
 
           <div className="relative xl:col-span-1">
             <Search
-              size={18}
+              size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAEAF]"
             />
 
@@ -574,7 +554,7 @@ function StaffShifts() {
                 setSearch(e.target.value)
               }
               placeholder="Search staff, ID, location..."
-              className="w-full rounded-xl border border-[#D9E9E7] bg-white py-2.5 pl-10 pr-4 text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+              className="h-9 sm:h-10 w-full rounded-xl border border-[#D9E9E7] bg-white pl-9 pr-3 text-xs sm:text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0]"
             />
           </div>
 
@@ -585,7 +565,7 @@ function StaffShifts() {
             onChange={(e) =>
               setDepartmentFilter(e.target.value)
             }
-            className="w-full rounded-xl border border-[#D9E9E7] bg-white px-3 py-2.5 text-sm text-[#31585A] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+            className="h-9 sm:h-10 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
           >
             <option value="All">
               All Departments
@@ -608,7 +588,7 @@ function StaffShifts() {
             onChange={(e) =>
               setShiftFilter(e.target.value)
             }
-            className="w-full rounded-xl border border-[#D9E9E7] bg-white px-3 py-2.5 text-sm text-[#31585A] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+            className="h-9 sm:h-10 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
           >
             <option value="All">
               All Shifts
@@ -635,7 +615,7 @@ function StaffShifts() {
             onChange={(e) =>
               setDateFilter(e.target.value)
             }
-            className="w-full rounded-xl border border-[#D9E9E7] bg-white px-3 py-2.5 text-sm text-[#31585A] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
+            className="h-9 sm:h-10 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
           />
 
         </div>
@@ -645,16 +625,16 @@ function StaffShifts() {
           TABLE
       ========================= */}
 
-      <div className="overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
 
-        <div className="flex flex-col gap-2 border-b border-[#EAF2F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 border-b border-[#EAF2F0] px-4 py-3 sm:px-5 sm:py-4 sm:flex-row sm:items-center sm:justify-between">
 
           <div>
-            <h2 className="font-semibold text-[#173F41]">
+            <h2 className="text-sm sm:text-base font-semibold text-[#173F41]">
               Staff Shift Schedule
             </h2>
 
-            <p className="mt-1 text-xs text-[#819596]">
+            <p className="mt-0.5 text-xs text-[#819596]">
               {filteredShifts.length} shift
               {filteredShifts.length !== 1
                 ? "s"
@@ -663,13 +643,14 @@ function StaffShifts() {
             </p>
           </div>
 
-          <div className="rounded-lg bg-[#E8F8F6] px-3 py-1.5 text-xs font-medium text-[#078F8A]">
+          <div className="rounded-lg bg-[#E8F8F6] px-2.5 py-1 text-xs font-medium text-[#078F8A]">
             Shift Management
           </div>
 
         </div>
 
-        <div className="overflow-x-auto">
+        {/* DESKTOP TABLE */}
+        <div className="hidden overflow-x-auto md:block">
 
           <table className="min-w-[1250px] w-full">
 
@@ -937,6 +918,77 @@ function StaffShifts() {
 
           </table>
 
+        </div>
+
+        {/* MOBILE CARDS */}
+        <div className="space-y-3 p-3 md:hidden">
+          {filteredShifts.length > 0 ? (
+            filteredShifts.map((shift) => (
+              <div key={shift.id} className="rounded-xl border border-[#E2EFED] bg-white p-3.5 shadow-sm">
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+                      <UserRound size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-[#173F41]">{shift.staff}</h3>
+                      <p className="text-xs text-[#819596]">{shift.id} · {shift.department}</p>
+                    </div>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[shift.status]}`}>
+                    {shift.status}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Shift</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{shift.shift}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Date</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{formatDate(shift.date)}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Hours</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{formatTime(shift.startTime)} - {formatTime(shift.endTime)}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#FAFDFC] p-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Location</span>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#31585A]">{shift.location}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-2 border-t border-[#EAF2F0] pt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShift(shift)}
+                    className="rounded-lg border border-[#D9E9E7] p-2 text-[#31585A] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                  >
+                    <Eye size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(shift)}
+                    className="rounded-lg border border-[#D9E9E7] p-2 text-[#31585A] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                  >
+                    <Edit3 size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(shift.id)}
+                    className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-xl border border-[#E2EFED] bg-white p-6 text-center text-xs text-[#819596]">
+              No shifts found. Try changing your search or filters.
+            </div>
+          )}
         </div>
       </div>
 

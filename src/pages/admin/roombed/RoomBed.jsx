@@ -11,12 +11,14 @@ import {
   Hospital,
   Info,
   LayoutGrid,
+  Plus,
   Search,
   Settings2,
   UserRound,
   Wrench,
   X,
 } from "lucide-react";
+import RoomBedForm from "../../../components/admin/RoomBedForm";
 
 /* -------------------------------------------------------------------------- */
 /*                                  DATA                                      */
@@ -254,15 +256,15 @@ const roomTypeStyles = {
 
 function StatCard({ title, value, icon: Icon, iconClass }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-slate-800">{value}</p>
+    <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-slate-200 bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm">
+      <div className="flex items-center justify-between gap-1 sm:gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-slate-500">{title}</p>
+          <p className="mt-0.5 sm:mt-1 md:mt-2 text-base sm:text-lg md:text-2xl font-bold leading-none text-slate-800">{value}</p>
         </div>
 
-        <div className={`rounded-xl p-3 ${iconClass}`}>
-          <Icon size={20} />
+        <div className={`flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl ${iconClass}`}>
+          <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-5 md:w-5" />
         </div>
       </div>
     </div>
@@ -393,6 +395,25 @@ export default function RoomBed() {
   const [statusFilter, setStatusFilter] = useState("All");
 
   const [selectedBed, setSelectedBed] = useState(null);
+  const [showRoomBedModal, setShowRoomBedModal] = useState(false);
+  const [formInitialMode, setFormInitialMode] = useState("room");
+
+  const handleAddRoom = (newRoom) => {
+    setRooms((current) => [newRoom, ...current]);
+  };
+
+  const handleAddBed = (roomId, newBed) => {
+    setRooms((current) =>
+      current.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              beds: [...room.beds, newBed],
+            }
+          : room
+      )
+    );
+  };
 
   /* ------------------------------- STATS -------------------------------- */
 
@@ -553,17 +574,29 @@ export default function RoomBed() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-sm">
-            <span className="font-semibold text-slate-800">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="rounded-xl border border-[#E2EFED] bg-white px-3 py-2 text-xs text-[#31585A] shadow-sm">
+            <span className="font-bold text-[#073F42]">
               {stats.occupied}
             </span>{" "}
             occupied of{" "}
-            <span className="font-semibold text-slate-800">
+            <span className="font-bold text-[#073F42]">
               {stats.beds}
             </span>{" "}
             beds
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormInitialMode("room");
+              setShowRoomBedModal(true);
+            }}
+            className="inline-flex h-10 sm:h-11 items-center justify-center gap-1.5 rounded-xl bg-[#08A6A0] px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
+          >
+            <Plus size={16} />
+            Add Room / Bed
+          </button>
         </div>
       </div>
 
@@ -571,7 +604,7 @@ export default function RoomBed() {
       {/* STAT CARDS                                                         */}
       {/* ------------------------------------------------------------------ */}
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-6">
         <StatCard
           title="Total Rooms"
           value={stats.rooms}
@@ -919,6 +952,17 @@ export default function RoomBed() {
             </div>
           </div>
         </div>
+      )}
+
+      {showRoomBedModal && (
+        <RoomBedForm
+          open={showRoomBedModal}
+          rooms={rooms}
+          onClose={() => setShowRoomBedModal(false)}
+          onAddRoom={handleAddRoom}
+          onAddBed={handleAddBed}
+          initialMode={formInitialMode}
+        />
       )}
     </div>
   );

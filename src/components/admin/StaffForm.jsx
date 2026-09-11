@@ -15,8 +15,8 @@ const StaffForm = ({
         fixed inset-0 z-50
         flex items-center justify-center
         bg-[#073F42]/45
-        p-3 backdrop-blur-sm
-        sm:p-5
+        p-2.5 backdrop-blur-sm
+        sm:p-4 md:p-6
       "
       onClick={onClose}
     >
@@ -25,7 +25,7 @@ const StaffForm = ({
       ===================================================== */}
       <div
         className="
-          flex max-h-[92vh]
+          flex max-h-[92vh] sm:max-h-[94vh]
           w-full max-w-2xl
           flex-col
           overflow-hidden
@@ -64,7 +64,7 @@ const StaffForm = ({
 
             <h2
               className="
-                mt-1 text-base font-bold
+                mt-0.5 text-base font-bold
                 tracking-tight text-[#073F42]
                 sm:text-xl
               "
@@ -74,7 +74,7 @@ const StaffForm = ({
 
             <p
               className="
-                mt-0.5 text-[10px]
+                mt-0.5 text-[11px]
                 text-[#5D7B7D]
                 sm:text-xs
               "
@@ -92,7 +92,7 @@ const StaffForm = ({
             className="
               flex h-8 w-8 shrink-0
               items-center justify-center
-              rounded-lg
+              rounded-xl
               border border-[#CFE7E4]
               bg-white/70
               text-[#6F898A]
@@ -254,7 +254,7 @@ const StaffForm = ({
               type="button"
               onClick={onClose}
               className="
-                h-9 rounded-lg
+                h-10 rounded-xl
                 border border-[#D9E9E7]
                 bg-white
                 px-4
@@ -264,8 +264,7 @@ const StaffForm = ({
                 hover:border-[#08A6A0]
                 hover:bg-[#E8F8F6]
                 hover:text-[#08A6A0]
-                sm:h-10
-                sm:rounded-xl
+                sm:h-11
                 sm:px-5
                 sm:text-sm
               "
@@ -277,10 +276,10 @@ const StaffForm = ({
             <button
               type="submit"
               className="
-                inline-flex h-9
+                inline-flex h-10
                 items-center justify-center
                 gap-1.5
-                rounded-lg
+                rounded-xl
                 bg-[#08A6A0]
                 px-4
                 text-xs font-semibold
@@ -289,16 +288,15 @@ const StaffForm = ({
                 transition
                 hover:bg-[#078F8A]
                 hover:shadow-md
-                sm:h-10
-                sm:rounded-xl
+                sm:h-11
                 sm:px-5
                 sm:text-sm
               "
             >
               {isEditing ? (
-                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Save className="h-4 w-4" />
               ) : (
-                <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <UserPlus className="h-4 w-4" />
               )}
 
               {isEditing ? "Update Staff" : "Register Staff"}
@@ -347,10 +345,8 @@ const FormField = ({
       <label
         className="
           mb-1.5 block
-          text-[10px] font-semibold
+          text-xs font-semibold
           text-[#31585A]
-          sm:mb-2
-          sm:text-xs
         "
       >
         {label}
@@ -369,12 +365,12 @@ const FormField = ({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="
-          h-9 w-full
-          rounded-lg
+          h-10 w-full
+          rounded-xl
           border border-[#D9E9E7]
           bg-[#FAFDFC]
-          px-3
-          text-xs
+          px-3 sm:px-3.5
+          text-xs sm:text-sm
           text-[#31585A]
           outline-none
           transition
@@ -384,9 +380,7 @@ const FormField = ({
           focus:bg-white
           focus:ring-2
           focus:ring-[#08A6A0]/10
-          sm:h-10
-          sm:rounded-xl
-          sm:text-sm
+          sm:h-11
         "
       />
     </div>
@@ -409,10 +403,8 @@ const FormSelect = ({
       <label
         className="
           mb-1.5 block
-          text-[10px] font-semibold
+          text-xs font-semibold
           text-[#31585A]
-          sm:mb-2
-          sm:text-xs
         "
       >
         {label}
@@ -429,12 +421,12 @@ const FormSelect = ({
         required={required}
         onChange={(event) => onChange(event.target.value)}
         className="
-          h-9 w-full
-          rounded-lg
+          h-10 w-full
+          rounded-xl
           border border-[#D9E9E7]
           bg-[#FAFDFC]
-          px-3
-          text-xs
+          px-3 sm:px-3.5
+          text-xs sm:text-sm
           text-[#31585A]
           outline-none
           transition
@@ -443,9 +435,7 @@ const FormSelect = ({
           focus:bg-white
           focus:ring-2
           focus:ring-[#08A6A0]/10
-          sm:h-10
-          sm:rounded-xl
-          sm:text-sm
+          sm:h-11
         "
       >
         {options.map((option) => (

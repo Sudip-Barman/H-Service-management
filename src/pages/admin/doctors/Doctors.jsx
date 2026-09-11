@@ -158,6 +158,23 @@ const getInitials = (doctor) => {
 };
 
 
+const getAvailabilityType = (availability) => {
+  switch (availability) {
+    case "Available":
+      return "available";
+    case "Unavailable":
+      return "unavailable";
+    case "On Leave":
+      return "leave";
+    default:
+      return "default";
+  }
+};
+
+const getStatusType = (status) => {
+  return status === "Active" ? "active" : "inactive";
+};
+
 const StatusBadge = ({ children, type = "default" }) => {
   const styles = {
     active: "bg-[#E8F8F6] text-[#078E89]",
@@ -176,6 +193,123 @@ const StatusBadge = ({ children, type = "default" }) => {
     >
       {children}
     </span>
+  );
+};
+
+const DoctorMobileCard = ({
+  doctor,
+  onView,
+  onEdit,
+  onDelete,
+}) => {
+  const name = getDoctorName(doctor);
+
+  return (
+    <div className="rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          {doctor.photo ? (
+            <img
+              src={doctor.photo}
+              alt={name}
+              className="h-10 w-10 shrink-0 rounded-xl object-cover ring-2 ring-[#E8F8F6]"
+            />
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-xs font-bold text-[#08A6A0]">
+              {getInitials(doctor)}
+            </div>
+          )}
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-[#173F41]">
+              {name}
+            </p>
+            <p className="mt-0.5 text-xs text-[#819596]">
+              {doctor.registration_number}
+            </p>
+          </div>
+        </div>
+
+        <StatusBadge type={getAvailabilityType(doctor.available_status)}>
+          {doctor.available_status || "Unavailable"}
+        </StatusBadge>
+      </div>
+
+      {/* Information Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Specialization
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">
+            {doctor.specialization || "Not specified"}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Department
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-[#31585A] sm:text-sm">
+            {doctor.department || "Not specified"}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Experience
+          </p>
+          <p className="mt-1 text-xs font-semibold text-[#31585A] sm:text-sm">
+            {Number(doctor.experience_years || 0)} yrs exp
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-[#FAFDFC] p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Fee / Status
+          </p>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-xs font-bold text-[#08A6A0] sm:text-sm">
+              ₹{doctor.consultation_fee || 0}
+            </span>
+            <StatusBadge type={getStatusType(doctor.status)}>
+              {doctor.status}
+            </StatusBadge>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-3 flex gap-2 border-t border-[#EAF2F0] pt-3">
+        <button
+          type="button"
+          onClick={() => onView(doctor)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E8F8F6] px-3 py-2 text-xs font-semibold text-[#073F42] transition hover:bg-[#DDF3F0]"
+        >
+          <Eye size={14} />
+          View Profile
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onEdit(doctor)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+          title="Edit Doctor"
+        >
+          <Edit3 size={15} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(doctor)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          title="Delete Doctor"
+        >
+          <Trash2 size={15} />
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -357,23 +491,6 @@ const Doctors = () => {
     setSearch("");
   };
 
-  const getAvailabilityType = (availability) => {
-    switch (availability) {
-      case "Available":
-        return "available";
-      case "Unavailable":
-        return "unavailable";
-      case "On Leave":
-        return "leave";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusType = (status) => {
-    return status === "Active" ? "active" : "inactive";
-  };
-
   return (
     <div className="min-h-full bg-[#F7FBFA] p-3 sm:p-4 lg:p-5">
       {/* Header */}
@@ -423,32 +540,32 @@ const Doctors = () => {
         </button>
       </div>
 
-  {/* Stats */}
-<div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-  <StatCard
-    icon={Users}
-    label="Total Doctors"
-    value={stats.total}
-  />
+      {/* Stats */}
+      <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+        <StatCard
+          icon={Users}
+          label="Total Doctors"
+          value={stats.total}
+        />
 
-  <StatCard
-    icon={UserRound}
-    label="Active Doctors"
-    value={stats.active}
-  />
+        <StatCard
+          icon={UserRound}
+          label="Active Doctors"
+          value={stats.active}
+        />
 
-  <StatCard
-    icon={Activity}
-    label="Available Now"
-    value={stats.available}
-  />
+        <StatCard
+          icon={Activity}
+          label="Available Now"
+          value={stats.available}
+        />
 
-  <StatCard
-    icon={CalendarDays}
-    label="On Leave"
-    value={stats.onLeave}
-  />
-</div>
+        <StatCard
+          icon={CalendarDays}
+          label="On Leave"
+          value={stats.onLeave}
+        />
+      </div>
       {/* Search & Filters */}
       <div className="mb-5">
         <SearchFilter
@@ -599,7 +716,7 @@ const Doctors = () => {
       </div>
 
       {/* Doctor Table */}
-      <div className="overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm md:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
             <thead>
@@ -803,6 +920,35 @@ const Doctors = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Doctor Cards */}
+      <div className="space-y-3 md:hidden">
+        {filteredDoctors.length > 0 ? (
+          filteredDoctors.map((doctor) => (
+            <DoctorMobileCard
+              key={doctor.doctor_id}
+              doctor={doctor}
+              onView={setSelectedDoctor}
+              onEdit={handleEditDoctor}
+              onDelete={setDoctorToDelete}
+            />
+          ))
+        ) : (
+          <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-12 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
+              <Stethoscope size={22} />
+            </div>
+
+            <p className="mt-3 text-sm font-bold text-[#31585A]">
+              No doctors found
+            </p>
+
+            <p className="mt-1 text-xs text-[#819596]">
+              Try changing your search or filters.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Doctor Form */}

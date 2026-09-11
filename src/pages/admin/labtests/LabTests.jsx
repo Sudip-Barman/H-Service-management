@@ -137,25 +137,135 @@ const statusConfig = {
 
 function StatCard({ title, value, icon: Icon, iconClass }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500">
+    <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-slate-200 bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm">
+      <div className="flex items-center justify-between gap-1 sm:gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-slate-500">
             {title}
           </p>
 
-          <p className="mt-1 text-2xl font-bold text-slate-800">
+          <p className="mt-0.5 sm:mt-1 md:mt-2 text-base sm:text-lg md:text-2xl font-bold leading-none text-slate-800">
             {value}
           </p>
         </div>
 
-        <div className={`rounded-xl p-3 ${iconClass}`}>
+        <div className={`flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5 ${iconClass}`}>
           <Icon size={20} />
         </div>
       </div>
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*                              MOBILE CARD                                   */
+/* -------------------------------------------------------------------------- */
+
+const LabTestMobileCard = ({
+  test,
+  onView,
+  onEdit,
+  onDelete,
+}) => {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-xs font-bold text-emerald-700">
+            <FlaskConical size={18} />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-slate-800">
+              {test.name}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {test.id} • {test.shortName}
+            </p>
+          </div>
+        </div>
+
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusConfig[test.status].classes}`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${statusConfig[test.status].dot}`}
+          />
+          {test.status}
+        </span>
+      </div>
+
+      {/* Information Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="rounded-lg bg-slate-50 p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Category
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-slate-700 sm:text-sm">
+            {test.category}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-slate-50 p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Sample Type
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-slate-700 sm:text-sm">
+            {test.sample}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-slate-50 p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Price
+          </p>
+          <p className="mt-1 text-xs font-bold text-emerald-700 sm:text-sm">
+            ₹{test.price}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-slate-50 p-2.5 sm:p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Turnaround Time
+          </p>
+          <p className="mt-1 text-xs font-semibold text-slate-700 sm:text-sm">
+            {test.turnaround}
+          </p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+        <button
+          type="button"
+          onClick={() => onView(test)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100"
+        >
+          <Activity size={14} />
+          View Details
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onEdit(test)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          title="Edit"
+        >
+          <Edit3 size={15} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(test)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          title="Delete"
+        >
+          <Trash2 size={15} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 /* -------------------------------------------------------------------------- */
 /*                              TEST FORM                                     */
@@ -169,8 +279,8 @@ function TestForm({
   onClose,
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={onSubmit} className="space-y-3.5 sm:space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
         {/* Test Name */}
         <div className="sm:col-span-2">
           <label className="mb-1.5 block text-xs font-semibold text-slate-700">
@@ -188,7 +298,7 @@ function TestForm({
               })
             }
             placeholder="Enter test name"
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+            className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           />
         </div>
 
@@ -209,7 +319,7 @@ function TestForm({
               })
             }
             placeholder="e.g. CBC"
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+            className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           />
         </div>
 
@@ -228,7 +338,7 @@ function TestForm({
                 category: e.target.value,
               })
             }
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-emerald-400 focus:ring-emerald-100"
+            className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:ring-emerald-100"
           >
             <option value="">Select category</option>
             <option value="Hematology">Hematology</option>
@@ -256,7 +366,7 @@ function TestForm({
                 sample: e.target.value,
               })
             }
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-emerald-400 focus:ring-emerald-100"
+            className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:ring-emerald-100"
           >
             <option value="">Select sample</option>
             <option value="Blood">Blood</option>
@@ -290,7 +400,7 @@ function TestForm({
                   price: e.target.value,
                 })
               }
-              className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-7 pr-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+              className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-7 pr-3 sm:pr-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
             />
           </div>
         </div>
@@ -312,7 +422,7 @@ function TestForm({
               })
             }
             placeholder="e.g. 4 Hours"
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+            className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           />
         </div>
 
@@ -330,7 +440,7 @@ function TestForm({
                 status: e.target.value,
               })
             }
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-emerald-400 focus:ring-emerald-100"
+            className="h-10 sm:h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:ring-emerald-100"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -353,23 +463,23 @@ function TestForm({
               })
             }
             placeholder="Enter test description"
-            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+      <div className="flex justify-end gap-2 border-t border-slate-100 pt-3 sm:pt-4">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          className="h-10 sm:h-11 rounded-xl border border-slate-200 px-4 sm:px-5 text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-50"
         >
           Cancel
         </button>
 
         <button
           type="submit"
-          className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          className="flex h-10 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-xl bg-emerald-600 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white transition hover:bg-emerald-700"
         >
           {editing ? (
             <>
@@ -564,10 +674,10 @@ export default function LabTests() {
       {/* HEADER                                                           */}
       {/* ---------------------------------------------------------------- */}
 
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-emerald-100 p-2.5 text-emerald-700">
-            <FlaskConical size={23} />
+            <FlaskConical size={22} />
           </div>
 
           <div>
@@ -584,9 +694,9 @@ export default function LabTests() {
         <button
           type="button"
           onClick={openAddForm}
-          className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-4 py-2.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
         >
-          <Plus size={17} />
+          <Plus size={16} />
           Add Lab Test
         </button>
       </div>
@@ -595,7 +705,7 @@ export default function LabTests() {
       {/* STAT CARDS                                                       */}
       {/* ---------------------------------------------------------------- */}
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
         <StatCard
           title="Total Tests"
           value={stats.total}
@@ -686,10 +796,10 @@ export default function LabTests() {
       </div>
 
       {/* ---------------------------------------------------------------- */}
-      {/* TABLE                                                            */}
+      {/* DESKTOP TABLE                                                    */}
       {/* ---------------------------------------------------------------- */}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
           <div>
             <h2 className="text-sm font-bold text-slate-800">
@@ -879,26 +989,61 @@ export default function LabTests() {
       </div>
 
       {/* ---------------------------------------------------------------- */}
+      {/* MOBILE LAB TEST CARDS                                            */}
+      {/* ---------------------------------------------------------------- */}
+
+      <div className="space-y-3 md:hidden">
+        {filteredTests.length > 0 ? (
+          filteredTests.map((test) => (
+            <LabTestMobileCard
+              key={test.id}
+              test={test}
+              onView={(t) => {
+                setSelectedTest(t);
+                setShowDetails(true);
+              }}
+              onEdit={openEditForm}
+              onDelete={setDeleteTest}
+            />
+          ))
+        ) : (
+          <div className="rounded-xl border border-slate-200 bg-white px-5 py-12 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+              <FlaskConical size={22} />
+            </div>
+
+            <p className="mt-3 text-sm font-bold text-slate-800">
+              No laboratory tests found
+            </p>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Try changing your search or filters.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ---------------------------------------------------------------- */}
       {/* ADD / EDIT MODAL                                                 */}
       {/* ---------------------------------------------------------------- */}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-[2px]">
+          <div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="rounded-xl bg-emerald-50 p-2 text-emerald-700">
                   <FlaskConical size={18} />
                 </div>
 
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-800">
                     {editingTest
                       ? "Edit Lab Test"
                       : "Add Lab Test"}
                   </h2>
 
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500">
                     {editingTest
                       ? "Update laboratory test information"
                       : "Create a new laboratory test"}
@@ -909,13 +1054,13 @@ export default function LabTests() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="flex h-8 w-8 items-center justify-center rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               <TestForm
                 form={form}
                 setForm={setForm}

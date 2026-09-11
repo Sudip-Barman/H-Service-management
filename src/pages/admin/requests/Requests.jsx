@@ -454,7 +454,7 @@ function Request() {
   );
 }
 
-const inputClass = "h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 text-sm text-[#173F41] outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10";
+const inputClass = "h-10 sm:h-11 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 sm:px-3.5 text-xs sm:text-sm text-[#173F41] outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10";
 
 function TableHead({ children, align = "left" }) {
   return <th className={`whitespace-nowrap px-4 py-3.5 text-${align} text-[11px] font-bold uppercase tracking-wide text-[#819596]`}>{children}</th>;
@@ -465,7 +465,7 @@ function FilterSelect({ label, value, onChange, options }) {
 }
 
 function SelectInput({ value, onChange, options }) {
-  return <div className="relative"><select value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} appearance-none pr-9`}>{options.map((option) => <option key={option}>{option}</option>)}</select><ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA9AA]" /></div>;
+  return <div className="relative"><select value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} appearance-none pr-9`}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select><ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA9AA]" /></div>;
 }
 
 function TextInput({ value, onChange, placeholder }) { return <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inputClass} />; }
@@ -490,11 +490,11 @@ function StatusBadge({ status }) {
 }
 
 function Info({ label, value }) { return <div><p className="mb-1 text-[10px] font-semibold uppercase text-[#9AA9AA]">{label}</p><p className="truncate text-xs font-medium text-[#5F7375]">{value}</p></div>; }
-function Detail({ label, value }) { return <div className="rounded-xl border border-[#EDF4F2] bg-[#F8FCFB] p-3"><p className="text-[10px] font-bold uppercase tracking-wide text-[#9AA9AA]">{label}</p><p className="mt-1 text-sm font-semibold text-[#173F41]">{value}</p></div>; }
+function Detail({ label, value }) { return <div className="rounded-xl border border-[#EDF4F2] bg-[#F8FCFB] p-3"><p className="text-[10px] font-bold uppercase tracking-wide text-[#9AA9AA]">{label}</p><p className="mt-1 text-xs sm:text-sm font-semibold text-[#173F41]">{value}</p></div>; }
 
 function EmptyState({ onReset }) { return <div className="flex min-h-[280px] flex-col items-center justify-center px-5 text-center"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F8F6] text-[#08A6A0]"><Package className="h-7 w-7" /></div><h3 className="mt-4 text-sm font-bold text-[#173F41]">No requests found</h3><p className="mt-1 max-w-sm text-xs leading-5 text-[#819596]">No request matches your current search or filter criteria.</p><button type="button" onClick={onReset} className="mt-4 text-xs font-semibold text-[#08A6A0] hover:text-[#078E89]">Clear Search & Filters</button></div>; }
 
-function ModalOverlay({ children, onClose }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>{children}</div>; }
+function ModalOverlay({ children, onClose }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>{children}</div>; }
 
 function formatDate(date) {
   if (!date) return "N/A";

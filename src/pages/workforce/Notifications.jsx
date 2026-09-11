@@ -131,15 +131,15 @@ export default function Notifications({ user }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#073F42]">
+          <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl">
             Notifications
           </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
             Stay updated with your latest hospital activities and alerts.
           </p>
         </div>
@@ -147,57 +147,63 @@ export default function Notifications({ user }) {
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#08A6A0] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#078f8a]"
+            className="inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white transition hover:bg-[#078f8a]"
           >
-            <CheckCheck size={17} />
+            <CheckCheck size={16} />
             Mark All as Read
           </button>
         )}
       </div>
 
       {/* Notification Summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-              <Bell size={21} />
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Total Notifications</p>
-              <p className="text-2xl font-bold text-[#073F42]">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+                Total Notifications
+              </p>
+              <p className="mt-0.5 sm:mt-1 text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
                 {notifications.length}
               </p>
             </div>
+
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-[#E8F8F6] text-[#08A6A0] [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <Bell />
+            </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-              <AlertCircle size={21} />
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Unread</p>
-              <p className="text-2xl font-bold text-[#073F42]">
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+                Unread
+              </p>
+              <p className="mt-0.5 sm:mt-1 text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
                 {unreadCount}
               </p>
             </div>
+
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-amber-50 text-amber-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <AlertCircle />
+            </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-green-50 text-green-600">
-              <CheckCheck size={21} />
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Read</p>
-              <p className="text-2xl font-bold text-[#073F42]">
+        <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">
+                Read
+              </p>
+              <p className="mt-0.5 sm:mt-1 text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">
                 {notifications.length - unreadCount}
               </p>
+            </div>
+
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl bg-green-50 text-green-600 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5">
+              <CheckCheck />
             </div>
           </div>
         </div>

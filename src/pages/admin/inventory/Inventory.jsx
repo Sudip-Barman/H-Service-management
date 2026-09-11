@@ -500,22 +500,19 @@ const StatCard = ({ title, value, subtitle, icon: Icon, type = "primary" }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-[#E2EFED] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-[#819596]">{title}</p>
-          <h3 className="mt-2 text-2xl font-bold text-[#073F42]">{value}</h3>
-          <p className="mt-1 text-xs text-[#9AAEAF]">{subtitle}</p>
-        </div>
-
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+    <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+      <div className="flex items-center justify-between gap-1.5">
+        <span
+          className={`flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl ${
             iconClasses[type]
-          }`}
+          } [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5`}
         >
-          <Icon size={21} />
-        </div>
+          <Icon />
+        </span>
+        <strong className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">{value}</strong>
       </div>
+      <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">{title}</p>
+      {subtitle && <p className="mt-0.5 hidden truncate text-[9px] sm:text-[10px] text-[#9AAEAF] sm:block">{subtitle}</p>}
     </div>
   );
 };
@@ -776,41 +773,41 @@ const Inventory = () => {
 
       <div className="border-b border-[#E2EFED] bg-white">
         <div className="px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
-                  <Boxes size={25} />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
+                  <Boxes className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
 
                 <div>
-                  <h1 className="text-2xl font-bold text-[#073F42]">
+                  <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl lg:text-3xl">
                     Inventory Management
                   </h1>
 
-                  <p className="mt-1 text-sm text-[#819596]">
+                  <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">
                     Manage hospital equipment, consumables and general stock
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={handleExport}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#D9E9E7] bg-white px-4 py-2.5 text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#078F8A]"
+                className="inline-flex h-10 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-xl border border-[#D9E9E7] bg-white px-3 sm:px-4 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#078F8A]"
               >
-                <Download size={17} />
+                <Download size={16} />
                 Export
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#08A6A0] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#078F8A]"
+                className="inline-flex h-10 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3 sm:px-4 text-xs sm:text-sm font-semibold text-white transition hover:bg-[#078F8A]"
               >
-                <Plus size={18} />
+                <Plus size={16} className="sm:size-[18px]" />
                 Add New Item
               </button>
             </div>
@@ -822,13 +819,13 @@ const Inventory = () => {
           CONTENT
       =================================================== */}
 
-      <main className="px-4 py-6 sm:px-6 lg:px-8">
+      <main className="px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
 
         {/* =================================================
             STATISTICS
         ================================================= */}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
           <StatCard
             title="Total Items"
             value={stats.totalItems}
