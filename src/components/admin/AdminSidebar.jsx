@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   HandHeart,
   CalendarDays,
+  CalendarCheck,
   ClipboardList,
   Clock3,
   Droplets,
@@ -55,14 +56,19 @@ const menuSections = [
         icon: UserRound,
       },
       {
-        label: "Appointments",
-        path: "/admin/appointments",
+        label: "Advance Booking",
+        path: "/admin/booking",
         icon: CalendarDays,
       },
       {
         label: "Admissions",
         path: "/admin/admissions",
         icon: LogIn,
+      },
+      {
+        label: "Follow Up",
+        path: "/admin/follow-up",
+        icon: CalendarCheck,
       },
       {
         label: "Rooms & Beds",
@@ -93,11 +99,6 @@ const menuSections = [
         label: "Services",
         path: "/admin/services",
         icon: HandHeart,
-      },
-      {
-        label: "Lab Tests",
-        path: "/admin/lab-tests",
-        icon: FlaskConical,
       },
       {
         label: "Requests",
@@ -140,19 +141,9 @@ const menuSections = [
     title: "Hospital Operations",
     items: [
       {
-        label: "Blood Bank",
-        path: "/admin/blood",
-        icon: Droplets,
-      },
-      {
         label: "Pharmacy",
         path: "/admin/pharmacy",
         icon: Pill,
-      },
-      {
-        label: "Food & Diet",
-        path: "/admin/food",
-        icon: Utensils,
       },
       {
         label: "Inventory",

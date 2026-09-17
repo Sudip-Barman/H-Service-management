@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Droplets,
   Edit3,
-  ExternalLink,
   FileText,
   HeartPulse,
   Mail,
@@ -114,24 +113,53 @@ const getServiceStatus = (service) => {
   return service?.status || "Active";
 };
 
-const getIdentificationDocument = (patient) => {
-  return (
-    patient?.identificationDocument ||
-    patient?.identificationDocumentUrl ||
-    patient?.identificationDocumentPath ||
-    patient?.documentUrl ||
-    ""
-  );
-};
+/* =========================================================
+   DIGITAL SIGNATURE
+========================================================= */
 
-const getIdentificationDocumentName = (patient) => {
+const getDigitalSignature = (patient) =>
+  patient?.digitalSignature ||
+  patient?.digital_signature ||
+  patient?.signature ||
+  patient?.signatureUrl ||
+  patient?.signature_url ||
+  "";
+
+function DigitalSignature({ patient }) {
+  const signature = getDigitalSignature(patient);
+
+  if (!signature) {
+    return (
+      <EmptyState
+        icon={FileText}
+        text="No digital signature recorded"
+      />
+    );
+  }
+
   return (
-    patient?.identificationDocumentName ||
-    patient?.identificationDocumentFileName ||
-    patient?.documentName ||
-    ""
+    <div className="rounded-xl border border-[#E2EFED] bg-[#FAFDFC] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
+            Digital Signature
+          </p>
+          <p className="mt-1 text-xs text-[#527071]">
+            Patient signature recorded during registration
+          </p>
+        </div>
+
+        <div className="flex min-h-24 min-w-48 items-center justify-center overflow-hidden rounded-lg border border-[#D9E9E7] bg-white p-3">
+          <img
+            src={signature}
+            alt={`${getPatientName(patient)} digital signature`}
+            className="max-h-20 max-w-full object-contain"
+          />
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
 /* =========================================================
    STATUS BADGE
@@ -308,10 +336,6 @@ function IdentificationDocument({ patient }) {
   const documentName =
     getIdentificationDocumentName(patient);
 
-  const identificationType =
-    patient?.identificationType ||
-    patient?.identification_type;
-
   if (!documentUrl && !documentName) {
     return (
       <div className="rounded-lg border border-dashed border-[#D9E9E7] bg-[#FAFDFC] px-4 py-5 text-center">
@@ -464,10 +488,6 @@ function PatientProfile({
   const emergencyContactRelation =
     patient?.emergencyContactRelation ||
     patient?.emergency_contact_relation;
-
-  const identificationType =
-    patient?.identificationType ||
-    patient?.identification_type;
 
   return (
     <div
@@ -636,153 +656,50 @@ function PatientProfile({
           <div className="space-y-4 p-4 sm:p-5">
 
             {/* =================================================
-                1. PATIENT PHOTO + COMPLETE DETAILS
+                1. COMPLETE PATIENT INFORMATION
             ================================================== */}
 
             <ProfileSection
               icon={User}
               title="Patient Information"
             >
+              <div className="min-w-0">
+                <div className="mb-5">
+                  <h3 className="text-xl font-bold text-[#173F41]">
+                    {name}
+                  </h3>
 
-              <div className="flex flex-col gap-5 lg:flex-row">
-
-                {/* Large Patient Photo */}
-
-                <div className="flex shrink-0 justify-center lg:justify-start">
-
-                  <div className="relative">
-
-                    {patient?.photo ? (
-                      <img
-                        src={patient.photo}
-                        alt={name}
-                        className="
-                          h-32 w-32
-                          rounded-xl
-                          border-4
-                          border-[#E8F8F6]
-                          object-cover
-                          shadow-sm
-                          sm:h-36 sm:w-36
-                        "
-                      />
-                    ) : (
-                      <div
-                        className="
-                          flex h-32 w-32
-                          items-center justify-center
-                          rounded-xl
-                          border-4
-                          border-[#E8F8F6]
-                          bg-[#FAFDFC]
-                          text-2xl font-bold
-                          text-[#08A6A0]
-                          sm:h-36 sm:w-36
-                        "
-                      >
-                        {getInitials(name)}
-                      </div>
-                    )}
-
-                    <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-[#08A6A0] text-white">
-                      <ShieldCheck size={14} />
-                    </div>
-
-                  </div>
+                  <p className="mt-1 text-xs text-[#819596]">
+                    Patient ID:{" "}
+                    <span className="font-semibold text-[#527071]">
+                      {patientId}
+                    </span>
+                  </p>
                 </div>
 
-                {/* Patient Details */}
-
-                <div className="min-w-0 flex-1">
-
-                  <div className="mb-5">
-
-                    <h3 className="text-xl font-bold text-[#173F41]">
-                      {name}
-                    </h3>
-
-                    <p className="mt-1 text-xs text-[#819596]">
-                      Patient ID:{" "}
-                      <span className="font-semibold text-[#527071]">
-                        {patientId}
-                      </span>
-                    </p>
-
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
-
-                    <InfoItem
-                      icon={User}
-                      label="First Name"
-                      value={firstName}
-                    />
-
-                    <InfoItem
-                      icon={User}
-                      label="Middle Name"
-                      value={middleName}
-                    />
-
-                    <InfoItem
-                      icon={User}
-                      label="Last Name"
-                      value={lastName}
-                    />
-
-                    <InfoItem
-                      icon={CalendarDays}
-                      label="Date of Birth"
-                      value={dateOfBirth}
-                    />
-
-                    <InfoItem
-                      icon={User}
-                      label="Age"
-                      value={
-                        patient.age !== undefined &&
-                        patient.age !== null &&
-                        patient.age !== ""
-                          ? `${patient.age} years`
-                          : "-"
-                      }
-                    />
-
-                    <InfoItem
-                      icon={User}
-                      label="Gender"
-                      value={patient.gender}
-                    />
-
-                    <InfoItem
-                      icon={Droplets}
-                      label="Blood Group"
-                      value={bloodGroup}
-                    />
-
-                    <InfoItem
-                      icon={User}
-                      label="Marital Status"
-                      value={maritalStatus}
-                    />
-
-                    <InfoItem
-                      icon={User}
-                      label="Occupation"
-                      value={patient.occupation}
-                    />
-
-                    <InfoItem
-                      icon={MapPin}
-                      label="Nationality"
-                      value={patient.nationality}
-                    />
-
-                  </div>
+                <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
+                  <InfoItem icon={User} label="First Name" value={firstName} />
+                  <InfoItem icon={User} label="Middle Name" value={middleName} />
+                  <InfoItem icon={User} label="Last Name" value={lastName} />
+                  <InfoItem icon={CalendarDays} label="Date of Birth" value={dateOfBirth} />
+                  <InfoItem
+                    icon={User}
+                    label="Age"
+                    value={
+                      patient.age !== undefined &&
+                      patient.age !== null &&
+                      patient.age !== ""
+                        ? `${patient.age} years`
+                        : "-"
+                    }
+                  />
+                  <InfoItem icon={User} label="Gender" value={patient.gender} />
+                  <InfoItem icon={Droplets} label="Blood Group" value={bloodGroup} />
+                  <InfoItem icon={User} label="Marital Status" value={maritalStatus} />
+                  <InfoItem icon={User} label="Occupation" value={patient.occupation} />
+                  <InfoItem icon={MapPin} label="Nationality" value={patient.nationality} />
                 </div>
-
               </div>
-
             </ProfileSection>
 
             {/* =================================================
@@ -877,31 +794,6 @@ function PatientProfile({
             </ProfileSection>
 
             {/* =================================================
-                4. IDENTIFICATION
-            ================================================== */}
-
-            <ProfileSection
-              icon={FileText}
-              title="Identification"
-            >
-
-              <div className="space-y-4">
-
-                <InfoItem
-                  icon={ShieldCheck}
-                  label="Identification Type"
-                  value={identificationType}
-                />
-
-                <IdentificationDocument
-                  patient={patient}
-                />
-
-              </div>
-
-            </ProfileSection>
-
-            {/* =================================================
                 5. PATIENT PROBLEM / DISEASE
             ================================================== */}
 
@@ -914,6 +806,17 @@ function PatientProfile({
                 problem={patientProblem}
               />
 
+            </ProfileSection>
+
+            {/* =================================================
+                5. DIGITAL SIGNATURE
+            ================================================== */}
+
+            <ProfileSection
+              icon={FileText}
+              title="Digital Signature"
+            >
+              <DigitalSignature patient={patient} />
             </ProfileSection>
 
             {/* =================================================

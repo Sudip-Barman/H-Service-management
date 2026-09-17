@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Baby,
@@ -20,7 +20,6 @@ import ServiceForm from "../../../components/admin/ServiceForm";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 
 import {
-  serviceData,
   serviceCategoryOptions,
   serviceAvailabilityOptions,
   serviceStatusOptions,
@@ -46,20 +45,180 @@ const emptyServiceForm = {
   rating: 0,
 };
 
+/* =========================
+   Automatic Service Icon
+========================= */
+
+const getServiceIcon = (name = "", category = "") => {
+  const text = `${name} ${category}`.toLowerCase();
+
+  if (
+    text.includes("baby") ||
+    text.includes("sitter")
+  ) {
+    return "Baby";
+  }
+
+  if (text.includes("japa")) {
+    return "HeartHandshake";
+  }
+
+  if (text.includes("elder")) {
+    return "HeartHandshake";
+  }
+
+  if (text.includes("icu")) {
+    return "Activity";
+  }
+
+  if (
+    text.includes("nurse") ||
+    text.includes("gnm") ||
+    text.includes("anm") ||
+    text.includes("b.sc")
+  ) {
+    return "Stethoscope";
+  }
+
+  if (
+    text.includes("patient") ||
+    text.includes("care")
+  ) {
+    return "HeartPulse";
+  }
+
+  if (text.includes("attendant")) {
+    return "UserRound";
+  }
+
+  return "Stethoscope";
+};
+
 const Services = () => {
-  const [services, setServices] = useState(serviceData);
+  /* =========================
+     Services
+  ========================= */
+
+  const [services, setServices] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+
+  /* =========================
+     Fetch Services
+  ========================= */
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        setFetchError("");
+
+        const token =
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("token") ||
+          localStorage.getItem("jwt_token");
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/services",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                  }
+                : {}),
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch services (${response.status})`
+          );
+        }
+
+        const data = await response.json();
+
+        const formattedServices = data.map((service) => ({
+          ...service,
+
+          /* =========================
+             Keep Original Backend ID
+          ========================= */
+
+          backendId: service.id,
+
+          /* =========================
+             UI Service ID
+          ========================= */
+
+          id: `SRV-${String(service.id).padStart(4, "0")}`,
+
+          /* =========================
+             Automatic Icon
+          ========================= */
+
+          icon: getServiceIcon(
+            service.name,
+            service.category
+          ),
+
+          /* =========================
+             UI-only Fields
+          ========================= */
+
+          priceUnit: "per day",
+
+          availability: service.is_active
+            ? "Available"
+            : "Unavailable",
+
+          status: service.is_active
+            ? "Active"
+            : "Inactive",
+
+          staffRequired: 1,
+          availableStaff: 0,
+          bookings: 0,
+          rating: 0,
+        }));
+
+        setServices(formattedServices);
+      } catch (error) {
+        console.error(
+          "Error fetching services:",
+          error
+        );
+
+        setFetchError(
+          error.message ||
+            "Unable to load services."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   /* =========================
      Search & Filters
   ========================= */
 
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] =
+    useState("All");
   const [availabilityFilter, setAvailabilityFilter] =
     useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] =
+    useState("All");
 
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] =
+    useState(false);
 
   /* =========================
      Service Details
@@ -73,8 +232,10 @@ const Services = () => {
   ========================= */
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(emptyServiceForm);
-  const [formError, setFormError] = useState("");
+  const [form, setForm] =
+    useState(emptyServiceForm);
+  const [formError, setFormError] =
+    useState("");
   const [editingService, setEditingService] =
     useState(null);
 
@@ -94,20 +255,26 @@ const Services = () => {
       total: services.length,
 
       active: services.filter(
-        (service) => service.status === "Active"
+        (service) =>
+          service.status === "Active"
       ).length,
 
       available: services.filter(
-        (service) => service.availability === "Available"
+        (service) =>
+          service.availability ===
+          "Available"
       ).length,
 
       limited: services.filter(
-        (service) => service.availability === "Limited"
+        (service) =>
+          service.availability ===
+          "Limited"
       ).length,
 
       bookings: services.reduce(
         (total, service) =>
-          total + Number(service.bookings || 0),
+          total +
+          Number(service.bookings || 0),
         0
       ),
     };
@@ -118,23 +285,34 @@ const Services = () => {
   ========================= */
 
   const filteredServices = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
+    const searchValue =
+      search.trim().toLowerCase();
 
     return services.filter((service) => {
       const matchesSearch =
         !searchValue ||
-        service.name.toLowerCase().includes(searchValue) ||
-        service.id.toLowerCase().includes(searchValue) ||
-        service.category.toLowerCase().includes(searchValue) ||
-        service.description.toLowerCase().includes(searchValue);
+        service.name
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        service.id
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        service.category
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        service.description
+          ?.toLowerCase()
+          .includes(searchValue);
 
       const matchesCategory =
         categoryFilter === "All" ||
-        service.category === categoryFilter;
+        service.category ===
+          categoryFilter;
 
       const matchesAvailability =
         availabilityFilter === "All" ||
-        service.availability === availabilityFilter;
+        service.availability ===
+          availabilityFilter;
 
       const matchesStatus =
         statusFilter === "All" ||
@@ -179,7 +357,8 @@ const Services = () => {
   const generateServiceId = () => {
     const highestNumber = services.reduce(
       (maxNumber, service) => {
-        const match = service.id?.match(/^SRV-(\d+)$/);
+        const match =
+          service.id?.match(/^SRV-(\d+)$/);
 
         if (!match) return maxNumber;
 
@@ -191,10 +370,9 @@ const Services = () => {
       1000
     );
 
-    return `SRV-${String(highestNumber + 1).padStart(
-      4,
-      "0"
-    )}`;
+    return `SRV-${String(
+      highestNumber + 1
+    ).padStart(4, "0")}`;
   };
 
   /* =========================
@@ -218,7 +396,9 @@ const Services = () => {
 
   const handleAddService = () => {
     setEditingService(null);
-    setForm({ ...emptyServiceForm });
+    setForm({
+      ...emptyServiceForm,
+    });
     setFormError("");
 
     setSelectedService(null);
@@ -250,7 +430,9 @@ const Services = () => {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingService(null);
-    setForm({ ...emptyServiceForm });
+    setForm({
+      ...emptyServiceForm,
+    });
     setFormError("");
   };
 
@@ -326,7 +508,8 @@ const Services = () => {
   const handleSubmitService = (event) => {
     event.preventDefault();
 
-    const validationError = validateForm();
+    const validationError =
+      validateForm();
 
     if (validationError) {
       setFormError(validationError);
@@ -337,14 +520,32 @@ const Services = () => {
       ...form,
 
       name: form.name.trim(),
-      description: form.description.trim(),
-      duration: form.duration.trim(),
+
+      description:
+        form.description.trim(),
+
+      duration:
+        form.duration.trim(),
 
       price: Number(form.price),
-      staffRequired: Number(form.staffRequired),
-      availableStaff: Number(form.availableStaff),
-      bookings: Number(form.bookings || 0),
-      rating: Number(form.rating || 0),
+
+      staffRequired:
+        Number(form.staffRequired),
+
+      availableStaff:
+        Number(form.availableStaff),
+
+      bookings:
+        Number(form.bookings || 0),
+
+      rating:
+        Number(form.rating || 0),
+
+      /* Automatically generate icon */
+      icon: getServiceIcon(
+        form.name,
+        form.category
+      ),
     };
 
     /* =========================
@@ -352,16 +553,23 @@ const Services = () => {
     ========================= */
 
     if (editingService) {
-      setServices((currentServices) =>
-        currentServices.map((service) =>
-          service.id === editingService.id
-            ? {
-                ...service,
-                ...serviceDataToSave,
-                id: editingService.id,
-              }
-            : service
-        )
+      setServices(
+        (currentServices) =>
+          currentServices.map(
+            (service) =>
+              service.id ===
+              editingService.id
+                ? {
+                    ...service,
+                    ...serviceDataToSave,
+
+                    id: editingService.id,
+
+                    backendId:
+                      editingService.backendId,
+                  }
+                : service
+          )
       );
 
       handleCloseForm();
@@ -374,13 +582,18 @@ const Services = () => {
 
     const newService = {
       ...serviceDataToSave,
+
       id: generateServiceId(),
+
+      backendId: null,
     };
 
-    setServices((currentServices) => [
-      ...currentServices,
-      newService,
-    ]);
+    setServices(
+      (currentServices) => [
+        ...currentServices,
+        newService,
+      ]
+    );
 
     handleCloseForm();
   };
@@ -412,16 +625,21 @@ const Services = () => {
   const handleConfirmRemove = () => {
     if (!serviceToRemove) return;
 
-    const removedServiceId = serviceToRemove.id;
+    const removedServiceId =
+      serviceToRemove.id;
 
-    setServices((currentServices) =>
-      currentServices.filter(
-        (service) => service.id !== removedServiceId
-      )
+    setServices(
+      (currentServices) =>
+        currentServices.filter(
+          (service) =>
+            service.id !==
+            removedServiceId
+        )
     );
 
     if (
-      selectedService?.id === removedServiceId
+      selectedService?.id ===
+      removedServiceId
     ) {
       setSelectedService(null);
     }
@@ -450,8 +668,9 @@ const Services = () => {
           </h1>
 
           <p className="mt-1 text-xs text-[#819596] sm:text-sm">
-            Manage hospital care services, pricing, availability
-            and service status.
+            Manage hospital care services,
+            pricing, availability and service
+            status.
           </p>
         </div>
 
@@ -520,9 +739,6 @@ const Services = () => {
 
       {/* =========================
           Search & Filters
-
-          Existing SearchFilter
-          is reused unchanged.
       ========================= */}
 
       <SearchFilter
@@ -534,6 +750,7 @@ const Services = () => {
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {/* Service Category */}
+
           <div>
             <label
               htmlFor="service-category"
@@ -553,7 +770,9 @@ const Services = () => {
               id="service-category"
               value={categoryFilter}
               onChange={(event) =>
-                setCategoryFilter(event.target.value)
+                setCategoryFilter(
+                  event.target.value
+                )
               }
               className="
                 h-9
@@ -575,15 +794,21 @@ const Services = () => {
                 sm:text-sm
               "
             >
-              {serviceCategoryOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
+              {serviceCategoryOptions.map(
+                (option) => (
+                  <option
+                    key={option}
+                    value={option}
+                  >
+                    {option}
+                  </option>
+                )
+              )}
             </select>
           </div>
 
           {/* Availability */}
+
           <div>
             <label
               htmlFor="service-availability"
@@ -603,7 +828,9 @@ const Services = () => {
               id="service-availability"
               value={availabilityFilter}
               onChange={(event) =>
-                setAvailabilityFilter(event.target.value)
+                setAvailabilityFilter(
+                  event.target.value
+                )
               }
               className="
                 h-9
@@ -625,15 +852,21 @@ const Services = () => {
                 sm:text-sm
               "
             >
-              {serviceAvailabilityOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
+              {serviceAvailabilityOptions.map(
+                (option) => (
+                  <option
+                    key={option}
+                    value={option}
+                  >
+                    {option}
+                  </option>
+                )
+              )}
             </select>
           </div>
 
           {/* Status */}
+
           <div>
             <label
               htmlFor="service-status"
@@ -653,7 +886,9 @@ const Services = () => {
               id="service-status"
               value={statusFilter}
               onChange={(event) =>
-                setStatusFilter(event.target.value)
+                setStatusFilter(
+                  event.target.value
+                )
               }
               className="
                 h-9
@@ -675,15 +910,21 @@ const Services = () => {
                 sm:text-sm
               "
             >
-              {serviceStatusOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
+              {serviceStatusOptions.map(
+                (option) => (
+                  <option
+                    key={option}
+                    value={option}
+                  >
+                    {option}
+                  </option>
+                )
+              )}
             </select>
           </div>
 
           {/* Clear Filters */}
+
           {hasActiveFilters && (
             <div className="sm:col-span-2 lg:col-span-3">
               <div className="flex justify-end">
@@ -718,63 +959,115 @@ const Services = () => {
           </h2>
 
           <p className="text-xs text-[#819596] sm:text-sm">
-            Showing {filteredServices.length} of{" "}
+            Showing{" "}
+            {filteredServices.length} of{" "}
             {services.length} services
           </p>
         </div>
       </div>
 
       {/* =========================
-          Services
+          Loading State
       ========================= */}
 
-      {filteredServices.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredServices.map((service) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              onViewDetails={handleViewDetails}
-              onEdit={handleEditService}
-            />
-          ))}
+      {loading && (
+        <div className="rounded-2xl border border-[#E2EFED] bg-white px-6 py-12 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#E8F8F6] border-t-[#08A6A0]" />
+
+          <p className="mt-4 text-sm font-medium text-[#073F42]">
+            Loading services...
+          </p>
+
+          <p className="mt-1 text-xs text-[#819596]">
+            Fetching services from the server.
+          </p>
         </div>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-[#D9E9E7] bg-white px-6 py-12 text-center sm:py-14">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
-            <Search size={24} />
+      )}
+
+      {/* =========================
+          API Error
+      ========================= */}
+
+      {!loading && fetchError && (
+        <div className="rounded-2xl border border-red-100 bg-white px-6 py-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+            <Activity size={24} />
           </div>
 
           <h3 className="mt-4 text-lg font-semibold text-[#073F42]">
-            No services found
+            Unable to load services
           </h3>
 
           <p className="mx-auto mt-2 max-w-md text-sm text-[#819596]">
-            No services match your current search or filter
-            criteria. Try changing the filters or search term.
+            {fetchError}
           </p>
+        </div>
+      )}
 
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="
-                mt-5
-                rounded-xl
-                bg-[#08A6A0]
-                px-4
-                py-2.5
-                text-sm
-                font-semibold
-                text-white
-                transition
-                hover:bg-[#078F8A]
-              "
-            >
-              Clear Filters
-            </button>
+      {/* =========================
+          Services
+      ========================= */}
+
+      {!loading &&
+      !fetchError &&
+      filteredServices.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredServices.map(
+            (service) => (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                onViewDetails={
+                  handleViewDetails
+                }
+                onEdit={
+                  handleEditService
+                }
+              />
+            )
           )}
         </div>
+      ) : (
+        !loading &&
+        !fetchError && (
+          <div className="rounded-2xl border border-dashed border-[#D9E9E7] bg-white px-6 py-12 text-center sm:py-14">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+              <Search size={24} />
+            </div>
+
+            <h3 className="mt-4 text-lg font-semibold text-[#073F42]">
+              No services found
+            </h3>
+
+            <p className="mx-auto mt-2 max-w-md text-sm text-[#819596]">
+              No services match your current
+              search or filter criteria. Try
+              changing the filters or search
+              term.
+            </p>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="
+                  mt-5
+                  rounded-xl
+                  bg-[#08A6A0]
+                  px-4
+                  py-2.5
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-[#078F8A]
+                "
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )
       )}
 
       {/* =========================
@@ -801,7 +1094,9 @@ const Services = () => {
           onSubmit={handleSubmitService}
           onClose={handleCloseForm}
           formError={formError}
-          isEditing={Boolean(editingService)}
+          isEditing={Boolean(
+            editingService
+          )}
         />
       )}
 
@@ -820,8 +1115,12 @@ const Services = () => {
         confirmText="Remove Service"
         cancelText="Cancel"
         variant="danger"
-        onConfirm={handleConfirmRemove}
-        onCancel={handleCancelRemove}
+        onConfirm={
+          handleConfirmRemove
+        }
+        onCancel={
+          handleCancelRemove
+        }
       />
     </div>
   );
@@ -853,7 +1152,8 @@ const ServiceCard = ({
   onEdit,
 }) => {
   const ServiceIcon =
-    iconMap[service.icon] || Stethoscope;
+    iconMap[service.icon] ||
+    Stethoscope;
 
   return (
     <div
@@ -872,6 +1172,7 @@ const ServiceCard = ({
       "
     >
       {/* Card Header */}
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div
@@ -914,7 +1215,8 @@ const ServiceCard = ({
             sm:px-2.5
             sm:text-xs
             ${
-              service.status === "Active"
+              service.status ===
+              "Active"
                 ? "bg-[#E8F8F6] text-[#078F8A]"
                 : "bg-gray-100 text-gray-500"
             }
@@ -925,6 +1227,7 @@ const ServiceCard = ({
       </div>
 
       {/* Category */}
+
       <div className="mt-4">
         <span className="inline-flex rounded-lg bg-[#FAFDFC] px-2.5 py-1 text-xs font-medium text-[#31585A] ring-1 ring-[#E2EFED]">
           {service.category}
@@ -932,20 +1235,27 @@ const ServiceCard = ({
       </div>
 
       {/* Description */}
+
       <p className="mt-3 min-h-[66px] text-xs leading-5 text-[#31585A] sm:text-sm sm:leading-6">
-        {service.description}
+        {service.description ||
+          "No description available."}
       </p>
 
       {/* Service Information */}
+
       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
         {/* Price */}
+
         <div className="rounded-xl bg-[#FAFDFC] p-3">
           <p className="text-[11px] text-[#819596] sm:text-xs">
             Service Charge
           </p>
 
           <p className="mt-1 text-sm font-semibold text-[#073F42] sm:text-base">
-            ₹{Number(service.price || 0).toLocaleString("en-IN")}
+            ₹
+            {Number(
+              service.price || 0
+            ).toLocaleString("en-IN")}
           </p>
 
           <p className="text-[11px] text-[#819596] sm:text-xs">
@@ -954,6 +1264,7 @@ const ServiceCard = ({
         </div>
 
         {/* Duration */}
+
         <div className="rounded-xl bg-[#FAFDFC] p-3">
           <p className="text-[11px] text-[#819596] sm:text-xs">
             Duration
@@ -965,6 +1276,7 @@ const ServiceCard = ({
         </div>
 
         {/* Available Staff */}
+
         <div className="rounded-xl bg-[#FAFDFC] p-3">
           <p className="text-[11px] text-[#819596] sm:text-xs">
             Available Staff
@@ -976,6 +1288,7 @@ const ServiceCard = ({
         </div>
 
         {/* Bookings */}
+
         <div className="rounded-xl bg-[#FAFDFC] p-3">
           <p className="text-[11px] text-[#819596] sm:text-xs">
             Bookings
@@ -988,6 +1301,7 @@ const ServiceCard = ({
       </div>
 
       {/* Availability */}
+
       <div className="mt-4 flex items-center justify-between border-t border-[#E2EFED] pt-4">
         <span className="text-xs text-[#819596] sm:text-sm">
           Availability
@@ -1002,9 +1316,11 @@ const ServiceCard = ({
             font-medium
             sm:text-xs
             ${
-              service.availability === "Available"
+              service.availability ===
+              "Available"
                 ? "bg-[#E8F8F6] text-[#078F8A]"
-                : service.availability === "Limited"
+                : service.availability ===
+                  "Limited"
                 ? "bg-amber-50 text-amber-600"
                 : "bg-red-50 text-red-500"
             }
@@ -1015,6 +1331,7 @@ const ServiceCard = ({
       </div>
 
       {/* Rating */}
+
       <div className="mt-3 flex items-center justify-between">
         <span className="text-xs text-[#819596] sm:text-sm">
           Patient Rating
@@ -1026,10 +1343,13 @@ const ServiceCard = ({
       </div>
 
       {/* Actions */}
+
       <div className="mt-5 flex gap-2">
         <button
           type="button"
-          onClick={() => onViewDetails?.(service)}
+          onClick={() =>
+            onViewDetails?.(service)
+          }
           className="
             flex-1
             rounded-xl
@@ -1051,7 +1371,9 @@ const ServiceCard = ({
 
         <button
           type="button"
-          onClick={() => onEdit?.(service)}
+          onClick={() =>
+            onEdit?.(service)
+          }
           className="
             flex-1
             rounded-xl

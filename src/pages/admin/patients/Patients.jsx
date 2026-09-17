@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Archive,
   Activity,
+  Archive,
   BedDouble,
   ChevronRight,
   Droplets,
@@ -18,14 +18,16 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import PatientForm from "../../../components/admin/PatientForm";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import PatientProfile from "../../../components/admin/PatientProfile";
+import Toast from "../../../components/common/Toast";
 
-import { patientData } from "../../../data/patientData";
+import { apiRequest } from "../../../api/api";
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const safeArray = (value) => (Array.isArray(value) ? value : []);
+const safeArray = (value) =>
+  Array.isArray(value) ? value : [];
 
 const getInitials = (name = "") => {
   return (
@@ -38,21 +40,43 @@ const getInitials = (name = "") => {
   );
 };
 
-const getPatientName = (patient) =>
-  patient?.fullName || patient?.name || "Unnamed Patient";
+const getPatientName = (patient) => {
+  if (patient?.fullName) return patient.fullName;
+  if (patient?.name) return patient.name;
+
+  const fullName = [
+    patient?.firstName || patient?.first_name,
+    patient?.middleName || patient?.middle_name,
+    patient?.lastName || patient?.last_name,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return fullName || "Unnamed Patient";
+};
 
 const getPatientId = (patient) =>
-  patient?.patientId || patient?.registrationNumber || patient?.id || "N/A";
+  patient?.patientId ||
+  patient?.patient_id ||
+  patient?.registrationNumber ||
+  patient?.registration_number ||
+  patient?.id ||
+  "N/A";
 
 const getRoomBed = (patient) => {
   if (patient?.roomBed) return patient.roomBed;
 
   if (patient?.roomNumber || patient?.bedNumber) {
-    return `${patient.roomNumber || "-"} / ${patient.bedNumber || "-"}`;
+    return `${patient.roomNumber || "-"} / ${
+      patient.bedNumber || "-"
+    }`;
   }
 
   if (patient?.room || patient?.bed) {
-    return `${patient.room || "-"} / ${patient.bed || "-"}`;
+    return `${patient.room || "-"} / ${
+      patient.bed || "-"
+    }`;
   }
 
   return "Not Assigned";
@@ -87,11 +111,143 @@ const getAdmissionStatus = (patient) => {
     return patient.admissionStatus;
   }
 
+  if (patient?.admission_status) {
+    return patient.admission_status;
+  }
+
   if (patient?.status === "Admitted") {
     return "Admitted";
   }
 
   return "Not Admitted";
+};
+
+/* =========================================================
+   NORMALIZE BACKEND PATIENT
+========================================================= */
+
+const normalizePatient = (patient) => {
+  const firstName =
+    patient?.first_name ||
+    patient?.firstName ||
+    "";
+
+  const middleName =
+    patient?.middle_name ||
+    patient?.middleName ||
+    "";
+
+  const lastName =
+    patient?.last_name ||
+    patient?.lastName ||
+    "";
+
+  const fullName = [
+    firstName,
+    middleName,
+    lastName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return {
+    ...patient,
+
+    id: patient.id,
+
+    registrationNumber:
+      patient.registration_number ||
+      patient.registrationNumber ||
+      "",
+
+    registrationDate:
+      patient.registration_date ||
+      patient.registrationDate ||
+      "",
+
+    firstName,
+    middleName,
+    lastName,
+
+    fullName:
+      patient.fullName ||
+      patient.name ||
+      fullName ||
+      "Unnamed Patient",
+
+    dateOfBirth:
+      patient.date_of_birth ||
+      patient.dateOfBirth ||
+      "",
+
+    bloodGroup:
+      patient.blood_group ||
+      patient.bloodGroup ||
+      "",
+
+    postalCode:
+      patient.postal_code ||
+      patient.postalCode ||
+      "",
+
+    emergencyContactName:
+      patient.emergency_contact_name ||
+      patient.emergencyContactName ||
+      "",
+
+    emergencyContactPhone:
+      patient.emergency_contact_phone ||
+      patient.emergencyContactPhone ||
+      "",
+
+    emergencyContactRelation:
+      patient.emergency_contact_relation ||
+      patient.emergencyContactRelation ||
+      "",
+
+    maritalStatus:
+      patient.marital_status ||
+      patient.maritalStatus ||
+      "",
+
+    patientProblem:
+      patient.patient_problem ||
+      patient.patientProblem ||
+      "",
+
+    digitalSignature:
+      patient.digital_signature ||
+      patient.digitalSignature ||
+      "",
+
+    activeServices:
+      patient.activeServices ||
+      [],
+
+    services:
+      patient.services ||
+      [],
+
+    appointments:
+      patient.appointments ||
+      [],
+
+    assignedStaff:
+      patient.assignedStaff ||
+      [],
+
+    admissionStatus:
+      patient.admissionStatus ||
+      patient.admission_status ||
+      (patient.status === "Admitted"
+        ? "Admitted"
+        : "Not Admitted"),
+
+    roomBed:
+      patient.roomBed ||
+      "Not Assigned",
+  };
 };
 
 /* =========================================================
@@ -127,9 +283,10 @@ const StatusBadge = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${styles[status] ||
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+        styles[status] ||
         "border-slate-200 bg-slate-50 text-slate-600"
-        }`}
+      }`}
     >
       {status || "Unknown"}
     </span>
@@ -168,13 +325,19 @@ const FilterSelect = ({
 
       <select
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
         className="
-          h-10 w-full rounded-lg
-          border border-[#D9E9E7]
+          h-10
+          w-full
+          rounded-lg
+          border
+          border-[#D9E9E7]
           bg-[#FAFDFC]
           px-3
-          text-sm text-[#173F41]
+          text-sm
+          text-[#173F41]
           outline-none
           transition
           focus:border-[#08A6A0]
@@ -232,7 +395,7 @@ const PatientRow = ({
       {/* Age / Gender */}
       <td className="px-4 py-4">
         <p className="text-sm font-semibold text-[#31585A]">
-          {patient.age || "-"} yrs
+          {patient.age ?? "-"} yrs
         </p>
 
         <p className="mt-0.5 text-xs text-[#819596]">
@@ -306,6 +469,7 @@ const PatientRow = ({
       {/* Actions */}
       <td className="px-4 py-4">
         <div className="flex items-center justify-end gap-1">
+          {/* View */}
           <button
             type="button"
             onClick={() => onView(patient)}
@@ -315,6 +479,7 @@ const PatientRow = ({
             <Eye size={16} />
           </button>
 
+          {/* Edit */}
           <button
             type="button"
             onClick={() => onEdit(patient)}
@@ -324,15 +489,17 @@ const PatientRow = ({
             <Edit3 size={16} />
           </button>
 
+          {/* Delete */}
           <button
             type="button"
             onClick={() => onArchive(patient)}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[#527071] transition hover:bg-red-50 hover:text-red-600"
-            title="Archive patient"
+            title="Delete patient"
           >
             <Archive size={16} />
           </button>
 
+          {/* Details */}
           <button
             type="button"
             onClick={() => onView(patient)}
@@ -361,7 +528,6 @@ const PatientMobileCard = ({
 
   return (
     <div className="rounded-xl border border-[#E2EFED] bg-white p-4 shadow-sm">
-      {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <PatientAvatar patient={patient} />
@@ -380,18 +546,20 @@ const PatientMobileCard = ({
         <StatusBadge status={patient.status} />
       </div>
 
-      {/* Information */}
       <div className="mt-4 grid grid-cols-2 gap-3">
+        {/* Age */}
         <div className="rounded-lg bg-[#FAFDFC] p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
             Age / Gender
           </p>
 
           <p className="mt-1 text-sm font-semibold text-[#31585A]">
-            {patient.age || "-"} / {patient.gender || "-"}
+            {patient.age ?? "-"} /{" "}
+            {patient.gender || "-"}
           </p>
         </div>
 
+        {/* Blood */}
         <div className="rounded-lg bg-[#FAFDFC] p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
             Blood Group
@@ -402,6 +570,7 @@ const PatientMobileCard = ({
           </p>
         </div>
 
+        {/* Admission */}
         <div className="rounded-lg bg-[#FAFDFC] p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
             Admission
@@ -412,6 +581,7 @@ const PatientMobileCard = ({
           </p>
         </div>
 
+        {/* Room */}
         <div className="rounded-lg bg-[#FAFDFC] p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">
             Room / Bed
@@ -423,7 +593,7 @@ const PatientMobileCard = ({
         </div>
       </div>
 
-      {/* Contact */}
+      {/* Phone */}
       <div className="mt-3 flex items-center gap-2 text-xs text-[#527071]">
         <Phone
           size={14}
@@ -452,6 +622,7 @@ const PatientMobileCard = ({
 
       {/* Actions */}
       <div className="mt-4 flex gap-2 border-t border-[#EAF2F0] pt-3">
+        {/* View */}
         <button
           type="button"
           onClick={() => onView(patient)}
@@ -461,6 +632,7 @@ const PatientMobileCard = ({
           View
         </button>
 
+        {/* Edit */}
         <button
           type="button"
           onClick={() => onEdit(patient)}
@@ -470,11 +642,12 @@ const PatientMobileCard = ({
           <Edit3 size={15} />
         </button>
 
+        {/* Delete */}
         <button
           type="button"
           onClick={() => onArchive(patient)}
           className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-          title="Archive patient"
+          title="Delete patient"
         >
           <Archive size={15} />
         </button>
@@ -488,17 +661,22 @@ const PatientMobileCard = ({
 ========================================================= */
 
 const Patients = () => {
-  const [patients, setPatients] = useState(
-    safeArray(patientData)
-  );
+  const [patients, setPatients] = useState([]);
 
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] =
+    useState(true);
 
-  const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] =
+    useState("");
 
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [showFilters, setShowFilters] =
+    useState(false);
 
-  const [bloodFilter, setBloodFilter] = useState("All");
+  const [statusFilter, setStatusFilter] =
+    useState("All");
+
+  const [bloodFilter, setBloodFilter] =
+    useState("All");
 
   const [admissionFilter, setAdmissionFilter] =
     useState("All");
@@ -515,45 +693,173 @@ const Patients = () => {
   const [patientToArchive, setPatientToArchive] =
     useState(null);
 
+  const [deleting, setDeleting] =
+    useState(false);
+
+  const [toast, setToast] = useState({
+    type: "success",
+    title: "",
+    message: "",
+  });
+
   /* =======================================================
-     FILTER OPTIONS
+     TOAST
+  ======================================================= */
+
+  const showToast = ({
+    type = "success",
+    title = "",
+    message = "",
+  }) => {
+    setToast({
+      type,
+      title,
+      message,
+    });
+  };
+
+  const closeToast = () => {
+    setToast({
+      type: "success",
+      title: "",
+      message: "",
+    });
+  };
+
+  /* =======================================================
+     AUTO HIDE TOAST
+  ======================================================= */
+
+  useEffect(() => {
+    if (!toast.message) return;
+
+    const timer = setTimeout(() => {
+      setToast({
+        type: "success",
+        title: "",
+        message: "",
+      });
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [toast.message]);
+
+  /* =======================================================
+     LOAD PATIENTS
+  ======================================================= */
+
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+
+      const data = await apiRequest(
+        "/patients/"
+      );
+
+      const normalizedPatients =
+        safeArray(data).map(
+          normalizePatient
+        );
+
+      setPatients(normalizedPatients);
+    } catch (error) {
+      console.error(
+        "Failed to load patients:",
+        error
+      );
+
+      showToast({
+        type: "error",
+        title: "Failed to Load Patients",
+        message:
+          error.message ||
+          "Unable to fetch patient records from the server.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =======================================================
+     INITIAL LOAD
+  ======================================================= */
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  /* =======================================================
+     STATUS OPTIONS
   ======================================================= */
 
   const statusOptions = useMemo(() => {
     const statuses = new Set(
       patients
-        .map((patient) => patient?.status)
+        .map(
+          (patient) => patient?.status
+        )
         .filter(Boolean)
     );
 
     return [
-      { value: "All", label: "All Status" },
-      ...Array.from(statuses).map((status) => ({
-        value: status,
-        label: status,
-      })),
+      {
+        value: "All",
+        label: "All Status",
+      },
+
+      ...Array.from(statuses).map(
+        (status) => ({
+          value: status,
+          label: status,
+        })
+      ),
     ];
   }, [patients]);
+
+  /* =======================================================
+     BLOOD OPTIONS
+  ======================================================= */
 
   const bloodOptions = useMemo(() => {
     const bloodGroups = new Set(
       patients
-        .map((patient) => patient?.bloodGroup)
+        .map(
+          (patient) =>
+            patient?.bloodGroup
+        )
         .filter(Boolean)
     );
 
     return [
-      { value: "All", label: "All Blood Groups" },
-      ...Array.from(bloodGroups).map((blood) => ({
-        value: blood,
-        label: blood,
-      })),
+      {
+        value: "All",
+        label: "All Blood Groups",
+      },
+
+      ...Array.from(bloodGroups).map(
+        (blood) => ({
+          value: blood,
+          label: blood,
+        })
+      ),
     ];
   }, [patients]);
 
+  /* =======================================================
+     ADMISSION OPTIONS
+  ======================================================= */
+
   const admissionOptions = [
-    { value: "All", label: "All Admission" },
-    { value: "Admitted", label: "Admitted" },
+    {
+      value: "All",
+      label: "All Admission",
+    },
+    {
+      value: "Admitted",
+      label: "Admitted",
+    },
     {
       value: "Not Admitted",
       label: "Not Admitted",
@@ -565,11 +871,15 @@ const Patients = () => {
   ======================================================= */
 
   const filteredPatients = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = search
+      .trim()
+      .toLowerCase();
 
     return patients.filter((patient) => {
       const services = safeArray(
-        patient?.activeServices
+        patient?.activeServices?.length
+          ? patient.activeServices
+          : patient?.services
       );
 
       const serviceText = services
@@ -577,12 +887,13 @@ const Patients = () => {
           typeof service === "string"
             ? service
             : service?.name ||
-            service?.serviceName ||
-            ""
+              service?.serviceName ||
+              ""
         )
         .join(" ");
 
-      const roomBed = getRoomBed(patient);
+      const roomBed =
+        getRoomBed(patient);
 
       const searchableText = [
         getPatientName(patient),
@@ -595,6 +906,8 @@ const Patients = () => {
         patient?.status,
         patient?.doctorName,
         patient?.assignedDoctor,
+        patient?.patientProblem,
+        patient?.patient_problem,
         roomBed,
         serviceText,
       ]
@@ -603,20 +916,23 @@ const Patients = () => {
         .toLowerCase();
 
       const matchesSearch =
-        !query || searchableText.includes(query);
+        !query ||
+        searchableText.includes(query);
 
       const matchesStatus =
         statusFilter === "All" ||
-        patient?.status === statusFilter;
+        patient?.status ===
+          statusFilter;
 
       const matchesBlood =
         bloodFilter === "All" ||
-        patient?.bloodGroup === bloodFilter;
+        patient?.bloodGroup ===
+          bloodFilter;
 
       const matchesAdmission =
         admissionFilter === "All" ||
         getAdmissionStatus(patient) ===
-        admissionFilter;
+          admissionFilter;
 
       return (
         matchesSearch &&
@@ -640,26 +956,36 @@ const Patients = () => {
   const stats = useMemo(() => {
     const total = patients.length;
 
-    const registered = patients.filter(
-      (patient) =>
-        patient?.status === "Registered"
-    ).length;
+    const registered =
+      patients.filter(
+        (patient) =>
+          patient?.status ===
+          "Registered"
+      ).length;
 
-    const admitted = patients.filter(
-      (patient) =>
-        patient?.status === "Admitted" ||
-        getAdmissionStatus(patient) === "Admitted"
-    ).length;
+    const admitted =
+      patients.filter(
+        (patient) =>
+          patient?.status ===
+            "Admitted" ||
+          getAdmissionStatus(
+            patient
+          ) === "Admitted"
+      ).length;
 
-    const treatment = patients.filter(
-      (patient) =>
-        patient?.status === "Under Treatment"
-    ).length;
+    const treatment =
+      patients.filter(
+        (patient) =>
+          patient?.status ===
+          "Under Treatment"
+      ).length;
 
-    const active = patients.filter(
-      (patient) =>
-        patient?.status === "Active"
-    ).length;
+    const active =
+      patients.filter(
+        (patient) =>
+          patient?.status ===
+          "Active"
+      ).length;
 
     return {
       total,
@@ -683,154 +1009,201 @@ const Patients = () => {
      EDIT PATIENT
   ======================================================= */
 
-  const handleEditPatient = (patient) => {
+  const handleEditPatient = (
+    patient
+  ) => {
     setSelectedPatient(null);
     setEditingPatient(patient);
     setShowPatientForm(true);
   };
 
   /* =======================================================
-     SAVE PATIENT
+     PATIENT SUBMIT
   ======================================================= */
 
-  const handlePatientSubmit = (formData) => {
-    if (editingPatient) {
-      setPatients((currentPatients) =>
-        currentPatients.map((patient) =>
-          patient.id === editingPatient.id
-            ? {
-              ...patient,
-              ...formData,
+  const handlePatientSubmit =
+    async (patientData) => {
+      await loadPatients();
 
-              id: editingPatient.id,
+      setShowPatientForm(false);
+      setEditingPatient(null);
 
-              activeServices:
-                formData.activeServices ??
-                editingPatient.activeServices ??
-                [],
+      showToast({
+        type: "success",
+        title: editingPatient
+          ? "Patient Updated"
+          : "Registration Successful",
 
-              services:
-                formData.services ??
-                editingPatient.services ??
-                [],
-
-              appointments:
-                formData.appointments ??
-                editingPatient.appointments ??
-                [],
-
-              assignedStaff:
-                formData.assignedStaff ??
-                editingPatient.assignedStaff ??
-                [],
-
-              admissionStatus:
-                formData.admissionStatus ??
-                editingPatient.admissionStatus ??
-                "Not Admitted",
-
-              roomBed:
-                formData.roomBed ??
-                editingPatient.roomBed ??
-                "Not Assigned",
-            }
-            : patient
-        )
-      );
-    } else {
-      const newPatient = {
-        ...formData,
-
-        id: `PAT-${String(
-          patients.length + 1
-        ).padStart(4, "0")}`,
-
-        patientId:
-          formData.patientId ||
-          `PAT-${String(
-            patients.length + 1
-          ).padStart(4, "0")}`,
-
-        registrationDate:
-          formData.registrationDate ||
-          new Date().toISOString().split("T")[0],
-
-        status:
-          formData.status || "Registered",
-
-        admissionStatus:
-          formData.admissionStatus ||
-          "Not Admitted",
-
-        roomBed:
-          formData.roomBed ||
-          "Not Assigned",
-
-        activeServices:
-          formData.activeServices || [],
-
-        services:
-          formData.services || [],
-
-        appointments:
-          formData.appointments || [],
-
-        labTests:
-          formData.labTests || [],
-
-        requests:
-          formData.requests || [],
-
-        assignedStaff:
-          formData.assignedStaff || [],
-      };
-
-      setPatients((currentPatients) => [
-        ...currentPatients,
-        newPatient,
-      ]);
-    }
-
-    setShowPatientForm(false);
-    setEditingPatient(null);
-  };
+        message: editingPatient
+          ? "Patient information has been updated successfully."
+          : "Patient has been registered successfully.",
+      });
+    };
 
   /* =======================================================
-     ARCHIVE PATIENT
+     DELETE PATIENT
   ======================================================= */
 
-  const handleArchivePatient = () => {
-    if (!patientToArchive) return;
+  const handleArchivePatient =
+    async () => {
+      if (
+        !patientToArchive ||
+        deleting
+      ) {
+        return;
+      }
 
-    setPatients((currentPatients) =>
-      currentPatients.map((patient) =>
-        patient.id === patientToArchive.id
-          ? {
-            ...patient,
-            status: "Inactive",
+      const deletedPatientId =
+        patientToArchive.id;
+
+      const deletedPatientName =
+        getPatientName(
+          patientToArchive
+        );
+
+      try {
+        setDeleting(true);
+
+        /* ---------------------------------------------------
+           IMPORTANT
+
+           We use fetch directly here instead of apiRequest
+           because DELETE may return 204 No Content.
+
+           A 204 response has no JSON body, so calling
+           response.json() causes:
+
+           "Unexpected end of JSON input"
+        --------------------------------------------------- */
+
+        const token =
+          localStorage.getItem(
+            "access_token"
+          );
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/patients/${deletedPatientId}`,
+          {
+            method: "DELETE",
+            headers: {
+              ...(token && {
+                Authorization: `Bearer ${token}`,
+              }),
+            },
           }
-          : patient
-      )
-    );
+        );
 
-    setPatientToArchive(null);
+        /* ---------------------------------------------------
+           READ RESPONSE SAFELY
 
-    if (
-      selectedPatient?.id ===
-      patientToArchive.id
-    ) {
-      setSelectedPatient(null);
-    }
-  };
+           DELETE can return:
+           - 204 No Content
+           - JSON response
+           - text response
+        --------------------------------------------------- */
+
+        const responseText =
+          await response.text();
+
+        let responseData = null;
+
+        if (responseText) {
+          try {
+            responseData =
+              JSON.parse(responseText);
+          } catch {
+            responseData =
+              responseText;
+          }
+        }
+
+        /* ---------------------------------------------------
+           HANDLE SERVER ERROR
+        --------------------------------------------------- */
+
+        if (!response.ok) {
+          throw new Error(
+            responseData?.detail ||
+              responseData?.message ||
+              responseData ||
+              `Failed to delete patient (${response.status})`
+          );
+        }
+
+        /* ---------------------------------------------------
+           IMMEDIATELY REMOVE FROM REACT STATE
+
+           No reload is necessary.
+
+           This makes the patient disappear immediately
+           after successful deletion.
+        --------------------------------------------------- */
+
+        setPatients(
+          (currentPatients) =>
+            currentPatients.filter(
+              (patient) =>
+                patient.id !==
+                deletedPatientId
+            )
+        );
+
+        /* ---------------------------------------------------
+           CLOSE DELETE DIALOG
+        --------------------------------------------------- */
+
+        setPatientToArchive(null);
+
+        /* ---------------------------------------------------
+           CLOSE PROFILE IF OPEN
+        --------------------------------------------------- */
+
+        if (
+          selectedPatient?.id ===
+          deletedPatientId
+        ) {
+          setSelectedPatient(null);
+        }
+
+        /* ---------------------------------------------------
+           SUCCESS TOAST
+        --------------------------------------------------- */
+
+        showToast({
+          type: "success",
+          title: "Patient Deleted",
+          message: `${deletedPatientName} has been deleted successfully.`,
+        });
+      } catch (error) {
+        console.error(
+          "Failed to delete patient:",
+          error
+        );
+
+        showToast({
+          type: "error",
+          title: "Delete Failed",
+          message:
+            error.message ||
+            "Unable to delete the patient.",
+        });
+      } finally {
+        setDeleting(false);
+      }
+    };
 
   /* =======================================================
-     RESET FILTERS
+     ACTIVE FILTER CHECK
   ======================================================= */
 
   const hasActiveFilters =
     statusFilter !== "All" ||
     bloodFilter !== "All" ||
     admissionFilter !== "All";
+
+  /* =======================================================
+     CLEAR FILTERS
+  ======================================================= */
 
   const clearFilters = () => {
     setStatusFilter("All");
@@ -839,15 +1212,26 @@ const Patients = () => {
   };
 
   /* =======================================================
-     RENDER
+     UI
   ======================================================= */
 
   return (
     <div className="space-y-5">
 
-      {/* =================================================
-          PAGE HEADER
-      ================================================= */}
+      {/* ===================================================
+          TOAST
+      =================================================== */}
+
+      <Toast
+        type={toast.type}
+        title={toast.title}
+        message={toast.message}
+        onClose={closeToast}
+      />
+
+      {/* ===================================================
+          HEADER
+      =================================================== */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -862,14 +1246,18 @@ const Patients = () => {
           </div>
 
           <p className="mt-1 text-xs text-[#819596] sm:text-sm">
-            Register patients and manage their hospital records,
-            admissions and reception services.
+            Register patients and manage
+            their hospital records,
+            admissions and reception
+            services.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={handleAddPatient}
+          onClick={
+            handleAddPatient
+          }
           className="
             inline-flex
             items-center
@@ -888,14 +1276,15 @@ const Patients = () => {
           "
         >
           <UserPlus size={17} />
-
-          <span>Register Patient</span>
+          <span>
+            Register Patient
+          </span>
         </button>
       </div>
 
-      {/* =================================================
-          STAT CARDS
-      ================================================= */}
+      {/* ===================================================
+          STATS
+      =================================================== */}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         <StatCard
@@ -929,44 +1318,63 @@ const Patients = () => {
         />
       </div>
 
-      {/* =================================================
+      {/* ===================================================
           SEARCH + FILTER
-      ================================================= */}
+      =================================================== */}
 
       <SearchFilter
         search={search}
         setSearch={setSearch}
         showFilters={showFilters}
-        setShowFilters={setShowFilters}
+        setShowFilters={
+          setShowFilters
+        }
         placeholder="Search name, patient ID, phone, email or room..."
       >
         <div className="flex flex-col gap-3 sm:flex-row">
+
           <FilterSelect
             label="Status"
             value={statusFilter}
-            onChange={setStatusFilter}
-            options={statusOptions}
+            onChange={
+              setStatusFilter
+            }
+            options={
+              statusOptions
+            }
           />
 
           <FilterSelect
             label="Blood Group"
             value={bloodFilter}
-            onChange={setBloodFilter}
-            options={bloodOptions}
+            onChange={
+              setBloodFilter
+            }
+            options={
+              bloodOptions
+            }
           />
 
           <FilterSelect
             label="Admission"
-            value={admissionFilter}
-            onChange={setAdmissionFilter}
-            options={admissionOptions}
+            value={
+              admissionFilter
+            }
+            onChange={
+              setAdmissionFilter
+            }
+            options={
+              admissionOptions
+            }
           />
 
           {hasActiveFilters && (
             <div className="flex items-end">
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={
+                  clearFilters
+                }
                 className="
                   inline-flex
                   h-10
@@ -992,9 +1400,9 @@ const Patients = () => {
         </div>
       </SearchFilter>
 
-      {/* =================================================
-          RESULT COUNT
-      ================================================= */}
+      {/* ===================================================
+          RECORD COUNT
+      =================================================== */}
 
       <div className="flex items-center justify-between">
         <div>
@@ -1003,168 +1411,271 @@ const Patients = () => {
           </p>
 
           <p className="mt-0.5 text-xs text-[#819596]">
-            Showing {filteredPatients.length} of{" "}
-            {patients.length} patients
+            Showing{" "}
+            {filteredPatients.length}{" "}
+            of {patients.length}{" "}
+            patients
           </p>
         </div>
       </div>
 
-      {/* =================================================
-          DESKTOP TABLE
-      ================================================= */}
+      {/* ===================================================
+          LOADING
+      =================================================== */}
 
-      <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px]">
-            <thead>
-              <tr className="border-b border-[#E2EFED] bg-[#FAFDFC]">
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Patient
-                </th>
+      {loading ? (
+        <div className="rounded-2xl border border-[#E2EFED] bg-white px-6 py-16 text-center shadow-sm">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#D9E9E7] border-t-[#08A6A0]" />
 
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Age / Gender
-                </th>
+          <p className="mt-4 text-sm font-semibold text-[#31585A]">
+            Loading patient records...
+          </p>
 
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Blood
-                </th>
-
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Contact
-                </th>
-
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Admission
-                </th>
-
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Activity
-                </th>
-
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Status
-                </th>
-
-                <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wide text-[#819596]">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredPatients.length > 0 ? (
-                filteredPatients.map((patient) => (
-                  <PatientRow
-                    key={patient.id || getPatientId(patient)}
-                    patient={patient}
-                    onView={setSelectedPatient}
-                    onEdit={handleEditPatient}
-                    onArchive={setPatientToArchive}
-                  />
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-6 py-14 text-center"
-                  >
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
-                      <Users size={22} />
-                    </div>
-
-                    <p className="mt-3 text-sm font-bold text-[#31585A]">
-                      No patients found
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#819596]">
-                      Try changing your search or filters.
-                    </p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <p className="mt-1 text-xs text-[#819596]">
+            Fetching data from the
+            hospital database.
+          </p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* =================================================
+              DESKTOP TABLE
+          ================================================= */}
 
-      {/* =================================================
-          MOBILE CARDS
-      ================================================= */}
+          <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1050px]">
 
-      <div className="space-y-3 md:hidden">
-        {filteredPatients.length > 0 ? (
-          filteredPatients.map((patient) => (
-            <PatientMobileCard
-              key={patient.id || getPatientId(patient)}
-              patient={patient}
-              onView={setSelectedPatient}
-              onEdit={handleEditPatient}
-              onArchive={setPatientToArchive}
-            />
-          ))
-        ) : (
-          <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-12 text-center shadow-sm">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
-              <Users size={22} />
+                <thead>
+                  <tr className="border-b border-[#E2EFED] bg-[#FAFDFC]">
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Patient
+                    </th>
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Age / Gender
+                    </th>
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Blood
+                    </th>
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Contact
+                    </th>
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Admission
+                    </th>
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Activity
+                    </th>
+
+                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Status
+                    </th>
+
+                    <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wide text-[#819596]">
+                      Actions
+                    </th>
+
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredPatients.length >
+                  0 ? (
+                    filteredPatients.map(
+                      (patient) => (
+                        <PatientRow
+                          key={
+                            patient.id
+                          }
+                          patient={
+                            patient
+                          }
+                          onView={
+                            setSelectedPatient
+                          }
+                          onEdit={
+                            handleEditPatient
+                          }
+                          onArchive={
+                            setPatientToArchive
+                          }
+                        />
+                      )
+                    )
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="px-6 py-14 text-center"
+                      >
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+                          <Users size={22} />
+                        </div>
+
+                        <p className="mt-3 text-sm font-bold text-[#31585A]">
+                          No patients
+                          found
+                        </p>
+
+                        <p className="mt-1 text-xs text-[#819596]">
+                          {patients.length ===
+                          0
+                            ? "No patient records have been registered yet."
+                            : "Try changing your search or filters."}
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+
+              </table>
             </div>
-
-            <p className="mt-3 text-sm font-bold text-[#31585A]">
-              No patients found
-            </p>
-
-            <p className="mt-1 text-xs text-[#819596]">
-              Try changing your search or filters.
-            </p>
           </div>
-        )}
-      </div>
 
-      {/* =================================================
+          {/* =================================================
+              MOBILE CARDS
+          ================================================= */}
+
+          <div className="space-y-3 md:hidden">
+            {filteredPatients.length >
+            0 ? (
+              filteredPatients.map(
+                (patient) => (
+                  <PatientMobileCard
+                    key={
+                      patient.id
+                    }
+                    patient={
+                      patient
+                    }
+                    onView={
+                      setSelectedPatient
+                    }
+                    onEdit={
+                      handleEditPatient
+                    }
+                    onArchive={
+                      setPatientToArchive
+                    }
+                  />
+                )
+              )
+            ) : (
+              <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-12 text-center shadow-sm">
+
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F6] text-[#08A6A0]">
+                  <Users size={22} />
+                </div>
+
+                <p className="mt-3 text-sm font-bold text-[#31585A]">
+                  No patients
+                  found
+                </p>
+
+                <p className="mt-1 text-xs text-[#819596]">
+                  {patients.length ===
+                  0
+                    ? "No patient records have been registered yet."
+                    : "Try changing your search or filters."}
+                </p>
+
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ===================================================
           PATIENT PROFILE
-      ================================================= */}
+      =================================================== */}
 
       <PatientProfile
-        patient={selectedPatient}
-        open={!!selectedPatient}
-        onClose={() => setSelectedPatient(null)}
-        onEdit={handleEditPatient}
+        patient={
+          selectedPatient
+        }
+        open={
+          !!selectedPatient
+        }
+        onClose={() =>
+          setSelectedPatient(
+            null
+          )
+        }
+        onEdit={
+          handleEditPatient
+        }
       />
 
-      {/* =================================================
-          ADD / EDIT PATIENT FORM
-      ================================================= */}
+      {/* ===================================================
+          PATIENT FORM
+      =================================================== */}
 
       {showPatientForm && (
         <PatientForm
-          patient={editingPatient}
+          patient={
+            editingPatient
+          }
           onClose={() => {
-            setShowPatientForm(false);
-            setEditingPatient(null);
+            setShowPatientForm(
+              false
+            );
+
+            setEditingPatient(
+              null
+            );
           }}
-          onSubmit={handlePatientSubmit}
+          onSubmit={
+            handlePatientSubmit
+          }
         />
       )}
 
-      {/* =================================================
-          ARCHIVE CONFIRMATION
-      ================================================= */}
+      {/* ===================================================
+          DELETE CONFIRMATION
+      =================================================== */}
 
       <ConfirmDialog
-        open={!!patientToArchive}
-        title="Archive Patient Record?"
+        open={
+          !!patientToArchive
+        }
+
+        title="Delete Patient Record?"
+
         message={
           patientToArchive
-            ? `This will mark ${getPatientName(
-              patientToArchive
-            )} as inactive. The patient's hospital history will not be deleted.`
+            ? `This will permanently delete ${getPatientName(
+                patientToArchive
+              )}'s patient record from the database. This action cannot be undone.`
             : ""
         }
-        confirmText="Archive Patient"
+
+        confirmText={
+          deleting
+            ? "Deleting..."
+            : "Delete Patient"
+        }
+
         cancelText="Cancel"
+
         variant="danger"
-        onCancel={() => setPatientToArchive(null)}
-        onConfirm={handleArchivePatient}
+
+        onCancel={() => {
+          if (!deleting) {
+            setPatientToArchive(
+              null
+            );
+          }
+        }}
+
+        onConfirm={
+          handleArchivePatient
+        }
       />
     </div>
   );
