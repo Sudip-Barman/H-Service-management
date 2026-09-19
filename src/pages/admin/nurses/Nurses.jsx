@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Eye,
@@ -10,6 +10,8 @@ import {
   UserRound,
   UserRoundCheck,
   Users,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 import StatCard from "../../../components/admin/StatCard";
@@ -17,6 +19,7 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import NurseForm from "../../../components/admin/NurseForm";
 import NurseProfile from "../../../components/admin/NurseProfile";
+import { apiRequest } from "../../../api/api";
 
 /* -------------------------------------------------------------------------- */
 /*                                Mock Data                                   */
@@ -301,7 +304,7 @@ const StatusBadge = ({ status }) => {
 /* -------------------------------------------------------------------------- */
 
 const Nurses = () => {
-  const [nurses, setNurses] = useState(initialNurses);
+  const [nurses, setNurses] = useState([]);
 
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -316,6 +319,39 @@ const Nurses = () => {
   const [editingNurse, setEditingNurse] = useState(null);
 
   const [deleteNurse, setDeleteNurse] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
+
+  useEffect(() => {
+    const fetchNurses = async () => {
+      try {
+        const data = await apiRequest("/api/nurses");
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted = data.map((n) => ({
+            ...n,
+            nurse_id: n.id,
+            staff_id: n.staff_id || (100 + n.id),
+            experience_years: Number(n.experience_years || 0),
+          }));
+          setNurses(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load nurses from backend:", err);
+      }
+    };
+    fetchNurses();
+  }, []);
+
 
   /* ------------------------------------------------------------------------ */
   /*                                   Stats                                  */
@@ -467,7 +503,7 @@ const Nurses = () => {
   /*                              Add / Update                                */
   /* ------------------------------------------------------------------------ */
 
-  const handleNurseSubmit = (formData) => {
+  const handleNurseSubmit = async (formData) => {
     if (!formData) return;
 
     /*
@@ -549,6 +585,35 @@ const Nurses = () => {
           formData.photo_file || null,
       };
 
+      try {
+        await apiRequest(`/api/nurses/${editingNurse.nurse_id}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            first_name: formData.first_name,
+            middle_name: formData.middle_name || null,
+            last_name: formData.last_name || null,
+            date_of_birth: formData.date_of_birth || null,
+            gender: formData.gender || "Female",
+            phone: formData.phone,
+            email: formData.email || null,
+            address: formData.address || null,
+            qualification: formData.qualification || null,
+            department: formData.department,
+            ward: formData.ward || null,
+            experience_years: Number(formData.experience_years || 0),
+            license_number: formData.license_number || null,
+            license_expiry: formData.license_expiry || null,
+            shift_type: formData.shift_type || "Morning",
+            photo: formData.photo || photo || null,
+            status: formData.status || "Active",
+          }),
+        });
+        showToast("Nurse details updated successfully!", "success");
+      } catch (err) {
+        console.error("Failed to update nurse on backend:", err);
+        showToast(err.message || "Failed to update nurse", "error");
+      }
+
       setNurses((currentNurses) =>
         currentNurses.map((nurse) =>
           Number(nurse.nurse_id) ===
@@ -558,9 +623,6 @@ const Nurses = () => {
         )
       );
 
-      /*
-       * If the profile is open, update the profile too.
-       */
       if (
         selectedNurse &&
         Number(selectedNurse.nurse_id) ===
@@ -575,41 +637,61 @@ const Nurses = () => {
       return;
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                                  ADD                                   */
-    /* ---------------------------------------------------------------------- */
+    let createdNurse = null;
+    try {
+      createdNurse = await apiRequest("/api/nurses", {
+        method: "POST",
+        body: JSON.stringify({
+          registration_number: formData.registration_number || `REG-NUR-${Date.now().toString().slice(-4)}`,
+          first_name: formData.first_name,
+          middle_name: formData.middle_name || null,
+          last_name: formData.last_name || null,
+          date_of_birth: formData.date_of_birth || null,
+          gender: formData.gender || "Female",
+          phone: formData.phone,
+          email: formData.email || null,
+          address: formData.address || null,
+          qualification: formData.qualification || null,
+          department: formData.department,
+          ward: formData.ward || null,
+          experience_years: Number(formData.experience_years || 0),
+          license_number: formData.license_number || null,
+          license_expiry: formData.license_expiry || null,
+          shift_type: formData.shift_type || "Morning",
+          photo: formData.photo || photo || null,
+          status: formData.status || "Active",
+        }),
+      });
+      showToast("Nurse registered successfully with photo!", "success");
+    } catch (err) {
+      console.error("Failed to create nurse on backend:", err);
+      showToast(err.message || "Failed to register nurse", "error");
+    }
 
     const nextId =
-      nurses.length > 0
+      createdNurse?.id ||
+      (nurses.length > 0
         ? Math.max(
             ...nurses.map(
               (nurse) =>
                 Number(nurse.nurse_id) || 0
             )
           ) + 1
-        : 1;
+        : 1);
 
     const newNurse = {
       ...formData,
-
       nurse_id: nextId,
-
-      staff_id: Number(formData.staff_id),
-
+      id: nextId,
+      staff_id: Number(formData.staff_id || (100 + nextId)),
       experience_years: Number(
         formData.experience_years || 0
       ),
-
       status: formData.status || "Active",
-
-      /*
-       * New image gets its temporary preview.
-       */
       photo:
         formData.photo_file instanceof File
           ? photo
           : formData.photo || "",
-
       photo_file:
         formData.photo_file || null,
     };
@@ -627,10 +709,17 @@ const Nurses = () => {
   /*                              Delete Handler                              */
   /* ------------------------------------------------------------------------ */
 
-  const handleDeleteNurse = () => {
+  const handleDeleteNurse = async () => {
     if (!deleteNurse) return;
 
-    const deletedId = deleteNurse.nurse_id;
+    const deletedId = deleteNurse.id || deleteNurse.nurse_id;
+    try {
+      await apiRequest(`/api/nurses/${deletedId}`, { method: "DELETE" });
+      showToast("Nurse removed successfully!", "success");
+    } catch (err) {
+      console.error("Failed to delete nurse on backend:", err);
+      showToast(err.message || "Failed to delete nurse", "error");
+    }
 
     setNurses((currentNurses) =>
       currentNurses.filter(
@@ -656,7 +745,24 @@ const Nurses = () => {
   /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="space-y-5 pb-8">
+    <div className="space-y-4 pb-8 sm:space-y-5 sm:pb-10">
+      {/* TOAST ALERT */}
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl transition-all duration-300 ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700 shadow-red-500/10"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-emerald-500/10"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
       {/* Header */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

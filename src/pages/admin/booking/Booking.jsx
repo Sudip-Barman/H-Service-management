@@ -215,13 +215,17 @@ const isServiceStaff = (staff) => {
   return (
     !isDoctor(staff) &&
     (
+      staff?.type === "nurse" ||
       role.includes("nurse") ||
+      role.includes("nursing") ||
       role.includes("caretaker") ||
+      role.includes("caregiver") ||
       role.includes("attendant") ||
       role.includes("japa") ||
       role.includes("sitter") ||
       role.includes("home care") ||
       role.includes("healthcare") ||
+      role.includes("elder") ||
       role.includes("staff")
     )
   );
@@ -246,8 +250,25 @@ const normalizeStaff = (staff) => ({
   role:
     staff?.role ??
     staff?.designation ??
-    "",
+    staff?.qualification ??
+    "Staff",
+  department: staff?.department ?? "",
+  status: staff?.status ?? "Active",
 });
+
+const normalizeNurse = (nurse) => {
+  const name = getName(nurse);
+  const qual = nurse?.qualification ? ` (${nurse.qualification})` : "";
+  return {
+    id: getId(nurse),
+    staffId: nurse?.staff_id,
+    name: name || "Unnamed Nurse",
+    role: `Nurse${qual}`,
+    type: "nurse",
+    department: nurse?.department ?? "Nursing",
+    status: nurse?.status ?? "Active",
+  };
+};
 
 const normalizeService = (service) => ({
   id: getId(service),
@@ -312,7 +333,13 @@ const normalizeBooking = (
       String(
         booking.assigned_staff_id ??
           booking.staff_id
-      )
+      ) ||
+      (item.staffId != null &&
+        String(item.staffId) ===
+          String(
+            booking.assigned_staff_id ??
+              booking.staff_id
+          ))
   );
 
   const creator = staff.find(
@@ -524,6 +551,18 @@ const Booking = () => {
 
   const [apiError, setApiError] =
     useState("");
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
 
   /* =======================================================
      LOAD DATA
@@ -538,12 +577,16 @@ const Booking = () => {
         bookingData,
         patientData,
         staffData,
+        nurseData,
         serviceData,
+        doctorData,
       ] = await Promise.all([
         apiRequest("/api/bookings"),
         apiRequest("/api/patients"),
         apiRequest("/api/staff"),
+        apiRequest("/api/nurses").catch(() => []),
         apiRequest("/api/services"),
+        apiRequest("/api/doctors").catch(() => []),
       ]);
 
       const patientList = Array.isArray(
@@ -564,6 +607,15 @@ const Booking = () => {
           staffData?.data ??
           [];
 
+      const nurseList = Array.isArray(
+        nurseData
+      )
+        ? nurseData
+        : nurseData?.items ??
+          nurseData?.nurses ??
+          nurseData?.data ??
+          [];
+
       const serviceList = Array.isArray(
         serviceData
       )
@@ -571,6 +623,15 @@ const Booking = () => {
         : serviceData?.items ??
           serviceData?.services ??
           serviceData?.data ??
+          [];
+
+      const rawDoctorList = Array.isArray(
+        doctorData
+      )
+        ? doctorData
+        : doctorData?.items ??
+          doctorData?.doctors ??
+          doctorData?.data ??
           [];
 
       const bookingList = Array.isArray(
@@ -589,15 +650,56 @@ const Booking = () => {
             (item) => item.id != null
           );
 
-      const normalizedStaff =
+      const normalizedStaffList =
         staffList
           .map(normalizeStaff)
           .filter(
             (item) => item.id != null
           );
 
-      const normalizedDoctors =
-        normalizedStaff.filter(isDoctor);
+      const normalizedNursesList =
+        nurseList
+          .map(normalizeNurse)
+          .filter(
+            (item) => item.id != null
+          );
+
+      // Merge staff and nurses without duplicate names
+      const allStaffAndNurses = [...normalizedStaffList];
+      normalizedNursesList.forEach((nurse) => {
+        const existing = allStaffAndNurses.find(
+          (s) =>
+            (nurse.staffId != null && String(s.id) === String(nurse.staffId)) ||
+            (s.name && nurse.name && s.name.trim().toLowerCase() === nurse.name.trim().toLowerCase())
+        );
+
+        if (!existing) {
+          allStaffAndNurses.push(nurse);
+        } else {
+          if (!existing.role || existing.role.toLowerCase() === "staff") {
+            existing.role = nurse.role;
+          }
+          if (nurse.staffId != null) {
+            existing.staffId = nurse.staffId;
+          }
+        }
+      });
+
+      const normalizedDoctorsFromApi = rawDoctorList.map((doc) => ({
+        id: doc.id,
+        name: doc.name || `Dr. ${doc.first_name || ""} ${doc.last_name || ""}`.trim(),
+        role: "Doctor",
+        department: doc.department || doc.specialization || "General",
+        phone: doc.phone || "",
+        email: doc.email || "",
+      })).filter((item) => item.id != null);
+
+      const normalizedDoctors = [
+        ...normalizedDoctorsFromApi,
+        ...allStaffAndNurses.filter(isDoctor).filter(
+          (s) => !normalizedDoctorsFromApi.some((d) => String(d.id) === String(s.id))
+        ),
+      ];
 
       const normalizedServices =
         serviceList
@@ -607,7 +709,7 @@ const Booking = () => {
           );
 
       setPatients(normalizedPatients);
-      setStaffOptions(normalizedStaff);
+      setStaffOptions(allStaffAndNurses);
       setDoctors(normalizedDoctors);
       setServices(normalizedServices);
 
@@ -618,7 +720,7 @@ const Booking = () => {
             normalizedPatients,
             normalizedDoctors,
             normalizedServices,
-            normalizedStaff
+            allStaffAndNurses
           )
         )
       );
@@ -1581,6 +1683,12 @@ const Booking = () => {
       setFormError("");
       setEditingBooking(null);
       setShowAddModal(false);
+      showToast(
+        editingBooking
+          ? "Booking updated successfully!"
+          : "New booking created successfully!",
+        "success"
+      );
     } catch (error) {
       console.error(
         "Booking save failed:",
@@ -1590,6 +1698,10 @@ const Booking = () => {
       setFormError(
         error.message ||
           "Failed to save booking."
+      );
+      showToast(
+        error.message || "Failed to save booking.",
+        "error"
       );
     } finally {
       setSubmitting(false);
@@ -1644,6 +1756,7 @@ const Booking = () => {
             ? normalized
             : current
       );
+      showToast(`Booking status changed to ${status}`, "success");
     } catch (error) {
       console.error(
         "Status update failed:",
@@ -1653,6 +1766,10 @@ const Booking = () => {
       setApiError(
         error.message ||
           "Failed to update booking status."
+      );
+      showToast(
+        error.message || "Failed to update booking status.",
+        "error"
       );
     } finally {
       setUpdatingStatus(false);
@@ -1717,19 +1834,20 @@ const Booking = () => {
         </div>
       </div>
 
-      {apiError && (
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{apiError}</span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setApiError("")
-            }
-            className="shrink-0 font-semibold hover:text-red-900"
-          >
-            Dismiss
-          </button>
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl transition-all duration-300 ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700 shadow-red-500/10"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-emerald-500/10"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <XCircle className="h-5 w-5 shrink-0 text-red-500" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          )}
+          <span>{toast.message}</span>
         </div>
       )}
 
@@ -1904,13 +2022,9 @@ const Booking = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1450px]">
+              <table className="w-full min-w-[1250px]">
                 <thead>
                   <tr className="border-b border-[#EAF2F0] bg-[#FAFDFC] text-left">
-                    <TableHeader>
-                      Booking
-                    </TableHeader>
-
                     <TableHeader>
                       Patient
                     </TableHeader>
@@ -2126,30 +2240,6 @@ const BookingRow = ({
 
   return (
     <tr className="border-b border-[#EAF2F0] last:border-0 hover:bg-[#FAFDFC]">
-      <td className="px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F8F6]">
-            {isHomeService ? (
-              <Home className="h-5 w-5 text-[#08A6A0]" />
-            ) : (
-              <CalendarDays className="h-5 w-5 text-[#08A6A0]" />
-            )}
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-[#173F41]">
-              {booking.booking_number}
-            </p>
-
-            <p className="mt-1 text-xs text-[#819596]">
-              {isHomeService
-                ? "Home Healthcare"
-                : "Consultation"}
-            </p>
-          </div>
-        </div>
-      </td>
-
       <td className="px-5 py-4">
         <p className="text-sm font-bold text-[#173F41]">
           {booking.patient}

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   AlertCircle,
   ArrowDown,
@@ -247,6 +248,20 @@ function BloodBank() {
   const [bloodStocks, setBloodStocks] =
     useState(initialBloodStocks);
 
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const data = await apiRequest("/api/blood-bank");
+        if (Array.isArray(data) && data.length > 0) {
+          setBloodStocks(data);
+        }
+      } catch (err) {
+        console.error("Failed to load blood stocks:", err);
+      }
+    };
+    fetchStocks();
+  }, []);
+
   const [donors, setDonors] = useState(initialDonors);
   const emptyDonorForm = { name: "", bloodGroup: "", age: "", gender: "", phone: "", lastDonation: "", status: "Eligible" };
   const [showDonorModal, setShowDonorModal] = useState(false);
@@ -361,7 +376,7 @@ function BloodBank() {
     setFormData(emptyForm);
   };
 
-  const handleAddBlood = (e) => {
+  const handleAddBlood = async (e) => {
     e.preventDefault();
 
     if (
@@ -404,18 +419,37 @@ function BloodBank() {
         formData.notes || "No notes added",
     };
 
-    setBloodStocks((prev) => [
-      newBlood,
-      ...prev,
-    ]);
+    try {
+      const created = await apiRequest("/api/blood-bank", {
+        method: "POST",
+        body: JSON.stringify({
+          blood_group: formData.bloodGroup,
+          component: formData.component,
+          units,
+          min_stock: minStock,
+          expiry_date: formData.expiryDate || null,
+          donor_count: Number(formData.donorCount) || 0,
+          status,
+          location: formData.location,
+          notes: formData.notes || "",
+        }),
+      });
+      setBloodStocks((prev) => [created, ...prev]);
+    } catch (err) {
+      console.error("Failed to add blood stock via API:", err);
+      setBloodStocks((prev) => [newBlood, ...prev]);
+    }
 
     closeModal();
   };
 
-  const handleStockUpdate = (id, type) => {
+  const handleStockUpdate = async (id, type) => {
+    const currentItem = bloodStocks.find((b) => b.id === id || b.stock_id === id);
+    const backendId = currentItem?.stock_id || (typeof id === "number" ? id : parseInt(String(id).replace("BL-", "")) - 1000);
+
     setBloodStocks((prev) =>
       prev.map((blood) => {
-        if (blood.id !== id) return blood;
+        if (blood.id !== id && blood.stock_id !== backendId) return blood;
 
         const updatedUnits =
           type === "add"
@@ -441,7 +475,7 @@ function BloodBank() {
     );
 
     setSelectedBlood((prev) => {
-      if (!prev || prev.id !== id) return prev;
+      if (!prev || (prev.id !== id && prev.stock_id !== backendId)) return prev;
 
       const updatedUnits =
         type === "add"
@@ -464,6 +498,18 @@ function BloodBank() {
         status: updatedStatus,
       };
     });
+
+    if (backendId && backendId > 0) {
+      try {
+        const nextUnits = type === "add" ? (currentItem?.units || 0) + 1 : Math.max(0, (currentItem?.units || 0) - 1);
+        await apiRequest(`/api/blood-bank/${backendId}`, {
+          method: "PUT",
+          body: JSON.stringify({ units: nextUnits }),
+        });
+      } catch (err) {
+        console.error("Failed to update blood stock on server:", err);
+      }
+    }
   };
 
   const approveRequest = (id) => {

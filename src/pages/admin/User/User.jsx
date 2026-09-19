@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Eye,
@@ -14,6 +14,7 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 
 import { userData } from "../../../data";
+import { apiRequest } from "../../../api/api";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -37,6 +38,32 @@ export default function User() {
 
   const [confirmDelete, setConfirmDelete] =
     useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await apiRequest("/api/users");
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted = data.map((u) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            phone: u.phone || "+91 98765 00000",
+            location: u.location || "Kolkata, India",
+            registeredOn: u.created_at ? u.created_at.slice(0, 10) : "2026-09-01",
+            serviceRequests: u.serviceRequests || 0,
+            status: u.is_active ? "Active" : "Inactive",
+          }));
+          setUsers(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load users from backend:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
 
   /* =========================================================
      STATISTICS
@@ -115,13 +142,19 @@ export default function User() {
     setConfirmDelete(null);
   };
 
-  const confirmDeleteUser = () => {
+  const confirmDeleteUser = async () => {
     if (!confirmDelete) {
       return;
     }
 
     const deletedUserId =
       confirmDelete.id;
+
+    try {
+      await apiRequest(`/api/users/${deletedUserId}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to delete user on server:", e);
+    }
 
     setUsers((currentUsers) =>
       currentUsers.filter(

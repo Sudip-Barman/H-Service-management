@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   AlertCircle,
   Banknote,
@@ -2458,38 +2459,72 @@ const Billings = () => {
     useState(null);
 
   /* =======================================================
-     LOAD LOCAL DATA
+     LOAD BILLING DATA
   ======================================================= */
 
   useEffect(() => {
-    try {
-      const savedBills =
-        localStorage.getItem(
-          "hospital-bills"
-        );
+    const fetchBillingData = async () => {
+      try {
+        const backendBills = await apiRequest("/api/billing");
+        if (Array.isArray(backendBills) && backendBills.length > 0) {
+          const formatted = backendBills.map((b) => ({
+            id: b.invoiceNumber || b.id,
+            patientId: b.patientId,
+            patientName: b.patientName,
+            patientAge: b.patientAge,
+            patientGender: b.patientGender,
+            patientPhone: b.patientPhone,
+            patientEmail: b.patientEmail,
+            address: b.address,
+            type: b.type,
+            description: b.description,
+            doctor: b.doctor,
+            department: b.department,
+            visitDate: b.visitDate,
+            date: b.date,
+            items: b.items && b.items.length > 0 ? b.items : [
+              {
+                description: b.description || "Medical Consultation",
+                category: b.type || "Consultation",
+                quantity: 1,
+                rate: b.totalAmount || 500,
+                discount: b.discount || 0,
+              }
+            ],
+            discount: b.discount || 0,
+            taxRate: 5,
+            amountPaid: b.paidAmount || 0,
+            status: b.status || (b.paidAmount >= b.totalAmount ? "Paid" : b.paidAmount > 0 ? "Partial" : "Unpaid"),
+            paymentMethod: b.paymentMethod || "Cash",
+            paymentId: b.paymentId || `PAY-${b.bill_id || 1001}`,
+            paidAt: b.paidAt || "",
+          }));
+          setBills(formatted);
+          return;
+        }
 
-      const savedSettings =
-        localStorage.getItem(
-          "hospital-billing-settings"
-        );
-
-      if (savedBills) {
-        setBills(
-          JSON.parse(savedBills)
-        );
+        const savedBills = localStorage.getItem("hospital-bills");
+        if (savedBills) {
+          setBills(JSON.parse(savedBills));
+        }
+      } catch (error) {
+        console.error("Failed to load billing data from server, falling back to local:", error);
+        const savedBills = localStorage.getItem("hospital-bills");
+        if (savedBills) {
+          setBills(JSON.parse(savedBills));
+        }
       }
 
-      if (savedSettings) {
-        setBillingSettings(
-          JSON.parse(savedSettings)
-        );
+      try {
+        const savedSettings = localStorage.getItem("hospital-billing-settings");
+        if (savedSettings) {
+          setBillingSettings(JSON.parse(savedSettings));
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", error);
       }
-    } catch (error) {
-      console.error(
-        "Failed to load billing data:",
-        error
-      );
-    }
+    };
+    fetchBillingData();
   }, []);
 
   /* =======================================================
@@ -2619,7 +2654,7 @@ const Billings = () => {
      PAYMENT SUCCESS
   ======================================================= */
 
-  const handlePaymentSuccess = (
+  const handlePaymentSuccess = async (
     updatedBill
   ) => {
     setBills((previousBills) =>
@@ -2632,6 +2667,19 @@ const Billings = () => {
 
     setPaymentBill(null);
     setInvoiceBill(updatedBill);
+
+    try {
+      await apiRequest(`/api/billing/${updatedBill.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          paid_amount: updatedBill.amountPaid,
+          payment_status: updatedBill.status,
+          payment_method: updatedBill.paymentMethod || "UPI",
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to update bill payment on backend:", err);
+    }
   };
 
   /* =======================================================

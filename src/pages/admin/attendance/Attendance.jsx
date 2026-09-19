@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   CalendarDays,
   Check,
@@ -381,7 +382,7 @@ const Attendance = () => {
 
   const [attendance, setAttendance] =
     useState(initialAttendance);
-
+  const [liveStaff, setLiveStaff] = useState(staffList);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [departmentFilter, setDepartmentFilter] =
@@ -399,13 +400,61 @@ const Attendance = () => {
   const [timeEditorMember, setTimeEditorMember] =
     useState(null);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [staffRes, attRes] = await Promise.allSettled([
+          apiRequest("/api/staff"),
+          apiRequest("/api/attendance"),
+        ]);
+
+        if (staffRes.status === "fulfilled" && Array.isArray(staffRes.value) && staffRes.value.length > 0) {
+          const mapped = staffRes.value.map((s) => ({
+            id: s.employee_id || `EMP-${1000 + s.id}`,
+            staff_id: s.id,
+            name: s.name,
+            role: s.role,
+            department: s.department || s.role,
+            shift: s.shift || "09:00 AM - 05:00 PM",
+            phone: s.phone || "",
+            email: s.email || "",
+          }));
+          setLiveStaff(mapped);
+        }
+
+        if (attRes.status === "fulfilled" && Array.isArray(attRes.value) && attRes.value.length > 0) {
+          const mappedAtt = attRes.value.map((a) => ({
+            id: a.employee_id || `EMP-${1000 + (a.staff_id || a.id)}`,
+            backendId: a.id,
+            staff_id: a.staff_id,
+            name: a.staff_name || a.name,
+            role: a.role,
+            department: a.department,
+            date: a.date,
+            checkIn: a.check_in || "--",
+            checkOut: a.check_out || "--",
+            shift: a.shift || "09:00 AM - 05:00 PM",
+            status: a.status,
+            workHours: a.check_in && a.check_out ? "8h 00m" : (a.check_in ? "In progress" : "0h"),
+            phone: a.phone || "",
+            email: a.email || "",
+          }));
+          setAttendance(mappedAtt);
+        }
+      } catch (err) {
+        console.error("Failed to load attendance or staff data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const isCurrentDate = selectedDate === today;
   const isPastDate = selectedDate < today;
   const isDateEditable = isCurrentDate;
 
   const dateAttendance = useMemo(() => {
     if (isCurrentDate) {
-      return staffList.map((staff) => {
+      return liveStaff.map((staff) => {
         const existingRecord = attendance.find(
           (record) =>
             record.id === staff.id &&
@@ -433,17 +482,18 @@ const Attendance = () => {
   }, [
     attendance,
     isCurrentDate,
+    liveStaff,
     selectedDate,
     today,
   ]);
 
   const departments = useMemo(() => {
     const values = isCurrentDate
-      ? staffList.map((member) => member.department)
+      ? liveStaff.map((member) => member.department)
       : attendance.map((member) => member.department);
 
     return ["All", ...new Set(values)];
-  }, [attendance, isCurrentDate]);
+  }, [attendance, isCurrentDate, liveStaff]);
 
   const stats = useMemo(
     () => ({
@@ -528,7 +578,7 @@ const Attendance = () => {
     setTimeEditorMember(null);
   };
 
-  const setAttendanceStatus = (member, status) => {
+  const setAttendanceStatus = async (member, status) => {
     if (member.date !== today) return;
 
     const values =
@@ -592,9 +642,29 @@ const Attendance = () => {
         ? updated
         : current
     );
+
+    try {
+      await apiRequest("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify({
+          staff_id: member.staff_id || null,
+          staff_name: member.name,
+          role: member.role,
+          department: member.department,
+          date: today,
+          shift: member.shift,
+          check_in: values.checkIn !== "--" ? values.checkIn : null,
+          check_out: values.checkOut !== "--" ? values.checkOut : null,
+          status: status,
+          employee_id: member.id,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save attendance:", err);
+    }
   };
 
-  const saveTimes = (event) => {
+  const saveTimes = async (event) => {
     event.preventDefault();
 
     if (!timeEditorMember) return;
@@ -656,6 +726,26 @@ const Attendance = () => {
     );
 
     setTimeEditorMember(null);
+
+    try {
+      await apiRequest("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify({
+          staff_id: updated.staff_id || null,
+          staff_name: updated.name,
+          role: updated.role,
+          department: updated.department,
+          date: today,
+          shift: updated.shift,
+          check_in: updated.checkIn !== "--" ? updated.checkIn : null,
+          check_out: updated.checkOut !== "--" ? updated.checkOut : null,
+          status: updated.status,
+          employee_id: updated.id,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save attendance time:", err);
+    }
   };
 
   const handleExport = () => {

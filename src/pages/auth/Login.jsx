@@ -35,16 +35,6 @@ const Login = () => {
       icon: UserCog,
     },
     {
-      value: "doctor",
-      label: "Doctor",
-      icon: Stethoscope,
-    },
-    {
-      value: "nurse",
-      label: "Nurse",
-      icon: HeartPulse,
-    },
-    {
       value: "staff",
       label: "Staff",
       icon: UsersRound,
@@ -287,7 +277,7 @@ const Login = () => {
                       Login as
                     </label>
 
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-2 gap-2">
 
                       {roles.map((item) => {
 

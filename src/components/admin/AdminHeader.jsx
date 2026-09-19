@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiRequest } from "../../api/api";
 import {
   Bell,
   Menu,
@@ -14,9 +15,49 @@ const AdminHeader = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Reference for the complete profile area
   const profileRef = useRef(null);
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const notifs = await apiRequest("/api/notifications");
+        if (Array.isArray(notifs)) {
+          const unread = notifs.filter((n) => !n.read).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {
+        console.error("Failed to load notifications count:", err);
+      }
+    };
+    fetchNotifications();
+
+    // Listen for custom event if notifications are marked read elsewhere
+    const handleNotifUpdate = () => fetchNotifications();
+    window.addEventListener("notifications-updated", handleNotifUpdate);
+    return () => {
+      window.removeEventListener("notifications-updated", handleNotifUpdate);
+    };
+  }, []);
+
+  // Sync user if modified
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) setCurrentUser(JSON.parse(stored));
+    } catch {}
+  }, [showProfileMenu]);
 
   // ============================================================
   // CLOSE PROFILE DROPDOWN WHEN CLICKING OUTSIDE
@@ -157,17 +198,19 @@ const AdminHeader = ({ onMenuClick }) => {
 
           <button
             type="button"
+            onClick={() => navigate("/admin/notifications")}
             className="relative flex h-10 w-10 items-center justify-center rounded-xl text-[#31585A] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
             aria-label="Notifications"
           >
 
             <Bell className="h-5 w-5" />
 
-            {/* Notification Count */}
-
-            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#08A6A0] px-1 text-[9px] font-bold text-white">
-              3
-            </span>
+            {/* Notification Count - only show if > 0 */}
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#08A6A0] px-1 text-[9px] font-bold text-white">
+                {unreadCount}
+              </span>
+            )}
 
           </button>
 
@@ -201,7 +244,7 @@ const AdminHeader = ({ onMenuClick }) => {
               {/* Avatar */}
 
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D7F4F1] text-sm font-bold text-[#087F7A]">
-                AD
+                {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : "AD"}
               </div>
 
 
@@ -210,11 +253,11 @@ const AdminHeader = ({ onMenuClick }) => {
               <div className="hidden text-left md:block">
 
                 <p className="text-sm font-semibold leading-4 text-[#173F41]">
-                  Admin
+                  {currentUser?.name || "Admin"}
                 </p>
 
                 <p className="mt-1 text-[10px] leading-3 text-[#819596]">
-                  Administrator
+                  {currentUser?.role === "admin" ? "Administrator" : "Staff"}
                 </p>
 
               </div>
@@ -246,11 +289,11 @@ const AdminHeader = ({ onMenuClick }) => {
                 <div className="border-b border-[#E8F0EF] px-3 py-3">
 
                   <p className="text-sm font-semibold text-[#173F41]">
-                    Admin
+                    {currentUser?.name || "Admin"}
                   </p>
 
                   <p className="mt-1 truncate text-xs text-[#819596]">
-                    admin@carecore.com
+                    {currentUser?.email || "admin@carecore.com"}
                   </p>
 
                 </div>
@@ -264,6 +307,10 @@ const AdminHeader = ({ onMenuClick }) => {
 
                   <button
                     type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate("/admin/profile");
+                    }}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#31585A] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
                   >
                     <User className="h-4 w-4" />
@@ -276,6 +323,10 @@ const AdminHeader = ({ onMenuClick }) => {
 
                   <button
                     type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate("/admin/settings");
+                    }}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#31585A] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
                   >
                     <Settings className="h-4 w-4" />

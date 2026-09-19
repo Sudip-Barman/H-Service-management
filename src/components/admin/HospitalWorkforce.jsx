@@ -1,6 +1,6 @@
 import {
-  ChevronRight,
   Eye,
+  Trash2,
   Users,
 } from "lucide-react";
 
@@ -12,6 +12,7 @@ const HospitalWorkforce = ({
   staff = [],
   filteredStaff = [],
   onView,
+  onRemove,
   onClearFilters,
 }) => {
   return (
@@ -73,6 +74,7 @@ const HospitalWorkforce = ({
                     key={member.id}
                     member={member}
                     onView={() => onView(member)}
+                    onRemove={() => onRemove && onRemove(member)}
                   />
                 ))}
               </tbody>
@@ -86,6 +88,7 @@ const HospitalWorkforce = ({
                 key={member.id}
                 member={member}
                 onView={() => onView(member)}
+                onRemove={() => onRemove && onRemove(member)}
               />
             ))}
           </div>
@@ -113,7 +116,7 @@ const TableHeader = ({ children, align = "left" }) => {
    DESKTOP ROW
 ========================= */
 
-const StaffRow = ({ member, onView }) => {
+const StaffRow = ({ member, onView, onRemove }) => {
   return (
     <tr className="border-b border-[#EAF2F0] last:border-0 hover:bg-[#FAFDFC]">
       {/* Staff */}
@@ -172,14 +175,22 @@ const StaffRow = ({ member, onView }) => {
 
       {/* Action */}
       <td className="px-5 py-4">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onView}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
-            title="View staff"
+            title="View staff details"
           >
             <Eye className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#819596] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            title="Remove staff member"
+          >
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </td>
@@ -191,17 +202,18 @@ const StaffRow = ({ member, onView }) => {
    MOBILE CARD
 ========================= */
 
-const StaffMobileCard = ({ member, onView }) => {
+const StaffMobileCard = ({ member, onView, onRemove }) => {
   return (
-    <button
-      type="button"
-      onClick={onView}
-      className="flex w-full items-start gap-2.5 p-3 text-left transition hover:bg-[#FAFDFC] sm:gap-3 sm:p-4"
-    >
+    <div className="flex w-full items-start gap-2.5 p-3 text-left transition hover:bg-[#FAFDFC] sm:gap-3 sm:p-4">
       {/* Avatar */}
       <StaffAvatar name={member.name} />
 
-      <div className="min-w-0 flex-1">
+      <div
+        className="min-w-0 flex-1 cursor-pointer"
+        onClick={onView}
+        role="button"
+        tabIndex={0}
+      >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-xs font-bold text-[#173F41] sm:text-sm">
@@ -209,7 +221,7 @@ const StaffMobileCard = ({ member, onView }) => {
             </p>
 
             <p className="mt-0.5 text-[10px] text-[#819596] sm:mt-1 sm:text-xs">
-              {member.id}
+              {member.id} · {member.designation}
             </p>
           </div>
 
@@ -231,8 +243,25 @@ const StaffMobileCard = ({ member, onView }) => {
         </div>
       </div>
 
-      <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-[#9AAEAF] sm:h-4 sm:w-4" />
-    </button>
+      <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={onView}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+          title="View staff details"
+        >
+          <Eye className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#819596] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          title="Remove staff member"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
   );
 };
 

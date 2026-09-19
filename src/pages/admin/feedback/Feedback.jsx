@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
 	CheckCircle2,
 	ChevronRight,
@@ -82,6 +83,21 @@ const statusStyles = {
 
 const Feedback = () => {
 	const [feedback, setFeedback] = useState(initialFeedback);
+
+	useEffect(() => {
+		const fetchFeedback = async () => {
+			try {
+				const data = await apiRequest("/api/feedback");
+				if (Array.isArray(data) && data.length > 0) {
+					setFeedback(data);
+				}
+			} catch (err) {
+				console.error("Failed to load feedback from server:", err);
+			}
+		};
+		fetchFeedback();
+	}, []);
+
 	const [search, setSearch] = useState("");
 	const [ratingFilter, setRatingFilter] = useState("All ratings");
 	const [statusFilter, setStatusFilter] = useState("All status");
@@ -108,13 +124,13 @@ const Feedback = () => {
 	}, [feedback, ratingFilter, search, statusFilter]);
 
 	const averageRating = (
-		feedback.reduce((total, item) => total + item.rating, 0) / feedback.length
+		feedback.reduce((total, item) => total + item.rating, 0) / (feedback.length || 1)
 	).toFixed(1);
 	const responseCount = feedback.filter(
 		(item) => item.status === "Needs response",
 	).length;
 
-	const markReviewed = (id) => {
+	const markReviewed = async (id) => {
 		setFeedback((current) =>
 			current.map((item) =>
 				item.id === id ? { ...item, status: "Reviewed" } : item,
@@ -123,6 +139,15 @@ const Feedback = () => {
 		setSelectedFeedback((current) =>
 			current?.id === id ? { ...current, status: "Reviewed" } : current,
 		);
+
+		try {
+			await apiRequest(`/api/feedback/${id}`, {
+				method: "PUT",
+				body: JSON.stringify({ status: "Reviewed" }),
+			});
+		} catch (err) {
+			console.error("Failed to update feedback status on server:", err);
+		}
 	};
 
 	return (

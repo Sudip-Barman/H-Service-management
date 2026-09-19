@@ -47,9 +47,12 @@ const DoctorForm = ({
   onSubmit,
 }) => {
   const [prevDoctor, setPrevDoctor] = useState(doctor);
+
   const [form, setForm] = useState(() =>
-    doctor ? { ...emptyDoctor, ...doctor } : emptyDoctor
+    doctor ? { ...emptyDoctor, ...doctor } : { ...emptyDoctor }
   );
+
+  // Actual image File that will be sent to backend
   const [photoFile, setPhotoFile] = useState(null);
 
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -60,11 +63,29 @@ const DoctorForm = ({
 
   const isEditing = Boolean(doctor);
 
+  /*
+   * --------------------------------------------------------------------------
+   * Sync Form When Doctor Changes
+   * --------------------------------------------------------------------------
+   */
+
   if (prevDoctor !== doctor) {
     setPrevDoctor(doctor);
-    setForm(doctor ? { ...emptyDoctor, ...doctor } : emptyDoctor);
+
+    setForm(
+      doctor
+        ? { ...emptyDoctor, ...doctor }
+        : { ...emptyDoctor }
+    );
+
     setPhotoFile(null);
   }
+
+  /*
+   * --------------------------------------------------------------------------
+   * Stop Camera
+   * --------------------------------------------------------------------------
+   */
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -80,9 +101,11 @@ const DoctorForm = ({
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Stop Camera When Component Unmounts                                        */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Stop Camera When Component Unmounts
+   * --------------------------------------------------------------------------
+   */
 
   useEffect(() => {
     return () => {
@@ -90,9 +113,11 @@ const DoctorForm = ({
     };
   }, []);
 
-  /* -------------------------------------------------------------------------- */
-  /* Form Handlers                                                              */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Form Handlers
+   * --------------------------------------------------------------------------
+   */
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -103,46 +128,74 @@ const DoctorForm = ({
     }));
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Upload Photo                                                               */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Upload Photo
+   * --------------------------------------------------------------------------
+   */
 
   const handlePhotoChange = (event) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      alert("Please select a valid image file.");
+    /*
+     * Validate MIME type
+     */
+    if (
+      ![
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+      ].includes(file.type)
+    ) {
+      alert("Please select a JPG, PNG or WEBP image.");
+
       event.target.value = "";
+
       return;
     }
 
+    /*
+     * Validate file size
+     */
     if (file.size > 5 * 1024 * 1024) {
       alert("Doctor photo must be less than 5 MB.");
+
       event.target.value = "";
+
       return;
     }
 
+    /*
+     * Keep the actual File.
+     *
+     * This is what will eventually be uploaded
+     * to FastAPI using FormData.
+     */
     setPhotoFile(file);
 
-    const reader = new FileReader();
+    /*
+     * Create temporary preview URL.
+     *
+     * This is ONLY for displaying the image.
+     * It is NOT sent to the backend.
+     */
+    const previewUrl = URL.createObjectURL(file);
 
-    reader.onload = () => {
-      setForm((current) => ({
-        ...current,
-        photo: reader.result,
-      }));
-    };
-
-    reader.readAsDataURL(file);
+    setForm((current) => ({
+      ...current,
+      photo: previewUrl,
+    }));
 
     event.target.value = "";
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Open Camera                                                                */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Open Camera
+   * --------------------------------------------------------------------------
+   */
 
   const openCamera = async () => {
     setCameraError("");
@@ -156,6 +209,7 @@ const DoctorForm = ({
       );
 
       setCameraOpen(true);
+
       return;
     }
 
@@ -166,17 +220,21 @@ const DoctorForm = ({
         await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "user",
+
             width: {
               ideal: 1280,
             },
+
             height: {
               ideal: 1280,
             },
           },
+
           audio: false,
         });
 
       streamRef.current = stream;
+
       setCameraOpen(true);
 
       setTimeout(() => {
@@ -199,20 +257,25 @@ const DoctorForm = ({
     }
   };
 
-
-  /* -------------------------------------------------------------------------- */
-  /* Close Camera                                                               */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Close Camera
+   * --------------------------------------------------------------------------
+   */
 
   const closeCamera = () => {
     stopCamera();
+
     setCameraOpen(false);
+
     setCameraError("");
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Capture Camera Photo                                                       */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Capture Camera Photo
+   * --------------------------------------------------------------------------
+   */
 
   const capturePhoto = () => {
     if (!videoRef.current) return;
@@ -223,7 +286,10 @@ const DoctorForm = ({
       !video.videoWidth ||
       !video.videoHeight
     ) {
-      alert("Camera is not ready yet. Please try again.");
+      alert(
+        "Camera is not ready yet. Please try again."
+      );
+
       return;
     }
 
@@ -236,12 +302,13 @@ const DoctorForm = ({
 
     if (!context) {
       alert("Unable to capture the photo.");
+
       return;
     }
 
     /*
-     * Mirror the image because the front camera preview
-     * is mirrored for a natural selfie experience.
+     * Mirror the image because the front camera
+     * preview is mirrored.
      */
     context.translate(canvas.width, 0);
     context.scale(-1, 1);
@@ -254,13 +321,22 @@ const DoctorForm = ({
       canvas.height
     );
 
+    /*
+     * Convert the captured image into a Blob.
+     *
+     * This avoids Base64 completely.
+     */
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          alert("Unable to create the captured photo.");
+          alert("Unable to create the photo file.");
+
           return;
         }
 
+        /*
+         * Convert Blob into a real File.
+         */
         const file = new File(
           [blob],
           `doctor-photo-${Date.now()}.jpg`,
@@ -269,25 +345,34 @@ const DoctorForm = ({
           }
         );
 
+        /*
+         * Store actual File for backend upload.
+         */
         setPhotoFile(file);
 
-        const imageUrl = URL.createObjectURL(blob);
+        /*
+         * Temporary preview URL.
+         */
+        const previewUrl =
+          URL.createObjectURL(file);
 
         setForm((current) => ({
           ...current,
-          photo: imageUrl,
+          photo: previewUrl,
         }));
 
         closeCamera();
       },
       "image/jpeg",
-      0.9
+      0.85
     );
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Remove Photo                                                               */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Remove Photo
+   * --------------------------------------------------------------------------
+   */
 
   const removePhoto = () => {
     setPhotoFile(null);
@@ -298,28 +383,36 @@ const DoctorForm = ({
     }));
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Validation                                                                 */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Validation
+   * --------------------------------------------------------------------------
+   */
 
   const validateForm = () => {
     if (!form.registration_number.trim()) {
-      alert("Registration number is required.");
+      alert(
+        "Registration number is required."
+      );
+
       return false;
     }
 
     if (!form.first_name.trim()) {
       alert("First name is required.");
+
       return false;
     }
 
     if (!form.last_name.trim()) {
       alert("Last name is required.");
+
       return false;
     }
 
     if (!form.specialization.trim()) {
       alert("Specialization is required.");
+
       return false;
     }
 
@@ -327,7 +420,10 @@ const DoctorForm = ({
       form.experience_years !== "" &&
       Number(form.experience_years) < 0
     ) {
-      alert("Experience cannot be negative.");
+      alert(
+        "Experience cannot be negative."
+      );
+
       return false;
     }
 
@@ -335,26 +431,40 @@ const DoctorForm = ({
       form.consultation_fee !== "" &&
       Number(form.consultation_fee) < 0
     ) {
-      alert("Consultation fee cannot be negative.");
+      alert(
+        "Consultation fee cannot be negative."
+      );
+
       return false;
     }
 
     return true;
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Submit                                                                     */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Submit
+   * --------------------------------------------------------------------------
+   */
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
     if (!validateForm()) return;
 
+    /*
+     * Prepare normal doctor information.
+     *
+     * photo is deliberately removed because it is only
+     * a browser preview URL.
+     */
     const doctorData = {
       ...form,
 
-      doctor_id: doctor?.doctor_id ?? null,
+      doctor_id:
+        doctor?.doctor_id ??
+        doctor?.id ??
+        null,
 
       experience_years: Number(
         form.experience_years || 0
@@ -364,15 +474,26 @@ const DoctorForm = ({
         form.consultation_fee || 0
       ),
 
+      /*
+       * This is the actual File object.
+       */
       photo_file: photoFile,
     };
 
+    delete doctorData.photo;
+
+    /*
+     * Parent component will create FormData
+     * and send it to FastAPI.
+     */
     onSubmit(doctorData);
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* Close                                                                      */
-  /* -------------------------------------------------------------------------- */
+  /*
+   * --------------------------------------------------------------------------
+   * Close
+   * --------------------------------------------------------------------------
+   */
 
   const handleClose = () => {
     stopCamera();
@@ -393,16 +514,14 @@ const DoctorForm = ({
 
   return (
     <>
-      {/* ====================================================================== */}
-      {/* Main Doctor Form                                                       */}
-      {/* ====================================================================== */}
+      {/* ==================================================================== */}
+      {/* Main Doctor Form                                                     */}
+      {/* ==================================================================== */}
 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-3 backdrop-blur-sm sm:p-5">
         <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Header                                                             */}
-          {/* ------------------------------------------------------------------ */}
+          {/* Header */}
 
           <div className="flex shrink-0 items-center justify-between border-b border-[#E2EFED] px-5 py-4 sm:px-6">
             <div>
@@ -429,9 +548,7 @@ const DoctorForm = ({
             </button>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Form                                                               */}
-          {/* ------------------------------------------------------------------ */}
+          {/* Form */}
 
           <form
             onSubmit={handleSubmit}
@@ -439,14 +556,13 @@ const DoctorForm = ({
           >
             <div className="overflow-y-auto px-5 py-5 sm:px-6">
 
-              {/* ============================================================ */}
-              {/* Doctor Photo                                                  */}
-              {/* ============================================================ */}
+              {/* ========================================================== */}
+              {/* Doctor Photo                                                */}
+              {/* ========================================================== */}
 
               <section className="mb-6">
                 <div className="flex flex-col items-center">
 
-                  {/* Photo Preview */}
                   <div className="relative">
 
                     {form.photo ? (
@@ -471,13 +587,15 @@ const DoctorForm = ({
                         <Camera className="h-8 w-8" />
                       </div>
                     )}
+
                   </div>
 
                   {/* Photo Buttons */}
+
                   <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
 
-                    {/* Upload Photo */}
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#D9E9E7] px-3 py-2 text-xs font-semibold text-[#08A6A0] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6]">
+
                       <Upload className="h-3.5 w-3.5" />
 
                       {form.photo
@@ -490,28 +608,31 @@ const DoctorForm = ({
                         onChange={handlePhotoChange}
                         className="hidden"
                       />
+
                     </label>
 
-                    {/* Take Photo */}
                     <button
                       type="button"
                       onClick={openCamera}
                       className="inline-flex items-center gap-2 rounded-lg border border-[#D9E9E7] px-3 py-2 text-xs font-semibold text-[#08A6A0] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6]"
                     >
                       <Camera className="h-3.5 w-3.5" />
+
                       Take Photo
                     </button>
+
                   </div>
 
                   <p className="mt-1.5 text-center text-[10px] text-[#819596]">
                     JPG, PNG or WEBP. Maximum 5 MB.
                   </p>
+
                 </div>
               </section>
 
-              {/* ============================================================ */}
-              {/* Registration Information                                      */}
-              {/* ============================================================ */}
+              {/* ========================================================== */}
+              {/* Registration Information                                   */}
+              {/* ========================================================== */}
 
               <section>
                 <SectionTitle>
@@ -519,6 +640,7 @@ const DoctorForm = ({
                 </SectionTitle>
 
                 <div className="grid gap-4 sm:grid-cols-2">
+
                   <InputField
                     label="Registration Number"
                     name="registration_number"
@@ -535,12 +657,13 @@ const DoctorForm = ({
                     onChange={handleChange}
                     placeholder="Medical license number"
                   />
+
                 </div>
               </section>
 
-              {/* ============================================================ */}
-              {/* Personal Information                                          */}
-              {/* ============================================================ */}
+              {/* ========================================================== */}
+              {/* Personal Information                                       */}
+              {/* ========================================================== */}
 
               <section className="mt-6">
                 <SectionTitle>
@@ -548,6 +671,7 @@ const DoctorForm = ({
                 </SectionTitle>
 
                 <div className="grid gap-4 sm:grid-cols-3">
+
                   <InputField
                     label="First Name"
                     name="first_name"
@@ -573,9 +697,11 @@ const DoctorForm = ({
                     placeholder="Last name"
                     required
                   />
+
                 </div>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
+
                   <InputField
                     label="Date of Birth"
                     name="date_of_birth"
@@ -604,6 +730,7 @@ const DoctorForm = ({
                     onChange={handleChange}
                     placeholder="+91 XXXXX XXXXX"
                   />
+
                 </div>
 
                 <div className="mt-4">
@@ -628,9 +755,9 @@ const DoctorForm = ({
                 </div>
               </section>
 
-              {/* ============================================================ */}
-              {/* Professional Information                                      */}
-              {/* ============================================================ */}
+              {/* ========================================================== */}
+              {/* Professional Information                                   */}
+              {/* ========================================================== */}
 
               <section className="mt-6">
                 <SectionTitle>
@@ -638,6 +765,7 @@ const DoctorForm = ({
                 </SectionTitle>
 
                 <div className="grid gap-4 sm:grid-cols-2">
+
                   <InputField
                     label="Specialization"
                     name="specialization"
@@ -654,9 +782,11 @@ const DoctorForm = ({
                     onChange={handleChange}
                     placeholder="e.g. Cardiology"
                   />
+
                 </div>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
+
                   <InputField
                     label="Qualification"
                     name="qualification"
@@ -685,12 +815,13 @@ const DoctorForm = ({
                     onChange={handleChange}
                     placeholder="₹ 0"
                   />
+
                 </div>
               </section>
 
-              {/* ============================================================ */}
-              {/* License & Availability                                        */}
-              {/* ============================================================ */}
+              {/* ========================================================== */}
+              {/* License & Availability                                     */}
+              {/* ========================================================== */}
 
               <section className="mt-6">
                 <SectionTitle>
@@ -698,6 +829,7 @@ const DoctorForm = ({
                 </SectionTitle>
 
                 <div className="grid gap-4 sm:grid-cols-3">
+
                   <InputField
                     label="License Expiry"
                     name="license_expiry"
@@ -728,52 +860,57 @@ const DoctorForm = ({
                       "Inactive",
                     ]}
                   />
+
                 </div>
               </section>
+
             </div>
 
-            {/* ---------------------------------------------------------------- */}
-            {/* Footer                                                           */}
-            {/* ---------------------------------------------------------------- */}
+            {/* Footer */}
 
             <div className="flex shrink-0 justify-end gap-3 border-t border-[#E2EFED] bg-[#FAFDFC] px-5 py-4 sm:px-6">
+
               <button
                 type="button"
                 onClick={handleClose}
-                className="h-10 sm:h-11 rounded-xl border border-[#D9E9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+                className="h-10 rounded-xl border border-[#D9E9E7] px-4 text-xs font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0] sm:h-11 sm:px-5 sm:text-sm"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="inline-flex h-10 sm:h-11 items-center justify-center rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-[#08A6A0] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#078E89] sm:h-11 sm:px-5 sm:text-sm"
               >
                 {isEditing
                   ? "Update Doctor"
                   : "Add Doctor"}
               </button>
+
             </div>
           </form>
         </div>
       </div>
 
-      {/* ====================================================================== */}
-      {/* Camera Modal                                                           */}
-      {/* ====================================================================== */}
+      {/* ==================================================================== */}
+      {/* Camera Modal                                                         */}
+      {/* ==================================================================== */}
 
       {cameraOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#173F41]/70 p-3 backdrop-blur-sm sm:p-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
+
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl sm:rounded-3xl">
 
             {/* Camera Header */}
+
             <div className="flex items-center justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4">
+
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-[#173F41]">
+                <h3 className="text-sm font-bold text-[#173F41] sm:text-base">
                   Take Doctor Photo
                 </h3>
 
-                <p className="mt-0.5 text-[10px] sm:text-xs text-[#819596]">
+                <p className="mt-0.5 text-[10px] text-[#819596] sm:text-xs">
                   Position the doctor inside the frame
                 </p>
               </div>
@@ -786,46 +923,55 @@ const DoctorForm = ({
               >
                 <X className="h-4 w-4" />
               </button>
+
             </div>
 
             {/* Camera Preview */}
+
             <div className="relative bg-[#173F41] p-3">
+
               {cameraError ? (
-                <div className="flex min-h-[300px] sm:min-h-[320px] flex-col items-center justify-center px-4 sm:px-6 text-center">
-                  <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white/10 text-white">
+                <div className="flex min-h-[300px] flex-col items-center justify-center px-4 text-center sm:min-h-[320px] sm:px-6">
+
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white sm:h-14 sm:w-14">
                     <Camera className="h-6 w-6 sm:h-7 sm:w-7" />
                   </div>
 
-                  <p className="mt-3 sm:mt-4 max-w-sm text-xs sm:text-sm font-semibold text-white">
+                  <p className="mt-3 max-w-sm text-xs font-semibold text-white sm:mt-4 sm:text-sm">
                     Camera Access Failed
                   </p>
 
                   <p className="mt-1 max-w-sm text-xs text-white/70">
                     {cameraError}
                   </p>
+
                 </div>
               ) : (
                 <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black">
+
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="h-full w-full object-cover scale-x-[-1]"
+                    className="h-full w-full scale-x-[-1] object-cover"
                   />
 
-                  {/* Frame Overlay */}
                   <div className="pointer-events-none absolute inset-4 rounded-full border-2 border-dashed border-white/60 sm:inset-6" />
+
                 </div>
               )}
+
             </div>
 
             {/* Camera Actions */}
+
             <div className="flex items-center justify-between border-t border-[#E2EFED] bg-white px-4 py-3 sm:px-5 sm:py-4">
+
               <button
                 type="button"
                 onClick={closeCamera}
-                className="h-9 sm:h-10 rounded-xl border border-[#D9E9E7] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:bg-[#FAFDFC]"
+                className="h-9 rounded-xl border border-[#D9E9E7] px-3.5 text-xs font-semibold text-[#31585A] transition hover:bg-[#FAFDFC] sm:h-10 sm:px-4 sm:text-sm"
               >
                 Cancel
               </button>
@@ -834,22 +980,26 @@ const DoctorForm = ({
                 <button
                   type="button"
                   onClick={openCamera}
-                  className="inline-flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white transition hover:bg-[#078E89]"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#08A6A0] px-3.5 text-xs font-semibold text-white transition hover:bg-[#078E89] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
                 >
                   <RotateCcw className="h-4 w-4" />
+
                   Try Again
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={capturePhoto}
-                  className="inline-flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078E89]"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#08A6A0] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#078E89] sm:h-10 sm:gap-2 sm:px-5 sm:text-sm"
                 >
                   <Camera className="h-4 w-4" />
+
                   Capture Photo
                 </button>
               )}
+
             </div>
+
           </div>
         </div>
       )}
@@ -857,12 +1007,12 @@ const DoctorForm = ({
   );
 };
 
-/* ========================================================================== */
-/* Reusable Components                                                        */
-/* ========================================================================== */
+/* ==========================================================================
+   Reusable Components
+   ========================================================================== */
 
 const SectionTitle = ({ children }) => (
-  <h3 className="mb-2.5 sm:mb-3 text-xs sm:text-sm font-bold text-[#173F41]">
+  <h3 className="mb-2.5 text-xs font-bold text-[#173F41] sm:mb-3 sm:text-sm">
     {children}
   </h3>
 );

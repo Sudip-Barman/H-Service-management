@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -12,12 +12,16 @@ import {
   BriefcaseBusiness,
   ArrowRight,
   CalendarCheck2,
+  Send,
+  X,
+  AlertCircle,
 } from "lucide-react";
 
 import {
   getWorkforceUser,
   getUserSchedule,
 } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
 export default function Schedule({ user }) {
   const navigate = useNavigate();
@@ -28,11 +32,88 @@ export default function Schedule({ user }) {
     getWorkforceUser(employeeId) ||
     getWorkforceUser("EMP-1001");
 
-  const schedules = getUserSchedule(employeeId);
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedDate, setSelectedDate] = useState(
-    new Date("2026-09-10")
-  );
+  const fetchSchedules = async () => {
+    try {
+      const data = await apiRequest("/schedules");
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((s) => ({
+          id: s.id,
+          employeeId: s.doctor_id ? `EMP-${s.doctor_id}` : employeeId,
+          date: s.date || s.start_date || "",
+          title: s.type || s.doctor_name || "Scheduled Shift",
+          type: s.type || "Duty",
+          startTime: s.start_time || "09:00",
+          endTime: s.end_time || "17:00",
+          department: s.department || "General Medicine",
+          location: s.location || "Hospital Main Wing",
+          status: s.status || "Scheduled",
+        }));
+        setSchedules(mapped);
+      } else {
+        setSchedules(getUserSchedule(employeeId));
+      }
+    } catch (err) {
+      console.error("Failed to load schedules from backend:", err);
+      setSchedules(getUserSchedule(employeeId));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [employeeId]);
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestData, setRequestData] = useState({
+    type: "Shift Swap",
+    date: "",
+    timeSlot: "Morning (08:00 - 14:00)",
+    reason: "",
+  });
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    if (!requestData.date || !requestData.reason) {
+      showToast("Please provide the requested date and reason", "error");
+      return;
+    }
+    try {
+      await apiRequest("/requests", {
+        method: "POST",
+        body: JSON.stringify({
+          request_type: "Schedule",
+          item: requestData.type,
+          requested_by: workforceUser?.name || user?.name || "Staff Member",
+          department: workforceUser?.department || "General",
+          priority: "Normal",
+          required_date: requestData.date,
+          description: `Time slot: ${requestData.timeSlot}. Reason: ${requestData.reason}`,
+          status: "Pending",
+        }),
+      });
+      showToast("Schedule change request submitted successfully!");
+      setRequestModalOpen(false);
+      setRequestData({
+        type: "Shift Swap",
+        date: "",
+        timeSlot: "Morning (08:00 - 14:00)",
+        reason: "",
+      });
+    } catch (err) {
+      showToast(err.message || "Failed to submit request", "error");
+    }
+  };
 
   const formatDateKey = (date) => {
     const year = date.getFullYear();
@@ -80,7 +161,7 @@ export default function Schedule({ user }) {
   };
 
   const isToday = (date) => {
-    return formatDateKey(date) === "2026-09-10";
+    return formatDateKey(date) === formatDateKey(new Date());
   };
 
   const selectedDateKey = formatDateKey(selectedDate);
@@ -171,7 +252,7 @@ export default function Schedule({ user }) {
   };
 
   const goToToday = () => {
-    setSelectedDate(new Date("2026-09-10"));
+    setSelectedDate(new Date());
   };
 
   const getStatusClass = (status) => {
@@ -251,36 +332,47 @@ export default function Schedule({ user }) {
             </div>
           </div>
 
-          {/* Date Navigation */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => changeDate(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#DDEBEA] text-slate-500 transition hover:bg-[#F5FAFA] hover:text-[#073F42]"
-              aria-label="Previous day"
-            >
-              <ChevronLeft size={18} />
-            </button>
+          {/* Action & Date Navigation */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => changeDate(-1)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#DDEBEA] text-slate-500 transition hover:bg-[#F5FAFA] hover:text-[#073F42]"
+                aria-label="Previous day"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <button
+                type="button"
+                onClick={goToToday}
+                className={`h-10 rounded-lg border px-4 text-sm font-medium transition ${
+                  isToday(selectedDate)
+                    ? "border-[#08A6A0] bg-[#E8F8F6] text-[#087F7B]"
+                    : "border-[#DDEBEA] text-slate-600 hover:bg-[#F5FAFA]"
+                }`}
+              >
+                Today
+              </button>
+
+              <button
+                type="button"
+                onClick={() => changeDate(1)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#DDEBEA] text-slate-500 transition hover:bg-[#F5FAFA] hover:text-[#073F42]"
+                aria-label="Next day"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
 
             <button
               type="button"
-              onClick={goToToday}
-              className={`h-10 rounded-lg border px-4 text-sm font-medium transition ${
-                isToday(selectedDate)
-                  ? "border-[#08A6A0] bg-[#E8F8F6] text-[#087F7B]"
-                  : "border-[#DDEBEA] text-slate-600 hover:bg-[#F5FAFA]"
-              }`}
+              onClick={() => setRequestModalOpen(true)}
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#08A6A0] px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
             >
-              Today
-            </button>
-
-            <button
-              type="button"
-              onClick={() => changeDate(1)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#DDEBEA] text-slate-500 transition hover:bg-[#F5FAFA] hover:text-[#073F42]"
-              aria-label="Next day"
-            >
-              <ChevronRight size={18} />
+              <Send size={15} />
+              Request Schedule Change
             </button>
           </div>
         </div>
@@ -606,6 +698,152 @@ export default function Schedule({ user }) {
           </button>
         </div>
       </section>
+
+      {/* SCHEDULE REQUEST MODAL */}
+      {requestModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E2EFED] bg-[#E8F8F6] px-5 py-4">
+              <div>
+                <h2 className="text-base font-bold text-[#073F42]">
+                  Request Schedule Change
+                </h2>
+                <p className="mt-0.5 text-xs text-[#5D7B7D]">
+                  Submit a shift swap or schedule adjustment request
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRequestModalOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleRequestSubmit} className="space-y-4 p-5">
+              <div>
+                <label className="block text-xs font-semibold text-[#31585A]">
+                  Request Type
+                </label>
+                <select
+                  value={requestData.type}
+                  onChange={(e) =>
+                    setRequestData((prev) => ({
+                      ...prev,
+                      type: e.target.value,
+                    }))
+                  }
+                  className="mt-1 h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
+                >
+                  <option>Shift Swap</option>
+                  <option>Leave / Day Off</option>
+                  <option>Time Adjustment</option>
+                  <option>Ward Transfer Request</option>
+                </select>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-semibold text-[#31585A]">
+                    Requested Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={requestData.date}
+                    onChange={(e) =>
+                      setRequestData((prev) => ({
+                        ...prev,
+                        date: e.target.value,
+                      }))
+                    }
+                    className="mt-1 h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#31585A]">
+                    Preferred Shift / Time
+                  </label>
+                  <select
+                    value={requestData.timeSlot}
+                    onChange={(e) =>
+                      setRequestData((prev) => ({
+                        ...prev,
+                        timeSlot: e.target.value,
+                      }))
+                    }
+                    className="mt-1 h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
+                  >
+                    <option>Morning (08:00 - 14:00)</option>
+                    <option>Evening (14:00 - 20:00)</option>
+                    <option>Night (20:00 - 08:00)</option>
+                    <option>Full Day Off</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#31585A]">
+                  Reason / Notes
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Explain the reason for this schedule request..."
+                  value={requestData.reason}
+                  onChange={(e) =>
+                    setRequestData((prev) => ({
+                      ...prev,
+                      reason: e.target.value,
+                    }))
+                  }
+                  className="mt-1 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] p-3 text-xs sm:text-sm text-[#31585A] outline-none focus:border-[#08A6A0]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-[#EAF2F1] pt-3">
+                <button
+                  type="button"
+                  onClick={() => setRequestModalOpen(false)}
+                  className="h-10 rounded-xl border border-[#D9E9E7] px-4 text-xs sm:text-sm font-semibold text-[#31585A]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#08A6A0] px-5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A]"
+                >
+                  <Send size={14} />
+                  Submit Request
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* FLOATING TOAST NOTIFICATION */}
+      {toast && (
+        <div
+          className={`
+            fixed bottom-6 right-6 z-50
+            flex items-center gap-2.5
+            rounded-2xl px-5 py-3.5
+            text-sm font-semibold text-white shadow-2xl
+            transition-all duration-300
+            ${toast.type === "error" ? "bg-red-600" : "bg-[#08A6A0]"}
+          `}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

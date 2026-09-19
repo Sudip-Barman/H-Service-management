@@ -65,7 +65,8 @@ const getPatientId = (patient) =>
   "N/A";
 
 const getRoomBed = (patient) => {
-  if (patient?.roomBed) return patient.roomBed;
+  if (patient?.roomBed && patient.roomBed !== "Not Assigned") return patient.roomBed;
+  if (patient?.room_bed) return patient.room_bed;
 
   if (patient?.roomNumber || patient?.bedNumber) {
     return `${patient.roomNumber || "-"} / ${
@@ -79,31 +80,40 @@ const getRoomBed = (patient) => {
     }`;
   }
 
-  return "Not Assigned";
+  return patient?.roomBed || "Not Assigned";
 };
 
 const getAppointmentCount = (patient) => {
-  if (Array.isArray(patient?.appointments)) {
+  if (Array.isArray(patient?.appointments) && patient.appointments.length > 0) {
     return patient.appointments.length;
   }
 
   return (
-    patient?.appointmentCount ||
-    patient?.appointmentsCount ||
-    0
+    patient?.appointmentCount ??
+    patient?.appointment_count ??
+    patient?.appointmentsCount ??
+    (Array.isArray(patient?.appointments) ? patient.appointments.length : 0)
   );
 };
 
 const getServiceCount = (patient) => {
-  if (Array.isArray(patient?.activeServices)) {
+  if (Array.isArray(patient?.activeServices) && patient.activeServices.length > 0) {
     return patient.activeServices.length;
+  }
+
+  if (patient?.serviceCount !== undefined && patient?.serviceCount !== null) {
+    return patient.serviceCount;
+  }
+
+  if (patient?.service_count !== undefined && patient?.service_count !== null) {
+    return patient.service_count;
   }
 
   if (Array.isArray(patient?.services)) {
     return patient.services.length;
   }
 
-  return patient?.serviceCount || 0;
+  return 0;
 };
 
 const getAdmissionStatus = (patient) => {
@@ -229,9 +239,19 @@ const normalizePatient = (patient) => {
       patient.services ||
       [],
 
+    serviceCount:
+      patient.serviceCount ??
+      patient.service_count ??
+      (Array.isArray(patient.services) ? patient.services.length : 0),
+
     appointments:
       patient.appointments ||
       [],
+
+    appointmentCount:
+      patient.appointmentCount ??
+      patient.appointment_count ??
+      (Array.isArray(patient.appointments) ? patient.appointments.length : 0),
 
     assignedStaff:
       patient.assignedStaff ||
@@ -246,6 +266,7 @@ const normalizePatient = (patient) => {
 
     roomBed:
       patient.roomBed ||
+      patient.room_bed ||
       "Not Assigned",
   };
 };
@@ -754,16 +775,119 @@ const Patients = () => {
     try {
       setLoading(true);
 
-      const data = await apiRequest(
-        "/patients/"
-      );
+      const [patientsRes, admissionsRes, bookingsRes] = await Promise.allSettled([
+        apiRequest("/api/patients"),
+        apiRequest("/api/admissions"),
+        apiRequest("/api/bookings"),
+      ]);
 
-      const normalizedPatients =
-        safeArray(data).map(
-          normalizePatient
+      const rawPatients =
+        patientsRes.status === "fulfilled" && Array.isArray(patientsRes.value)
+          ? patientsRes.value
+          : [];
+
+      const rawAdmissions =
+        admissionsRes.status === "fulfilled"
+          ? (Array.isArray(admissionsRes.value)
+              ? admissionsRes.value
+              : admissionsRes.value?.admissions || admissionsRes.value?.items || [])
+          : [];
+
+      const rawBookings =
+        bookingsRes.status === "fulfilled" && Array.isArray(bookingsRes.value)
+          ? bookingsRes.value
+          : [];
+
+      // Correlate patient records with real admissions and bookings
+      const enrichedPatients = rawPatients.map((patient) => {
+        // Find latest admission record for this patient
+        const patientAdmissions = rawAdmissions.filter(
+          (a) =>
+            a.patient_id === patient.id ||
+            (a.patient_registration_number &&
+              a.patient_registration_number === patient.registration_number)
+        );
+        const latestAdmission = patientAdmissions[0] || null;
+
+        // Find bookings for this patient
+        const patientBookings = rawBookings.filter(
+          (b) =>
+            b.patient_id === patient.id ||
+            (b.patient_phone && patient.phone && b.patient_phone === patient.phone)
         );
 
-      setPatients(normalizedPatients);
+        const serviceBookings = patientBookings.filter(
+          (b) =>
+            (b.service_id !== null && b.service_id !== undefined) ||
+            (b.booking_category &&
+              b.booking_category.toLowerCase().includes("service"))
+        );
+
+        const appointmentBookings = patientBookings.filter(
+          (b) =>
+            (b.doctor_id !== null && b.doctor_id !== undefined) ||
+            (b.booking_category &&
+              (b.booking_category.toLowerCase().includes("consultation") ||
+                b.booking_category.toLowerCase().includes("checkup")))
+        );
+
+        let admissionStatus =
+          patient.admission_status || patient.admissionStatus || "Not Admitted";
+        let roomBed = patient.room_bed || patient.roomBed || "Not Assigned";
+
+        if (latestAdmission) {
+          admissionStatus = latestAdmission.status || "Admitted";
+          if (
+            admissionStatus === "Admitted" &&
+            (latestAdmission.room_number || latestAdmission.bed_number)
+          ) {
+            const wardPrefix = latestAdmission.ward
+              ? `${latestAdmission.ward} - `
+              : "";
+            const roomPart = latestAdmission.room_number
+              ? `Room ${latestAdmission.room_number}`
+              : "";
+            const bedPart = latestAdmission.bed_number
+              ? latestAdmission.bed_number
+              : "";
+            roomBed = `${wardPrefix}${roomPart} / ${bedPart}`.trim();
+          } else if (admissionStatus !== "Admitted") {
+            roomBed = "Not Assigned";
+          }
+        }
+
+        const effectiveStatus =
+          admissionStatus === "Admitted"
+            ? "Admitted"
+            : (patient.status || "Active");
+
+        const patientServices = Array.isArray(patient.services)
+          ? patient.services
+          : [];
+
+        const serviceCount = Math.max(
+          patient.service_count || 0,
+          patientServices.length + serviceBookings.length
+        );
+
+        const appointmentCount = Math.max(
+          patient.appointment_count || 0,
+          appointmentBookings.length
+        );
+
+        return normalizePatient({
+          ...patient,
+          status: effectiveStatus,
+          admissionStatus,
+          roomBed,
+          serviceCount,
+          appointmentCount,
+          appointments: appointmentBookings,
+          activeServices: serviceBookings,
+        });
+      });
+
+      setPatients(enrichedPatients);
     } catch (error) {
       console.error(
         "Failed to load patients:",
@@ -1082,7 +1206,7 @@ const Patients = () => {
           );
 
         const response = await fetch(
-          `http://127.0.0.1:8000/patients/${deletedPatientId}`,
+          `http://127.0.0.1:8000/api/patients/${deletedPatientId}`,
           {
             method: "DELETE",
             headers: {

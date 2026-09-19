@@ -11,6 +11,8 @@ import {
   Stethoscope,
   UserRound,
   UserRoundCheck,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 import StatCard from "../../../components/admin/StatCard";
@@ -18,6 +20,7 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import ServiceDetails from "../../../components/admin/ServiceDetails";
 import ServiceForm from "../../../components/admin/ServiceForm";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
+import { apiRequest } from "../../../api/api";
 
 import {
   serviceCategoryOptions,
@@ -103,6 +106,18 @@ const Services = () => {
 
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
 
   /* =========================
      Fetch Services
@@ -114,35 +129,9 @@ const Services = () => {
         setLoading(true);
         setFetchError("");
 
-        const token =
-          localStorage.getItem("access_token") ||
-          localStorage.getItem("token") ||
-          localStorage.getItem("jwt_token");
+        const data = await apiRequest("/api/services");
 
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/services",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token
-                ? {
-                    Authorization: `Bearer ${token}`,
-                  }
-                : {}),
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch services (${response.status})`
-          );
-        }
-
-        const data = await response.json();
-
-        const formattedServices = data.map((service) => ({
+        const formattedServices = (Array.isArray(data) ? data : []).map((service) => ({
           ...service,
 
           /* =========================
@@ -180,10 +169,10 @@ const Services = () => {
             ? "Active"
             : "Inactive",
 
-          staffRequired: 1,
-          availableStaff: 0,
-          bookings: 0,
-          rating: 0,
+          staffRequired: Number(service.staff_required ?? 1),
+          availableStaff: Number(service.available_staff ?? 0),
+          bookings: Number(service.bookings ?? 0),
+          rating: Number(service.rating ?? 0),
         }));
 
         setServices(formattedServices);
@@ -505,7 +494,7 @@ const Services = () => {
      Add / Update Service
   ========================= */
 
-  const handleSubmitService = (event) => {
+  const handleSubmitService = async (event) => {
     event.preventDefault();
 
     const validationError =
@@ -548,54 +537,76 @@ const Services = () => {
       ),
     };
 
-    /* =========================
-       UPDATE EXISTING SERVICE
-    ========================= */
+    const token =
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("jwt_token");
 
-    if (editingService) {
-      setServices(
-        (currentServices) =>
-          currentServices.map(
-            (service) =>
-              service.id ===
-              editingService.id
-                ? {
-                    ...service,
-                    ...serviceDataToSave,
-
-                    id: editingService.id,
-
-                    backendId:
-                      editingService.backendId,
-                  }
-                : service
-          )
-      );
-
-      handleCloseForm();
-      return;
-    }
-
-    /* =========================
-       ADD NEW SERVICE
-    ========================= */
-
-    const newService = {
-      ...serviceDataToSave,
-
-      id: generateServiceId(),
-
-      backendId: null,
+    const backendPayload = {
+      name: serviceDataToSave.name,
+      category: serviceDataToSave.category,
+      description: serviceDataToSave.description,
+      price: serviceDataToSave.price,
+      duration: serviceDataToSave.duration,
+      staff_required: serviceDataToSave.staffRequired,
+      available_staff: serviceDataToSave.availableStaff,
+      bookings: serviceDataToSave.bookings,
+      rating: serviceDataToSave.rating,
+      is_active: serviceDataToSave.status === "Active",
     };
 
-    setServices(
-      (currentServices) => [
-        ...currentServices,
-        newService,
-      ]
-    );
+    try {
+      /* =========================
+         UPDATE EXISTING SERVICE
+      ========================= */
+      if (editingService && editingService.backendId) {
+        const updated = await apiRequest(
+          `/api/services/${editingService.backendId}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(backendPayload),
+          }
+        );
 
-    handleCloseForm();
+        setServices((currentServices) =>
+          currentServices.map((service) =>
+            service.id === editingService.id
+              ? {
+                  ...service,
+                  ...serviceDataToSave,
+                  backendId: updated.id,
+                }
+              : service
+          )
+        );
+
+        showToast("Service updated successfully!", "success");
+        handleCloseForm();
+        return;
+      }
+
+      /* =========================
+         ADD NEW SERVICE
+      ========================= */
+      const created = await apiRequest("/api/services", {
+        method: "POST",
+        body: JSON.stringify(backendPayload),
+      });
+
+      const newService = {
+        ...serviceDataToSave,
+        id: `SRV-${String(created.id).padStart(4, "0")}`,
+        backendId: created.id,
+      };
+
+      setServices((currentServices) => [newService, ...currentServices]);
+      showToast("New service created and saved!", "success");
+      handleCloseForm();
+    } catch (err) {
+      console.error("Failed to save service:", err);
+      setFormError(err.message || "Failed to persist service to database.");
+      showToast(err.message || "Failed to save service.", "error");
+    }
   };
 
   /* =========================
@@ -622,29 +633,37 @@ const Services = () => {
      Confirm Remove
   ========================= */
 
-  const handleConfirmRemove = () => {
+  const handleConfirmRemove = async () => {
     if (!serviceToRemove) return;
 
     const removedServiceId =
       serviceToRemove.id;
+    const backendId = serviceToRemove.backendId;
 
-    setServices(
-      (currentServices) =>
+    try {
+      if (backendId) {
+        await apiRequest(`/api/services/${backendId}`, {
+          method: "DELETE",
+        });
+      }
+
+      setServices((currentServices) =>
         currentServices.filter(
-          (service) =>
-            service.id !==
-            removedServiceId
+          (service) => service.id !== removedServiceId
         )
-    );
+      );
 
-    if (
-      selectedService?.id ===
-      removedServiceId
-    ) {
-      setSelectedService(null);
+      if (selectedService?.id === removedServiceId) {
+        setSelectedService(null);
+      }
+
+      showToast("Service deleted successfully!", "success");
+    } catch (err) {
+      console.error("Failed to delete service:", err);
+      showToast(err.message || "Failed to delete service", "error");
+    } finally {
+      setServiceToRemove(null);
     }
-
-    setServiceToRemove(null);
   };
 
   /* =========================
@@ -657,6 +676,24 @@ const Services = () => {
 
   return (
     <div className="space-y-5 sm:space-y-6">
+      {/* TOAST ALERT */}
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl transition-all duration-300 ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700 shadow-red-500/10"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-emerald-500/10"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* =========================
           Page Header
       ========================= */}

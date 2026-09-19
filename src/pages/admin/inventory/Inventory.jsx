@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   AlertTriangle,
   Archive,
@@ -523,6 +524,26 @@ const StatCard = ({ title, value, subtitle, icon: Icon, type = "primary" }) => {
 
 const Inventory = () => {
   const [items, setItems] = useState(initialItems);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const data = await apiRequest("/api/inventory");
+        if (Array.isArray(data)) {
+          const formatted = data.map((item) => ({
+            ...item,
+            condition: item.condition || item.item_condition || "Good",
+            type: item.type || item.item_type || "General",
+          }));
+          setItems(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load inventory items:", err);
+      }
+    };
+    fetchInventory();
+  }, []);
+
   const [transactions, setTransactions] = useState(initialTransactions);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -585,56 +606,87 @@ const Inventory = () => {
     URL.revokeObjectURL(link.href);
   };
 
-  const handleAddItem = (event) => {
+  const handleAddItem = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get("name") || "New Inventory Item";
     const nextId = Math.max(...items.map((item) => item.id), 0) + 1;
     const quantity = Number(formData.get("quantity")) || 0;
     const minimum = Number(formData.get("minimum")) || 0;
+    const code = formData.get("code") || `INV-${String(nextId).padStart(3, "0")}`;
 
-    setItems((current) => [
-      ...current,
-      {
-        id: nextId,
-        code: formData.get("code") || `INV-${String(nextId).padStart(3, "0")}`,
-        name,
-        category: formData.get("category") || "Other",
-        type: formData.get("type") || "Consumable",
-        unit: formData.get("unit") || "Piece",
-        quantity,
-        minimum,
-        maximum: Number(formData.get("maximum")) || quantity,
-        price: Number(formData.get("price")) || 0,
-        supplier: formData.get("supplier") || "Not specified",
-        batch: formData.get("batch") || "Not specified",
-        manufacture: formData.get("manufacture") || "",
-        expiry: formData.get("expiry") || null,
-        location: formData.get("location") || "Main Store",
-        condition: formData.get("condition") || "Good",
-        status: formData.get("status") || (quantity > minimum ? "Available" : "Low Stock"),
-      },
-    ]);
+    const payload = {
+      code,
+      name,
+      category: formData.get("category") || "Other",
+      item_type: formData.get("type") || "Consumable",
+      unit: formData.get("unit") || "Piece",
+      quantity,
+      minimum,
+      maximum: Number(formData.get("maximum")) || (minimum * 10),
+      price: Number(formData.get("price")) || 0,
+      supplier: formData.get("supplier") || "Hospital Central Supply",
+      batch: formData.get("batch") || `BATCH-${nextId}`,
+      manufacture: formData.get("manufacture") || null,
+      expiry: formData.get("expiry") || null,
+      location: formData.get("location") || "Main Store",
+      item_condition: formData.get("condition") || "Good",
+      status: formData.get("status") || (quantity > minimum ? "Available" : "Low Stock"),
+    };
+
+    try {
+      const created = await apiRequest("/api/inventory", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setItems((current) => [created, ...current]);
+    } catch (err) {
+      console.error("Failed to add inventory item via API:", err);
+      setItems((current) => [
+        ...current,
+        {
+          id: nextId,
+          ...payload,
+          type: payload.item_type,
+          condition: payload.item_condition,
+        },
+      ]);
+    }
     setShowAddModal(false);
   };
 
-  const handleEditItem = (event) => {
+  const handleEditItem = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const updatedFields = {
+      name: formData.get("name") || selectedItem.name,
+      quantity: Number(formData.get("quantity")) || 0,
+      location: formData.get("location") || selectedItem.location,
+      status: formData.get("status") || selectedItem.status,
+    };
+
     setItems((current) =>
       current.map((item) =>
         item.id === selectedItem.id
           ? {
               ...item,
-              name: formData.get("name") || item.name,
-              quantity: Number(formData.get("quantity")) || 0,
-              location: formData.get("location") || item.location,
-              status: formData.get("status") || item.status,
+              ...updatedFields,
             }
           : item
       )
     );
     setShowItemModal(false);
+
+    if (selectedItem?.id) {
+      try {
+        await apiRequest(`/api/inventory/${selectedItem.id}`, {
+          method: "PUT",
+          body: JSON.stringify(updatedFields),
+        });
+      } catch (err) {
+        console.error("Failed to update inventory item on server:", err);
+      }
+    }
   };
 
   const handleQuickAction = (title) => {
@@ -712,7 +764,7 @@ const Inventory = () => {
      DELETE
   ======================================================= */
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to deactivate this inventory item?"
     );
@@ -724,6 +776,12 @@ const Inventory = () => {
         item.id === id ? { ...item, status: "Inactive" } : item
       )
     );
+
+    try {
+      await apiRequest(`/api/inventory/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Failed to delete inventory item on server:", err);
+    }
   };
 
   /* =======================================================

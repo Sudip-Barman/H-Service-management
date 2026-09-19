@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   UserRound,
@@ -11,33 +11,100 @@ import {
   ShieldCheck,
   Building2,
   Clock3,
-  Pencil,
   CheckCircle2,
   ArrowRight,
   IdCard,
-  Bell,
   CalendarClock,
-  FileText,
   Award,
   Activity,
+  LockKeyhole,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 
 import {
   getWorkforceUser,
   getRolePermissions,
 } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
 export default function Profile({ user }) {
   const navigate = useNavigate();
 
-  const employeeId = user?.id || "EMP-1001";
+  const storedUser = useMemo(() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const employeeId = user?.id || storedUser?.id || "EMP-1001";
 
   const workforceUser = useMemo(() => {
-    return (
-      getWorkforceUser(employeeId) ||
-      getWorkforceUser("EMP-1001")
-    );
-  }, [employeeId]);
+    const base = getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001") || {};
+    return {
+      ...base,
+      name: storedUser?.name || base.name || "Workforce User",
+      email: storedUser?.email || base.email || "staff@carecore.com",
+      role: storedUser?.role || base.role || "staff",
+      employeeId: storedUser?.id ? `EMP-${1000 + storedUser.id}` : (base.employeeId || "EMP-1001"),
+      status: "Active",
+    };
+  }, [employeeId, storedUser]);
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      showToast("Please fill in all password fields", "error");
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showToast("New passwords do not match", "error");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      showToast("Password must be at least 6 characters", "error");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await apiRequest("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: passwordData.currentPassword,
+          new_password: passwordData.newPassword,
+          email: workforceUser?.email || null,
+        }),
+      });
+      showToast("Password updated successfully!");
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      console.error("Change password error:", err);
+      showToast(err.message || "Failed to update password", "error");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const role = workforceUser?.role?.toLowerCase() || "staff";
   const permissions = getRolePermissions(role);
@@ -121,7 +188,7 @@ export default function Profile({ user }) {
   const quickActions = [
     {
       label: "My Schedule",
-      description: "View your work schedule",
+      description: "View and request work schedules",
       icon: CalendarClock,
       path: "/workforce/schedule",
     },
@@ -132,16 +199,10 @@ export default function Profile({ user }) {
       path: "/workforce/attendance",
     },
     {
-      label: "Notifications",
-      description: "View recent updates",
-      icon: Bell,
-      path: "/workforce/notifications",
-    },
-    {
-      label: "Settings",
-      description: "Manage account settings",
-      icon: ShieldCheck,
-      path: "/workforce/settings",
+      label: "Help & Support",
+      description: "Get assistance from hospital support",
+      icon: HelpCircle,
+      path: "/workforce/help",
     },
   ];
 
@@ -202,14 +263,11 @@ export default function Profile({ user }) {
               </div>
             </div>
 
-            {/* Edit Profile */}
-            <button
-              type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-[#073F42] shadow-sm transition hover:bg-[#E8F8F6] sm:w-fit"
-            >
-              <Pencil size={16} />
-              Edit Profile
-            </button>
+            {/* Read-only Badge */}
+            <div className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white shadow-sm sm:w-fit">
+              <ShieldCheck size={18} className="text-[#63D8D1]" />
+              Verified Staff Account
+            </div>
           </div>
         </div>
       </section>
@@ -465,32 +523,109 @@ export default function Profile({ user }) {
             </div>
           </section>
 
-          {/* Account Security */}
-          <section className="rounded-2xl border border-[#DDEBEA] bg-white p-5 shadow-sm">
-            <div className="flex gap-3">
+          {/* Change Password */}
+          <section className="rounded-2xl border border-[#DDEBEA] bg-white p-5 sm:p-6 shadow-sm">
+            <div className="flex items-center gap-3 border-b border-[#E8EFEF] pb-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0]">
-                <ShieldCheck size={19} />
+                <LockKeyhole size={20} />
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold text-[#073F42]">
-                  Account Security
+                  Change Password
                 </h3>
 
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Keep your account information and password secure.
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Update your workforce account password
                 </p>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/workforce/settings")}
-                  className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-[#087F7B] transition hover:text-[#056966]"
-                >
-                  Security Settings
-                  <ArrowRight size={15} />
-                </button>
               </div>
             </div>
+
+            <form onSubmit={handlePasswordSubmit} className="mt-4 space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-[#31585A]">
+                  Current Password
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    type={showCurrent ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) =>
+                      setPasswordData((prev) => ({
+                        ...prev,
+                        currentPassword: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter current password"
+                    required
+                    className="h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 pr-10 text-xs sm:text-sm text-[#31585A] outline-none transition focus:border-[#08A6A0] focus:bg-white focus:ring-2 focus:ring-[#08A6A0]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#31585A]">
+                  New Password
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    type={showNew ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      setPasswordData((prev) => ({
+                        ...prev,
+                        newPassword: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter new password (min. 6 characters)"
+                    required
+                    className="h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 pr-10 text-xs sm:text-sm text-[#31585A] outline-none transition focus:border-[#08A6A0] focus:bg-white focus:ring-2 focus:ring-[#08A6A0]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNew(!showNew)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#31585A]">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
+                  placeholder="Confirm new password"
+                  required
+                  className="mt-1 h-10 w-full rounded-xl border border-[#D9E9E7] bg-[#FAFDFC] px-3 text-xs sm:text-sm text-[#31585A] outline-none transition focus:border-[#08A6A0] focus:bg-white focus:ring-2 focus:ring-[#08A6A0]/10"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#08A6A0] px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#078F8A] disabled:opacity-60"
+              >
+                <LockKeyhole size={15} />
+                {passwordLoading ? "Updating..." : "Update Password"}
+              </button>
+            </form>
           </section>
         </div>
       </div>
@@ -563,6 +698,27 @@ export default function Profile({ user }) {
           Secure Workforce Account
         </span>
       </div>
+
+      {/* FLOATING TOAST NOTIFICATION */}
+      {toast && (
+        <div
+          className={`
+            fixed bottom-6 right-6 z-50
+            flex items-center gap-2.5
+            rounded-2xl px-5 py-3.5
+            text-sm font-semibold text-white shadow-2xl
+            transition-all duration-300
+            ${toast.type === "error" ? "bg-red-600" : "bg-[#08A6A0]"}
+          `}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

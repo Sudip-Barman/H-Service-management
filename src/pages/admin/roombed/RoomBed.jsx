@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bed,
   Building2,
@@ -17,8 +17,11 @@ import {
   UserRound,
   Wrench,
   X,
+  AlertCircle,
 } from "lucide-react";
 import RoomBedForm from "../../../components/admin/RoomBedForm";
+import { apiRequest } from "../../../api/api";
+
 
 /* -------------------------------------------------------------------------- */
 /*                                  DATA                                      */
@@ -387,7 +390,19 @@ function RoomCard({ room, onBedClick }) {
 /* -------------------------------------------------------------------------- */
 
 export default function RoomBed() {
-  const [rooms, setRooms] = useState(initialRooms);
+  const [rooms, setRooms] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
 
   const [search, setSearch] = useState("");
   const [wardFilter, setWardFilter] = useState("All");
@@ -398,21 +413,116 @@ export default function RoomBed() {
   const [showRoomBedModal, setShowRoomBedModal] = useState(false);
   const [formInitialMode, setFormInitialMode] = useState("room");
 
-  const handleAddRoom = (newRoom) => {
-    setRooms((current) => [newRoom, ...current]);
+  const fetchRooms = async () => {
+    try {
+      const data = await apiRequest("/api/rooms-beds");
+      if (data && Array.isArray(data.rooms) && data.rooms.length > 0) {
+        const formatted = data.rooms.map((r) => ({
+          id: String(r.id),
+          backend_id: r.id,
+          roomNumber: r.room_number,
+          ward: r.ward,
+          roomType: r.room_type,
+          floor: r.floor,
+          beds: (r.beds || []).map((b) => ({
+            id: `B-${r.room_number}-${b.id}`,
+            backend_id: b.id,
+            number: b.bed_number,
+            status: b.status,
+            patient: b.patient_name || null,
+            patientId: b.patient_code || (b.patient_id ? `P-${1000 + b.patient_id}` : null),
+            admissionDate: b.admission_date || null,
+          })),
+        }));
+        setRooms(formatted);
+      }
+    } catch (err) {
+      console.error("Failed to load rooms/beds from backend:", err);
+    }
   };
 
-  const handleAddBed = (roomId, newBed) => {
-    setRooms((current) =>
-      current.map((room) =>
-        room.id === roomId
-          ? {
-              ...room,
-              beds: [...room.beds, newBed],
-            }
-          : room
-      )
-    );
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const handleAddRoom = async (newRoom) => {
+    try {
+      const payload = {
+        room_number: newRoom.roomNumber,
+        ward: newRoom.ward,
+        room_type: newRoom.roomType,
+        floor: newRoom.floor,
+        department: "General",
+        daily_charge: 500.0,
+        status: "Active",
+        beds: (newRoom.beds || []).map((b) => ({
+          bed_number: b.number,
+          status: b.status,
+          daily_charge: 500.0,
+        })),
+      };
+
+      await apiRequest("/api/rooms-beds/rooms", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      showToast(`Room ${newRoom.roomNumber} created and saved to database!`, "success");
+      await fetchRooms();
+    } catch (err) {
+      console.error("Failed to save room:", err);
+      showToast(err.message || "Failed to save room to database", "error");
+      setRooms((current) => [newRoom, ...current]);
+    }
+  };
+
+  const handleAddBed = async (roomId, newBed) => {
+    try {
+      const targetRoom = rooms.find((r) => r.id === roomId);
+      const backendRoomId = targetRoom?.backend_id || (Number(roomId) ? Number(roomId) : null);
+
+      if (backendRoomId) {
+        await apiRequest(`/api/rooms-beds/beds?room_id=${backendRoomId}`, {
+          method: "POST",
+          body: JSON.stringify({
+            bed_number: newBed.number,
+            status: newBed.status,
+            patient_name: newBed.patient,
+            patient_code: newBed.patientId,
+            admission_date: newBed.admissionDate,
+            daily_charge: 500.0,
+          }),
+        });
+
+        showToast(`${newBed.number} added to Room ${targetRoom?.roomNumber || roomId}!`, "success");
+        await fetchRooms();
+      } else {
+        setRooms((current) =>
+          current.map((room) =>
+            room.id === roomId
+              ? {
+                  ...room,
+                  beds: [...room.beds, newBed],
+                }
+              : room
+          )
+        );
+        showToast(`Bed added to room!`, "success");
+      }
+    } catch (err) {
+      console.error("Failed to add bed:", err);
+      showToast(err.message || "Failed to save bed to database", "error");
+      setRooms((current) =>
+        current.map((room) =>
+          room.id === roomId
+            ? {
+                ...room,
+                beds: [...room.beds, newBed],
+              }
+            : room
+        )
+      );
+    }
   };
 
   /* ------------------------------- STATS -------------------------------- */
@@ -489,7 +599,16 @@ export default function RoomBed() {
 
   /* -------------------------- UPDATE BED STATUS -------------------------- */
 
-  const updateBedStatus = (bedId, newStatus) => {
+  const updateBedStatus = async (bedId, newStatus) => {
+    let targetBackendId = null;
+    for (const r of rooms) {
+      const found = r.beds.find((b) => b.id === bedId);
+      if (found?.backend_id) {
+        targetBackendId = found.backend_id;
+        break;
+      }
+    }
+
     setRooms((currentRooms) =>
       currentRooms.map((room) => ({
         ...room,
@@ -536,6 +655,18 @@ export default function RoomBed() {
           }
         : null
     );
+
+    showToast(`Bed status updated to ${newStatus}!`, "success");
+
+    if (targetBackendId) {
+      try {
+        await apiRequest(`/api/rooms-beds/beds/${targetBackendId}/status?status=${encodeURIComponent(newStatus)}`, {
+          method: "PUT",
+        });
+      } catch (err) {
+        console.error("Failed to update bed status on server:", err);
+      }
+    }
   };
 
   /* ------------------------------ OPTIONS -------------------------------- */
@@ -551,6 +682,23 @@ export default function RoomBed() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-3 sm:p-4 lg:p-5">
+      {/* TOAST ALERT */}
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl transition-all duration-300 ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700 shadow-red-500/10"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-emerald-500/10"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
       {/* ------------------------------------------------------------------ */}
       {/* HEADER                                                             */}
       {/* ------------------------------------------------------------------ */}

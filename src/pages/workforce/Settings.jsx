@@ -14,10 +14,12 @@ import {
   Sun,
   UserRound,
   Volume2,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { getWorkforceUser } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
 const Settings = ({ user }) => {
   const navigate = useNavigate();
@@ -31,6 +33,45 @@ const Settings = ({ user }) => {
   const profile =
     getWorkforceUser(employeeId) ||
     getWorkforceUser("EMP-1001");
+
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    if (!currentPassword || !newPassword) {
+      setPasswordError("Please enter both current and new password.");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      await apiRequest("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          email: profile?.email || user?.email,
+        }),
+      });
+      setPasswordSuccess("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setTimeout(() => {
+        setPasswordModalOpen(false);
+        setPasswordSuccess("");
+      }, 1800);
+    } catch (err) {
+      setPasswordError(err.message || "Failed to change password");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const [preferences, setPreferences] = useState({
     email:
@@ -365,7 +406,11 @@ const Settings = ({ user }) => {
           title="Password"
           description="Change your CareCore account password."
           action="Change password"
-          onClick={() => {}}
+          onClick={() => {
+            setPasswordError("");
+            setPasswordSuccess("");
+            setPasswordModalOpen(true);
+          }}
         />
 
         <SettingsAction
@@ -427,6 +472,90 @@ const Settings = ({ user }) => {
           administration are managed from the Admin Portal.
         </p>
       </div>
+
+      {/* Password Change Modal */}
+      {passwordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-100">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#073F42]">Change Password</h3>
+                  <p className="text-xs text-gray-500">Update your account credentials</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPasswordModalOpen(false)}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="mt-5 space-y-4">
+              {passwordError && (
+                <div className="rounded-xl bg-red-50 p-3 text-xs font-medium text-red-600">
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && (
+                <div className="rounded-xl bg-green-50 p-3 text-xs font-medium text-green-700">
+                  {passwordSuccess}
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  required
+                  className="mt-1.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/15"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  required
+                  className="mt-1.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/15"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPasswordModalOpen(false)}
+                  className="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-[#078f8a] disabled:opacity-50"
+                >
+                  {passwordLoading ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

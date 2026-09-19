@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
   ChevronLeft,
@@ -9,7 +9,11 @@ import {
   Stethoscope,
   Users,
   X,
+  CheckCircle2,
+  AlertCircle,
+  Trash2,
 } from "lucide-react";
+import { apiRequest } from "../../../api/api";
 
 const initialSchedules = [
   { schedule_id: 1, date: "2026-09-08", start_time: "09:00", end_time: "13:00", doctor_name: "Dr. Arindam Sen", department: "Cardiology", location: "OPD Room 201", type: "Consultation", status: "Available" },
@@ -22,7 +26,7 @@ const initialSchedules = [
   { schedule_id: 8, date: "2026-09-22", start_time: "08:00", end_time: "12:00", doctor_name: "Dr. Sourav Mukherjee", department: "Orthopedics", location: "OT 1", type: "Surgery", status: "Booked" },
 ];
 
-const today = new Date("2026-09-09T00:00:00");
+const today = new Date();
 const toKey = (date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -40,6 +44,7 @@ const emptySchedule = { schedule_id: null, date: toKey(today), start_time: "09:0
 
 const Schedules = () => {
   const [schedules, setSchedules] = useState(initialSchedules);
+  const [doctorsList, setDoctorsList] = useState([]);
   const [, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(toKey(today));
   const [weekStart, setWeekStart] = useState(() => {
@@ -48,6 +53,37 @@ const Schedules = () => {
     return start;
   });
   const [formOpen, setFormOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const data = await apiRequest("/api/schedules");
+        if (Array.isArray(data)) {
+          setSchedules(data);
+        }
+      } catch (err) {
+        console.error("Failed to load schedules:", err);
+      }
+    };
+    const fetchDoctors = async () => {
+      try {
+        const docs = await apiRequest("/api/doctors");
+        if (Array.isArray(docs)) {
+          setDoctorsList(docs);
+        }
+      } catch (err) {
+        console.error("Failed to load doctors:", err);
+      }
+    };
+    fetchSchedules();
+    fetchDoctors();
+  }, []);
 
   const schedulesByDate = useMemo(() => schedules.reduce((grouped, schedule) => {
     (grouped[schedule.date] ||= []).push(schedule);
@@ -58,16 +94,48 @@ const Schedules = () => {
   const visibleSchedules = schedules;
 
   const selectDate = (date) => { setSelectedDate(toKey(date)); };
-  const saveSchedule = (event) => {
-    event.preventDefault();
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    const nextId = Math.max(0, ...schedules.map((schedule) => schedule.schedule_id)) + 1;
-    setSchedules((current) => [...current, { ...data, schedule_id: nextId }]);
-    setSelectedDate(data.date);
-    const scheduleDate = dateFromKey(data.date);
-    setWeekStart(new Date(scheduleDate.getFullYear(), scheduleDate.getMonth(), scheduleDate.getDate() - scheduleDate.getDay()));
-    setFormOpen(false);
+
+  const saveSchedule = async (formData) => {
+    try {
+      const payload = {
+        ...formData,
+        date: formData.start_date || formData.date,
+        start_date: formData.start_date || formData.date,
+        end_date: formData.end_date || formData.start_date || formData.date,
+      };
+
+      const created = await apiRequest("/api/schedules", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      const nextId = created?.id || Math.max(0, ...schedules.map((schedule) => schedule.schedule_id || schedule.id || 0)) + 1;
+      const newSchedule = { ...payload, ...created, schedule_id: nextId, id: nextId };
+      setSchedules((current) => [...current, newSchedule]);
+      setSelectedDate(payload.date);
+      const scheduleDate = dateFromKey(payload.date);
+      setWeekStart(new Date(scheduleDate.getFullYear(), scheduleDate.getMonth(), scheduleDate.getDate() - scheduleDate.getDay()));
+      setFormOpen(false);
+      showToast("Schedule created successfully!");
+    } catch (err) {
+      console.error("Failed to save schedule on server:", err);
+      showToast(err.message || "Failed to save schedule", "error");
+    }
   };
+
+  const deleteSchedule = async (id, e) => {
+    e?.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this schedule?")) return;
+    try {
+      await apiRequest(`/api/schedules/${id}`, { method: "DELETE" });
+      setSchedules((current) => current.filter((s) => (s.id || s.schedule_id) !== id));
+      showToast("Schedule deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete schedule:", err);
+      showToast(err.message || "Failed to delete schedule", "error");
+    }
+  };
+
 
   return (
     <div className="min-h-full bg-[#F7FBFA] p-3 sm:p-4 lg:p-5">
@@ -120,40 +188,66 @@ const Schedules = () => {
                 <th className="px-3 py-3">Department</th>
                 <th className="px-3 py-3">Location</th>
                 <th className="px-3 py-3">Status</th>
+                <th className="px-3 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EAF2F1]">
-              {visibleSchedules.sort((a, b) => `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`)).map((schedule) => (
-                <tr key={schedule.schedule_id} onClick={() => { setSelectedDate(schedule.date); setCurrentMonth(monthForKey(schedule.date)); }} className="cursor-pointer hover:bg-[#FBFDFC]">
-                  <td className="px-3 py-3">
-                    <p className="text-sm font-medium text-[#31585A]">{formatDate(schedule.date)}</p>
-                    <p className="mt-0.5 text-xs text-[#819596]">{schedule.start_time} – {schedule.end_time}</p>
-                  </td>
-                  <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.doctor_name}</td>
-                  <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.department}</td>
-                  <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.location}</td>
-                  <td className="px-3 py-3"><Badge status={schedule.status} /></td>
-                </tr>
-              ))}
+              {visibleSchedules.sort((a, b) => `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`)).map((schedule) => {
+                const schedId = schedule.id || schedule.schedule_id;
+                return (
+                  <tr key={schedId} onClick={() => { setSelectedDate(schedule.date); }} className="cursor-pointer hover:bg-[#FBFDFC]">
+                    <td className="px-3 py-3">
+                      <p className="text-sm font-medium text-[#31585A]">{formatDate(schedule.date)}</p>
+                      <p className="mt-0.5 text-xs text-[#819596]">{schedule.start_time} – {schedule.end_time}</p>
+                    </td>
+                    <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.doctor_name}</td>
+                    <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.department}</td>
+                    <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.location}</td>
+                    <td className="px-3 py-3"><Badge status={schedule.status} /></td>
+                    <td className="px-3 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => deleteSchedule(schedId, e)}
+                        className="rounded-lg p-1.5 text-[#819596] transition hover:bg-red-50 hover:text-red-600"
+                        title="Delete Schedule"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         {/* Mobile Cards */}
         <div className="space-y-3 md:hidden">
-          {visibleSchedules.sort((a, b) => `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`)).map((schedule) => (
-            <div
-              key={schedule.schedule_id}
-              onClick={() => { setSelectedDate(schedule.date); setCurrentMonth(monthForKey(schedule.date)); }}
-              className="cursor-pointer rounded-xl border border-[#E2EFED] bg-white p-3 shadow-sm hover:border-[#08A6A0]"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-bold text-[#173F41]">{schedule.doctor_name}</h3>
-                  <p className="text-xs text-[#819596]">{schedule.department} · {schedule.type}</p>
+          {visibleSchedules.sort((a, b) => `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`)).map((schedule) => {
+            const schedId = schedule.id || schedule.schedule_id;
+            return (
+              <div
+                key={schedId}
+                onClick={() => { setSelectedDate(schedule.date); }}
+                className="cursor-pointer rounded-xl border border-[#E2EFED] bg-white p-3 shadow-sm hover:border-[#08A6A0]"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#173F41]">{schedule.doctor_name}</h3>
+                    <p className="text-xs text-[#819596]">{schedule.department} · {schedule.type}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge status={schedule.status} />
+                    <button
+                      type="button"
+                      onClick={(e) => deleteSchedule(schedId, e)}
+                      className="rounded-lg p-1 text-[#819596] hover:bg-red-50 hover:text-red-600"
+                      title="Delete Schedule"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <Badge status={schedule.status} />
-              </div>
               <div className="mt-2.5 grid grid-cols-2 gap-2 text-xs text-[#507173]">
                 <div className="rounded-lg bg-[#FAFDFC] p-2">
                   <span className="text-[10px] font-semibold uppercase tracking-wide text-[#819596]">Time</span>
@@ -169,10 +263,39 @@ const Schedules = () => {
                 {schedule.location}
               </p>
             </div>
-          ))}
+          );
+        })}
         </div>
       </section>
-      {formOpen && <ScheduleForm selectedDate={selectedDate} onClose={() => setFormOpen(false)} onSubmit={saveSchedule} />}
+      {formOpen && (
+        <ScheduleForm
+          selectedDate={selectedDate}
+          doctorsList={doctorsList}
+          onClose={() => setFormOpen(false)}
+          onSubmit={saveSchedule}
+        />
+      )}
+
+      {/* FLOATING TOAST NOTIFICATION */}
+      {toast && (
+        <div
+          className={`
+            fixed bottom-6 right-6 z-50
+            flex items-center gap-2.5
+            rounded-2xl px-5 py-3.5
+            text-sm font-semibold text-white shadow-2xl
+            transition-all duration-300
+            ${toast.type === "error" ? "bg-red-600" : "bg-[#08A6A0]"}
+          `}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -192,7 +315,138 @@ const ScheduleCard = ({ schedule }) => <article className="rounded-xl border bor
 const Modal = ({ children, onClose }) => <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm"><div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-xl overflow-y-auto rounded-2xl sm:rounded-3xl bg-white shadow-2xl"><div className="flex items-start justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4"><div><h2 className="text-base sm:text-lg font-bold text-[#173F41]">Add Schedule</h2><p className="mt-0.5 text-xs text-[#819596]">Create a doctor, ward, or procedure schedule.</p></div><button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-xl text-[#819596] hover:bg-[#E8F8F6]"><X className="h-4 w-4" /></button></div><div className="p-4 sm:p-5">{children}</div></div></div>;
 const Input = ({ label, ...props }) => <label className="block text-xs font-semibold text-[#507173]">{label}<input {...props} className="mt-1 block h-10 sm:h-11 w-full rounded-xl border border-[#DDE9E7] px-3 sm:px-3.5 text-xs sm:text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]" /></label>;
 const Select = ({ label, options, ...props }) => <label className="block text-xs font-semibold text-[#507173]">{label}<select {...props} className="mt-1 block h-10 sm:h-11 w-full rounded-xl border border-[#DDE9E7] bg-white px-3 sm:px-3.5 text-xs sm:text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]">{options.map((option) => <option key={option}>{option}</option>)}</select></label>;
-const ScheduleForm = ({ selectedDate, onClose, onSubmit }) => <Modal onClose={onClose}><form onSubmit={onSubmit} className="space-y-3.5 sm:space-y-4"><div className="grid gap-3 sm:gap-4 sm:grid-cols-2"><Input label="Schedule Date" name="date" type="date" defaultValue={selectedDate} required /><Input label="Doctor Name" name="doctor_name" placeholder="Dr. Name" required /><Input label="Department" name="department" placeholder="e.g. Cardiology" required /><Input label="Location" name="location" placeholder="OPD Room / Ward / OT" required /><Input label="Start Time" name="start_time" type="time" defaultValue="09:00" required /><Input label="End Time" name="end_time" type="time" defaultValue="13:00" required /><Select label="Schedule Type" name="type" defaultValue="Consultation" options={["Consultation", "Ward Round", "Surgery", "Procedure"]} /><Select label="Status" name="status" defaultValue="Available" options={["Available", "Booked"]} /></div><div className="flex justify-end gap-2 sm:gap-3 border-t border-[#EAF2F1] pt-3 sm:pt-4"><button type="button" onClick={onClose} className="h-10 sm:h-11 rounded-xl border border-[#DDE9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A]">Cancel</button><button className="h-10 sm:h-11 rounded-xl bg-[#078E89] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#067A76]">Save Schedule</button></div></form></Modal>;
+
+const ScheduleForm = ({ selectedDate, doctorsList, onClose, onSubmit }) => {
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [doctorName, setDoctorName] = useState("");
+  const [department, setDepartment] = useState("");
+  const [startDate, setStartDate] = useState(selectedDate);
+  const [endDate, setEndDate] = useState(selectedDate);
+
+  const handleDoctorChange = (e) => {
+    const docId = e.target.value;
+    setSelectedDoctorId(docId);
+    const found = doctorsList.find((d) => String(d.id) === docId);
+    if (found) {
+      setDoctorName(`Dr. ${found.first_name} ${found.last_name || ""}`.trim());
+      setDepartment(found.department || "");
+    }
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+    onSubmit({
+      ...data,
+      doctor_id: selectedDoctorId ? Number(selectedDoctorId) : null,
+      doctor_name: doctorName || data.doctor_name,
+      department: department || data.department,
+      start_date: startDate,
+      end_date: endDate,
+      date: startDate,
+    });
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <form onSubmit={handleFormSubmit} className="space-y-3.5 sm:space-y-4">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+          <Input
+            label="Starting Date"
+            name="start_date"
+            type="date"
+            value={startDate}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              if (!endDate || endDate < e.target.value) {
+                setEndDate(e.target.value);
+              }
+            }}
+            required
+          />
+          <Input
+            label="Ending Date"
+            name="end_date"
+            type="date"
+            value={endDate}
+            min={startDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            required
+          />
+
+          {doctorsList && doctorsList.length > 0 ? (
+            <div>
+              <label className="block text-xs font-semibold text-[#507173]">
+                Select Doctor
+                <select
+                  value={selectedDoctorId}
+                  onChange={handleDoctorChange}
+                  className="mt-1 block h-10 sm:h-11 w-full rounded-xl border border-[#DDE9E7] bg-white px-3 sm:px-3.5 text-xs sm:text-sm font-normal text-[#31585A] outline-none focus:border-[#08A6A0]"
+                >
+                  <option value="">-- Choose registered doctor --</option>
+                  {doctorsList.map((doc) => (
+                    <option key={doc.id} value={doc.id}>
+                      Dr. {doc.first_name} {doc.last_name || ""} ({doc.department || "General"})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <input type="hidden" name="doctor_name" value={doctorName} />
+            </div>
+          ) : (
+            <Input
+              label="Doctor Name"
+              name="doctor_name"
+              value={doctorName}
+              onChange={(e) => setDoctorName(e.target.value)}
+              placeholder="Dr. Name"
+              required
+            />
+          )}
+
+          <Input
+            label="Department"
+            name="department"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            placeholder="e.g. Cardiology"
+            required
+          />
+          <Input label="Location" name="location" placeholder="OPD Room / Ward / OT" required />
+          <Input label="Start Time" name="start_time" type="time" defaultValue="09:00" required />
+          <Input label="End Time" name="end_time" type="time" defaultValue="13:00" required />
+          <Select
+            label="Schedule Type"
+            name="type"
+            defaultValue="Consultation"
+            options={["Consultation", "Ward Round", "Surgery", "Procedure"]}
+          />
+          <Select
+            label="Status"
+            name="status"
+            defaultValue="Available"
+            options={["Available", "Booked"]}
+          />
+        </div>
+        <div className="flex justify-end gap-2 sm:gap-3 border-t border-[#EAF2F1] pt-3 sm:pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 sm:h-11 rounded-xl border border-[#DDE9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A]"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="h-10 sm:h-11 rounded-xl bg-[#078E89] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#067A76]"
+          >
+            Save Schedule
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
 
 export default Schedules;
 

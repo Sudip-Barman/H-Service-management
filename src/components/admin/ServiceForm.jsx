@@ -6,7 +6,40 @@ import {
   UserPlus,
   Users,
   X,
+  Activity,
+  Baby,
+  ClipboardPlus,
+  HeartHandshake,
+  HeartPulse,
+  HouseHeart,
+  Stethoscope,
+  UserRound,
 } from "lucide-react";
+
+const ICON_MAP = {
+  Activity,
+  Baby,
+  ClipboardPlus,
+  HeartHandshake,
+  HeartPulse,
+  HouseHeart,
+  Stethoscope,
+  UserRound,
+  UserRoundCheck,
+};
+
+const getAutoServiceIcon = (name = "", category = "") => {
+  const text = `${name} ${category}`.toLowerCase();
+  if (text.includes("baby") || text.includes("sitter")) return "Baby";
+  if (text.includes("japa") || text.includes("elder") || text.includes("mother")) return "HeartHandshake";
+  if (text.includes("icu") || text.includes("emergency") || text.includes("critical")) return "Activity";
+  if (text.includes("nurse") || text.includes("doctor") || text.includes("physician") || text.includes("gnm") || text.includes("anm")) return "Stethoscope";
+  if (text.includes("home") || text.includes("house")) return "HouseHeart";
+  if (text.includes("patient") || text.includes("care") || text.includes("therapy")) return "HeartPulse";
+  if (text.includes("attendant") || text.includes("aide") || text.includes("worker")) return "UserRound";
+  if (text.includes("check") || text.includes("report") || text.includes("clip")) return "ClipboardPlus";
+  return "Stethoscope";
+};
 
 const ServiceForm = ({
   form,
@@ -18,9 +51,17 @@ const ServiceForm = ({
 }) => {
   const handleChange = (event) => {
     const { name, value } = event.target;
-
     onChange(name, value);
+
+    if (name === "name" || name === "category") {
+      const currentName = name === "name" ? value : (form.name || "");
+      const currentCat = name === "category" ? value : (form.category || "");
+      const autoIcon = getAutoServiceIcon(currentName, currentCat);
+      onChange("icon", autoIcon);
+    }
   };
+
+  const SelectedIconComponent = ICON_MAP[form.icon] || Stethoscope;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
@@ -191,33 +232,39 @@ const ServiceForm = ({
                 <div>
                   <label
                     htmlFor="service-icon"
-                    className="mb-1.5 block text-xs font-semibold text-[#31585A]"
+                    className="mb-1.5 flex items-center justify-between text-xs font-semibold text-[#31585A]"
                   >
-                    Service Icon
+                    <span>Service Icon</span>
+                    <span className="text-[10px] text-[#08A6A0] font-normal">Auto-selected in real time</span>
                   </label>
 
-                  <select
-                    id="service-icon"
-                    name="icon"
-                    value={form.icon || "Stethoscope"}
-                    onChange={handleChange}
-                    className="
-                      h-10 sm:h-11
-                      w-full
-                      rounded-xl
-                      border
-                      border-[#D9E9E7]
-                      bg-[#FAFDFC]
-                      px-3 sm:px-3.5
-                      text-xs sm:text-sm
-                      text-[#073F42]
-                      outline-none
-                      transition
-                      focus:border-[#08A6A0]
-                      focus:ring-2
-                      focus:ring-[#08A6A0]/10
-                    "
-                  >
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-[#D9E9E7] bg-[#E8F8F6] text-[#08A6A0]">
+                      <SelectedIconComponent className="h-5 w-5" />
+                    </div>
+
+                    <select
+                      id="service-icon"
+                      name="icon"
+                      value={form.icon || "Stethoscope"}
+                      onChange={handleChange}
+                      className="
+                        h-10 sm:h-11
+                        w-full
+                        rounded-xl
+                        border
+                        border-[#D9E9E7]
+                        bg-[#FAFDFC]
+                        px-3 sm:px-3.5
+                        text-xs sm:text-sm
+                        text-[#073F42]
+                        outline-none
+                        transition
+                        focus:border-[#08A6A0]
+                        focus:ring-2
+                        focus:ring-[#08A6A0]/10
+                      "
+                    >
                     <option value="Stethoscope">
                       Stethoscope
                     </option>
@@ -254,6 +301,7 @@ const ServiceForm = ({
                       Clipboard Plus
                     </option>
                   </select>
+                  </div>
                 </div>
 
                 {/* Description */}

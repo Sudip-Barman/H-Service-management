@@ -438,6 +438,9 @@ const FormSelect = ({
           sm:h-11
         "
       >
+        {value === "" && (
+          <option value="">Select an option</option>
+        )}
         {options.map((option) => (
           <option key={option} value={option}>
             {option}

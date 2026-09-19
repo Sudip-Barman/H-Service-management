@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
 	Bell,
 	Check,
@@ -89,7 +90,24 @@ const priorityStyles = {
 };
 
 const Notification = () => {
-	const [notifications, setNotifications] = useState(initialNotifications);
+	const [notifications, setNotifications] = useState([]);
+
+	useEffect(() => {
+		const fetchNotifications = async () => {
+			try {
+				const data = await apiRequest("/api/notifications");
+				if (Array.isArray(data)) {
+					setNotifications(data);
+					window.dispatchEvent(new Event("notifications-updated"));
+				}
+			} catch (err) {
+				console.error("Failed to load notifications from server:", err);
+				setNotifications(initialNotifications);
+			}
+		};
+		fetchNotifications();
+	}, []);
+
 	const [search, setSearch] = useState("");
 	const [typeFilter, setTypeFilter] = useState("All");
 	const [statusFilter, setStatusFilter] = useState("All");
@@ -126,34 +144,63 @@ const Notification = () => {
 		setShowForm(true);
 	};
 
-	const saveNotification = (event) => {
+	const saveNotification = async (event) => {
 		event.preventDefault();
 
 		if (!form.title.trim() || !form.message.trim()) return;
 
-			setNotifications((current) => [
-				{
-					id: Date.now(),
-					...form,
-					date: new Date().toISOString().slice(0, 10),
-					time: new Date().toLocaleTimeString([], {
-						hour: "2-digit",
-						minute: "2-digit",
-					}),
+		const today = new Date().toISOString().slice(0, 10);
+		const timeNow = new Date().toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+
+		const newNotif = {
+			id: Date.now(),
+			...form,
+			date: today,
+			time: timeNow,
+			read: false,
+		};
+
+		try {
+			const created = await apiRequest("/api/notifications", {
+				method: "POST",
+				body: JSON.stringify({
+					title: form.title.trim(),
+					message: form.message.trim(),
+					type: form.type,
+					priority: form.priority,
+					department: form.department,
+					recipient: form.recipient,
+					date: today,
+					time: timeNow,
 					read: false,
-				},
-				...current,
-			]);
+				}),
+			});
+			setNotifications((current) => [created, ...current]);
+			window.dispatchEvent(new Event("notifications-updated"));
+		} catch (err) {
+			console.error("Failed to create notification on backend:", err);
+			setNotifications((current) => [newNotif, ...current]);
+		}
 
 		setShowForm(false);
 	};
 
-	const markAsRead = (id) => {
+	const markAsRead = async (id) => {
 		setNotifications((current) =>
 			current.map((notification) =>
 				notification.id === id ? { ...notification, read: true } : notification
 			)
 		);
+		window.dispatchEvent(new Event("notifications-updated"));
+
+		try {
+			await apiRequest(`/api/notifications/${id}/read`, { method: "PUT" });
+		} catch (err) {
+			console.error("Failed to mark notification as read on server:", err);
+		}
 	};
 
 	const openNotificationDetails = (notification) => {
@@ -161,16 +208,32 @@ const Notification = () => {
 		markAsRead(notification.id);
 	};
 
-	const markAllAsRead = () => {
+	const markAllAsRead = async () => {
 		setNotifications((current) =>
 			current.map((notification) => ({ ...notification, read: true }))
 		);
+		window.dispatchEvent(new Event("notifications-updated"));
+
+		try {
+			await apiRequest("/api/notifications/mark-all-read", { method: "PUT" });
+		} catch {
+			const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+			await Promise.allSettled(
+				unreadIds.map((id) => apiRequest(`/api/notifications/${id}/read`, { method: "PUT" }))
+			);
+		}
 	};
 
-	const deleteNotification = (id) => {
+	const deleteNotification = async (id) => {
 		setNotifications((current) =>
 			current.filter((notification) => notification.id !== id)
 		);
+
+		try {
+			await apiRequest(`/api/notifications/${id}`, { method: "DELETE" });
+		} catch (err) {
+			console.error("Failed to delete notification on server:", err);
+		}
 	};
 
 	return (

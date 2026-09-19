@@ -30,6 +30,7 @@ import Inventory from "../pages/admin/inventory/Inventory";
 import Notification from "../pages/admin/notification/Notification";
 import Feedback from "../pages/admin/feedback/Feedback";
 import Settings from "../pages/admin/setting/Settings";
+import AdminProfile from "../pages/admin/profile/AdminProfile";
 
 import Admission from "../pages/admin/admissions/Admissions";
 import RoomBed from "../pages/admin/roombed/RoomBed";
@@ -39,14 +40,11 @@ import Billings from "../pages/admin/billings/Billings";
 
 // ================= WORKFORCE =================
 import WorkforceLayout from "../layouts/WorkforceLayout";
-import WorkforceDashboard from "../pages/workforce/Dashboard";
 import WorkforceProfile from "../pages/workforce/Profile";
 import WorkforceSchedule from "../pages/workforce/Schedule";
+import WorkforceAttendance from "../pages/workforce/Attendance";
 import WorkforceAppointments from "../pages/workforce/Appointments";
 import WorkforcePatients from "../pages/workforce/Patients";
-import WorkforceAssignments from "../pages/workforce/Assignments";
-import WorkforceAttendance from "../pages/workforce/Attendance";
-import WorkforceLeave from "../pages/workforce/Leave";
 import WorkforceNotifications from "../pages/workforce/Notifications";
 import WorkforceSettings from "../pages/workforce/Settings";
 import HelpSupport from "../pages/workforce/HelpSupport";
@@ -326,6 +324,11 @@ const AppRoutes = () => {
           element={<Settings />}
         />
 
+        <Route
+          path="profile"
+          element={<AdminProfile />}
+        />
+
       </Route>
 
 
@@ -348,67 +351,55 @@ const AppRoutes = () => {
         }
       >
 
-        {/* Dashboard */}
+        {/* Default /workforce redirects to profile */}
         <Route
           index
-          element={<WorkforceDashboard />}
+          element={<Navigate to="/workforce/profile" replace />}
         />
 
-        {/* Profile */}
+        {/* 1. Profile */}
         <Route
           path="profile"
           element={<WorkforceProfile />}
         />
 
-        {/* Schedule */}
-        <Route
-          path="schedule"
-          element={<WorkforceSchedule />}
-        />
-
-        {/* Appointments */}
-        <Route
-          path="appointments"
-          element={<WorkforceAppointments />}
-        />
-
-        {/* Patients */}
-        <Route
-          path="patients"
-          element={<WorkforcePatients />}
-        />
-
-        {/* Assignments */}
-        <Route
-          path="assignments"
-          element={<WorkforceAssignments />}
-        />
-
-        {/* Attendance */}
+        {/* 2. Attendance */}
         <Route
           path="attendance"
           element={<WorkforceAttendance />}
         />
 
-        {/* Leave */}
+        {/* 3. Schedule */}
         <Route
-          path="leave"
-          element={<WorkforceLeave />}
+          path="schedule"
+          element={<WorkforceSchedule />}
         />
 
-        {/* Notifications */}
+        {/* 4. Appointments */}
+        <Route
+          path="appointments"
+          element={<WorkforceAppointments />}
+        />
+
+        {/* 5. Patients */}
+        <Route
+          path="patients"
+          element={<WorkforcePatients />}
+        />
+
+        {/* 6. Notifications */}
         <Route
           path="notifications"
           element={<WorkforceNotifications />}
         />
 
-        {/* Settings */}
+        {/* 7. Settings */}
         <Route
           path="settings"
           element={<WorkforceSettings />}
         />
 
-        {/* Help */}
+        {/* 8. Help & Support */}
         <Route
           path="help"
           element={<HelpSupport />}

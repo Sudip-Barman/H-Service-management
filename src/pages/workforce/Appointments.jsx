@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -17,6 +17,7 @@ import {
   getUserAppointments,
   getRolePermissions,
 } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
 const Appointments = ({ user }) => {
   const navigate = useNavigate();
@@ -26,10 +27,41 @@ const Appointments = ({ user }) => {
   const profile =
     getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001");
 
-  const role = profile?.role?.toLowerCase() || "staff";
+  const role = profile?.role?.toLowerCase() || "doctor";
   const permissions = getRolePermissions(role);
 
-  const appointments = getUserAppointments(employeeId);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const data = await apiRequest("/bookings");
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((b) => ({
+            id: b.booking_number || `BK-${b.id}`,
+            employeeId: b.doctor_id ? `EMP-${b.doctor_id}` : employeeId,
+            patientId: b.patient_id ? `PAT-${b.patient_id}` : `PAT-001`,
+            patientName: b.patient_name || "Patient",
+            date: b.booking_date ? String(b.booking_date) : "",
+            time: b.time_slot || "10:00 AM",
+            department: b.department || "General Medicine",
+            type: b.booking_type || "In-Person",
+            status: b.status || "Scheduled",
+          }));
+          setAppointments(mapped);
+        } else {
+          setAppointments(getUserAppointments(employeeId));
+        }
+      } catch (err) {
+        console.error("Failed to load bookings from backend:", err);
+        setAppointments(getUserAppointments(employeeId));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, [employeeId]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");

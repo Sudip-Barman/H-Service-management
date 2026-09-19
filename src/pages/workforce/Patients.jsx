@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -17,6 +17,7 @@ import {
   getWorkforceUser,
   getUserPatients,
 } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
 const Patients = ({ user }) => {
   const navigate = useNavigate();
@@ -31,12 +32,49 @@ const Patients = ({ user }) => {
     getWorkforceUser(employeeId) ||
     getWorkforceUser("EMP-1001");
 
-  /*
-   * getUserPatients() should return only patients connected
-   * to this workforce member through appointments, treatment,
-   * or direct patient assignment.
-   */
-  const patients = getUserPatients(profile?.id || employeeId);
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const data = await apiRequest("/patients");
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((p) => ({
+            id: p.id,
+            patientId: p.registration_number || `PAT-${1000 + p.id}`,
+            name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Patient",
+            age: p.age || 35,
+            gender: p.gender || "Not specified",
+            phone: p.phone || "N/A",
+            condition: p.medical_history || (p.blood_group ? `Blood: ${p.blood_group}` : "Stable"),
+            department: p.assigned_doctor || "General Medicine",
+            status: p.status || "Active",
+            admissionDate: p.created_at
+              ? new Date(p.created_at).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "Recent",
+            appointmentTime: "10:30 AM",
+            doctorId: p.assigned_doctor_id
+              ? `DOC-${p.assigned_doctor_id}`
+              : employeeId,
+          }));
+          setPatients(mapped);
+        } else {
+          setPatients(getUserPatients(profile?.id || employeeId));
+        }
+      } catch (err) {
+        console.error("Failed to load patients:", err);
+        setPatients(getUserPatients(profile?.id || employeeId));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPatients();
+  }, [employeeId, profile?.id]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");

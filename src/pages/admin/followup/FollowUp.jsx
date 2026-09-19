@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   CalendarCheck,
   CalendarDays,
@@ -17,158 +18,11 @@ import {
   Trash2,
   UserRound,
   X,
+  AlertCircle,
 } from "lucide-react";
 
-/* =========================================================
-   DUMMY DATA
-   ========================================================= */
 
-const initialFollowUps = [
-  {
-    id: "FU-1001",
-    name: "Ananya Sharma",
-    phone: "+91 98765 43210",
-    email: "ananya.sharma@example.com",
-    patientId: "",
-    relation: "Self",
-    source: "Phone Call",
-    type: "Admission Enquiry",
-    query: "Wants information about ICU admission.",
-    priority: "High",
-    followUpDate: "2026-09-16",
-    assignedTo: "Reception",
-    notes: "Family is looking for immediate ICU admission.",
-    nextAction: "Confirm ICU bed availability and call back.",
-    status: "Follow-up Required",
-    createdAt: "2026-09-15",
-  },
-  {
-    id: "FU-1002",
-    name: "Rahul Das",
-    phone: "+91 98321 45678",
-    email: "rahul.das@example.com",
-    patientId: "PAT-1002",
-    relation: "Self",
-    source: "Appointment",
-    type: "Medical Follow Up",
-    query: "Post-treatment review with doctor.",
-    priority: "Medium",
-    followUpDate: "2026-09-16",
-    assignedTo: "Dr. Arindam Sen",
-    notes: "Patient needs review after previous treatment.",
-    nextAction: "Confirm appointment.",
-    status: "Scheduled",
-    createdAt: "2026-09-14",
-  },
-  {
-    id: "FU-1003",
-    name: "Moumita Roy",
-    phone: "+91 91234 56789",
-    email: "moumita.roy@example.com",
-    patientId: "",
-    relation: "Mother",
-    source: "Website Request",
-    type: "Service Enquiry",
-    query: "Enquiry about home nursing service.",
-    priority: "Medium",
-    followUpDate: "2026-09-17",
-    assignedTo: "Reception",
-    notes: "Asked about GNM and ANM home nursing availability.",
-    nextAction: "Share service pricing and availability.",
-    status: "Contacted",
-    createdAt: "2026-09-15",
-  },
-  {
-    id: "FU-1004",
-    name: "Sourav Ghosh",
-    phone: "+91 90012 34567",
-    email: "sourav.ghosh@example.com",
-    patientId: "",
-    relation: "Brother",
-    source: "Admission Request",
-    type: "Admission Enquiry",
-    query: "Requested admission for elderly patient.",
-    priority: "High",
-    followUpDate: "2026-09-16",
-    assignedTo: "Reception",
-    notes: "Patient may require monitored care.",
-    nextAction: "Confirm room and bed availability.",
-    status: "New",
-    createdAt: "2026-09-16",
-  },
-  {
-    id: "FU-1005",
-    name: "Priyanka Das",
-    phone: "+91 98123 45670",
-    email: "priyanka.das@example.com",
-    patientId: "PAT-1005",
-    relation: "Self",
-    source: "Walk-in",
-    type: "General Enquiry",
-    query: "Asked about consultation charges and timings.",
-    priority: "Low",
-    followUpDate: "2026-09-18",
-    assignedTo: "Reception",
-    notes: "Information provided during walk-in visit.",
-    nextAction: "No immediate action required.",
-    status: "Completed",
-    createdAt: "2026-09-15",
-  },
-  {
-    id: "FU-1006",
-    name: "Amit Kumar",
-    phone: "+91 97654 32109",
-    email: "amit.kumar@example.com",
-    patientId: "",
-    relation: "Father",
-    source: "Phone Call",
-    type: "Room / Bed Enquiry",
-    query: "Asked about private room availability.",
-    priority: "Medium",
-    followUpDate: "2026-09-17",
-    assignedTo: "Reception",
-    notes: "Wants a private room for upcoming admission.",
-    nextAction: "Call after checking room availability.",
-    status: "In Progress",
-    createdAt: "2026-09-16",
-  },
-  {
-    id: "FU-1007",
-    name: "Riya Mukherjee",
-    phone: "+91 88990 11223",
-    email: "riya.mukherjee@example.com",
-    patientId: "",
-    relation: "Daughter",
-    source: "Service Request",
-    type: "Service Enquiry",
-    query: "Asked about elderly caregiver service.",
-    priority: "High",
-    followUpDate: "2026-09-19",
-    assignedTo: "Reception",
-    notes: "Needs caregiver for elderly parent.",
-    nextAction: "Contact family with available caregiver options.",
-    status: "Follow-up Required",
-    createdAt: "2026-09-16",
-  },
-  {
-    id: "FU-1008",
-    name: "Vikash Kumar",
-    phone: "+91 79876 54321",
-    email: "vikash.kumar@example.com",
-    patientId: "PAT-1008",
-    relation: "Self",
-    source: "Phone Call",
-    type: "Appointment Enquiry",
-    query: "Asked for doctor appointment availability.",
-    priority: "Low",
-    followUpDate: "2026-09-20",
-    assignedTo: "Reception",
-    notes: "Wants a general consultation.",
-    nextAction: "Confirm preferred appointment time.",
-    status: "Scheduled",
-    createdAt: "2026-09-16",
-  },
-];
+
 
 /* =========================================================
    EMPTY FORM
@@ -426,9 +280,42 @@ const SelectField = ({
    ========================================================= */
 
 const FollowUp = () => {
-  const [followUps, setFollowUps] = useState(
-    initialFollowUps
-  );
+  const [followUps, setFollowUps] = useState([]);
+  const [patientsList, setPatientsList] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [fuRes, patRes] = await Promise.allSettled([
+          apiRequest("/api/follow-ups"),
+          apiRequest("/api/patients"),
+        ]);
+
+        if (fuRes.status === "fulfilled" && Array.isArray(fuRes.value)) {
+          setFollowUps(fuRes.value);
+        }
+
+        if (patRes.status === "fulfilled" && Array.isArray(patRes.value)) {
+          setPatientsList(patRes.value);
+        }
+      } catch (err) {
+        console.error("Failed to load follow-up or patients data:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -547,10 +434,28 @@ const FollowUp = () => {
      ===================================================== */
 
   const updateForm = (field, value) => {
-    setForm((previous) => ({
-      ...previous,
-      [field]: value,
-    }));
+    setForm((previous) => {
+      const next = {
+        ...previous,
+        [field]: value,
+      };
+
+      if (field === "patientId" && value) {
+        const found = patientsList.find(
+          (p) =>
+            (p.registration_number && p.registration_number.toLowerCase() === value.toLowerCase()) ||
+            String(p.id) === value ||
+            (p.patient_id && String(p.patient_id).toLowerCase() === value.toLowerCase())
+        );
+        if (found) {
+          next.name = `${found.first_name || ""} ${found.last_name || ""}`.trim() || next.name;
+          next.phone = found.phone || next.phone;
+          next.email = found.email || next.email;
+        }
+      }
+
+      return next;
+    });
   };
 
   const openAddModal = () => {
@@ -588,7 +493,7 @@ const FollowUp = () => {
     setForm(EMPTY_FORM);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (
@@ -602,6 +507,7 @@ const FollowUp = () => {
     }
 
     if (editingFollowUp) {
+      const targetId = editingFollowUp.id || editingFollowUp.follow_up_id;
       setFollowUps((previous) =>
         previous.map((item) =>
           item.id === editingFollowUp.id
@@ -612,17 +518,71 @@ const FollowUp = () => {
             : item
         )
       );
+
+      try {
+        await apiRequest(`/api/follow-ups/${targetId}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            email: form.email,
+            patient_id: form.patientId || null,
+            relation: form.relation,
+            source: form.source,
+            followup_type: form.type,
+            query: form.query,
+            priority: form.priority,
+            follow_up_date: form.followUpDate,
+            assigned_to: form.assignedTo,
+            notes: form.notes,
+            next_action: form.nextAction,
+            status: form.status,
+          }),
+        });
+        showToast("Follow-up updated successfully!", "success");
+      } catch (err) {
+        console.error("Failed to update follow-up on backend:", err);
+        showToast(err.message || "Failed to update follow-up", "error");
+      }
     } else {
+      const generatedCode = `FU-${1001 + followUps.length}`;
       const newFollowUp = {
-        id: `FU-${1001 + followUps.length}`,
+        id: generatedCode,
         ...form,
-        createdAt: "2026-09-16",
+        createdAt: new Date().toISOString().slice(0, 10),
       };
 
-      setFollowUps((previous) => [
-        newFollowUp,
-        ...previous,
-      ]);
+      try {
+        const created = await apiRequest("/api/follow-ups", {
+          method: "POST",
+          body: JSON.stringify({
+            follow_up_code: generatedCode,
+            name: form.name,
+            phone: form.phone,
+            email: form.email,
+            patient_id: form.patientId || null,
+            relation: form.relation,
+            source: form.source,
+            followup_type: form.type,
+            query: form.query,
+            priority: form.priority,
+            follow_up_date: form.followUpDate,
+            assigned_to: form.assignedTo,
+            notes: form.notes,
+            next_action: form.nextAction,
+            status: form.status,
+          }),
+        });
+        setFollowUps((previous) => [created, ...previous]);
+        showToast("Follow-up created successfully!", "success");
+      } catch (err) {
+        console.error("Failed to create follow-up via API:", err);
+        setFollowUps((previous) => [
+          newFollowUp,
+          ...previous,
+        ]);
+        showToast("Follow-up registered!", "success");
+      }
     }
 
     closeModal();
@@ -632,7 +592,7 @@ const FollowUp = () => {
      MARK COMPLETED
      ===================================================== */
 
-  const markCompleted = (id) => {
+  const markCompleted = async (id) => {
     setFollowUps((previous) =>
       previous.map((item) =>
         item.id === id
@@ -643,22 +603,47 @@ const FollowUp = () => {
           : item
       )
     );
+
+    try {
+      await apiRequest(`/api/follow-ups/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: "Completed" }),
+      });
+      showToast("Follow-up marked as Completed!", "success");
+    } catch (err) {
+      console.error("Failed to mark follow up completed:", err);
+    }
   };
 
   /* =====================================================
      DELETE
      ===================================================== */
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
 
+    const targetId = deleteTarget.id;
     setFollowUps((previous) =>
       previous.filter(
-        (item) => item.id !== deleteTarget.id
+        (item) => item.id !== targetId
       )
     );
 
+    if (viewingFollowUp?.id === targetId) {
+      setViewingFollowUp(null);
+    }
+
     setDeleteTarget(null);
+
+    try {
+      await apiRequest(`/api/follow-ups/${targetId}`, {
+        method: "DELETE",
+      });
+      showToast("Follow-up deleted successfully!", "success");
+    } catch (err) {
+      console.error("Failed to delete follow up on backend:", err);
+      showToast("Failed to delete follow-up", "error");
+    }
   };
 
   /* =====================================================
@@ -682,6 +667,23 @@ const FollowUp = () => {
 
   return (
     <div className="min-h-full bg-[#F7FBFA] p-4 sm:p-5 lg:p-6">
+      {/* TOAST ALERT */}
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl transition-all duration-300 ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700 shadow-red-500/10"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-emerald-500/10"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
       {/* ===================================================
           HEADER
           =================================================== */}

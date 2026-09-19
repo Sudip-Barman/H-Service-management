@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+	AlertCircle,
 	Bell,
 	Building2,
 	Check,
+	CheckCircle2,
 	Clock3,
 	Globe2,
 	LockKeyhole,
@@ -13,6 +15,7 @@ import {
 	SlidersHorizontal,
 	UserRound,
 } from "lucide-react";
+import { apiRequest } from "../../../api/api";
 
 const tabs = [
 	{ id: "hospital", label: "Hospital profile", icon: Building2 },
@@ -44,15 +47,57 @@ const Settings = () => {
 	const [activeTab, setActiveTab] = useState("hospital");
 	const [settings, setSettings] = useState(initialSettings);
 	const [saved, setSaved] = useState(false);
+	const [toast, setToast] = useState(null);
+	const [loading, setLoading] = useState(true);
+
+	const showToast = (message, type = "success") => {
+		setToast({ message, type });
+		setTimeout(() => setToast(null), 3000);
+	};
+
+	useEffect(() => {
+		const loadSettings = async () => {
+			try {
+				const data = await apiRequest("/api/settings");
+				if (data?.settings) {
+					setSettings((current) => ({
+						...current,
+						...data.settings,
+					}));
+				}
+			} catch (err) {
+				console.error("Failed to load settings from server:", err);
+			} finally {
+				setLoading(false);
+			}
+		};
+		loadSettings();
+	}, []);
 
 	const updateSetting = (field, value) => {
 		setSettings((current) => ({ ...current, [field]: value }));
 		setSaved(false);
 	};
 
-	const handleSave = () => {
-		setSaved(true);
-		window.setTimeout(() => setSaved(false), 2800);
+	const handleSave = async () => {
+		try {
+			const res = await apiRequest("/api/settings", {
+				method: "PUT",
+				body: JSON.stringify({ settings }),
+			});
+			if (res?.settings) {
+				setSettings((current) => ({
+					...current,
+					...res.settings,
+				}));
+			}
+			setSaved(true);
+			showToast("Settings saved successfully!");
+			window.setTimeout(() => setSaved(false), 2800);
+		} catch (err) {
+			console.error("Failed to save settings:", err);
+			showToast(err.message || "Failed to save settings", "error");
+		}
 	};
 
 	const resetSettings = () => {
@@ -150,6 +195,26 @@ const Settings = () => {
 					)}
 				</main>
 			</div>
+
+			{toast && (
+				<div
+					className={`
+						fixed bottom-6 right-6 z-50
+						flex items-center gap-2.5
+						rounded-2xl px-5 py-3.5
+						text-sm font-semibold text-white shadow-2xl
+						transition-all duration-300
+						${toast.type === "error" ? "bg-red-600" : "bg-[#08A6A0]"}
+					`}
+				>
+					{toast.type === "error" ? (
+						<AlertCircle className="h-5 w-5 shrink-0" />
+					) : (
+						<CheckCircle2 className="h-5 w-5 shrink-0" />
+					)}
+					<span>{toast.message}</span>
+				</div>
+			)}
 		</div>
 	);
 };

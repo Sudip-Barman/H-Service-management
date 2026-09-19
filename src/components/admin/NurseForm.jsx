@@ -142,19 +142,16 @@ const NurseForm = ({
       return;
     }
 
-    if (photoPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(photoPreview);
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-
-    setPhotoPreview(previewUrl);
-
-    setForm((current) => ({
-      ...current,
-      photo: current.photo || "",
-      photo_file: file,
-    }));
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotoPreview(reader.result);
+      setForm((current) => ({
+        ...current,
+        photo: reader.result,
+        photo_file: file,
+      }));
+    };
+    reader.readAsDataURL(file);
 
     event.target.value = "";
   };
@@ -247,39 +244,17 @@ const NurseForm = ({
       canvas.height
     );
 
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          alert("Unable to capture photo.");
-          return;
-        }
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
 
-        if (photoPreview?.startsWith("blob:")) {
-          URL.revokeObjectURL(photoPreview);
-        }
+    setPhotoPreview(dataUrl);
 
-        const file = new File(
-          [blob],
-          `nurse-photo-${Date.now()}.jpg`,
-          {
-            type: "image/jpeg",
-          }
-        );
+    setForm((current) => ({
+      ...current,
+      photo: dataUrl,
+      photo_file: null,
+    }));
 
-        const previewUrl = URL.createObjectURL(blob);
-
-        setPhotoPreview(previewUrl);
-
-        setForm((current) => ({
-          ...current,
-          photo_file: file,
-        }));
-
-        stopCamera();
-      },
-      "image/jpeg",
-      0.9
-    );
+    stopCamera();
   };
 
   /* -------------------------------------------------------------------------- */

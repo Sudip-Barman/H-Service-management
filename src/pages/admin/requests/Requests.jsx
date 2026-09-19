@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   AlertTriangle,
   Check,
@@ -129,6 +130,30 @@ const getPriorityType = (priority) => priority?.toLowerCase() || "normal";
 
 function Request() {
   const [requests, setRequests] = useState(initialRequests);
+  const [patientsList, setPatientsList] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [reqRes, patRes] = await Promise.allSettled([
+          apiRequest("/api/requests"),
+          apiRequest("/api/patients"),
+        ]);
+
+        if (reqRes.status === "fulfilled" && Array.isArray(reqRes.value)) {
+          setRequests(reqRes.value);
+        }
+
+        if (patRes.status === "fulfilled" && Array.isArray(patRes.value)) {
+          setPatientsList(patRes.value);
+        }
+      } catch (err) {
+        console.error("Failed to load requests from server:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [typeFilter, setTypeFilter] = useState("All");
@@ -193,11 +218,25 @@ function Request() {
   };
 
   const handleFormChange = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const next = { ...current, [field]: value };
+      if (field === "patientId" && value) {
+        const found = patientsList.find(
+          (p) =>
+            (p.registration_number && p.registration_number.toLowerCase() === value.toLowerCase()) ||
+            String(p.id) === value ||
+            (p.patient_id && String(p.patient_id).toLowerCase() === value.toLowerCase())
+        );
+        if (found) {
+          next.requestedFor = `${found.first_name || ""} ${found.last_name || ""}`.trim() || next.requestedFor;
+        }
+      }
+      return next;
+    });
     setFormError("");
   };
 
-  const createRequest = (event) => {
+  const createRequest = async (event) => {
     event.preventDefault();
 
     if (!form.item.trim() || !form.requestedFor.trim() || !form.requestedBy.trim() || !form.department.trim()) {
@@ -210,9 +249,10 @@ function Request() {
       1000
     ) + 1;
     const today = new Date().toISOString().slice(0, 10);
+    const generatedCode = `REQ-${nextNumber}`;
 
     const newRequest = {
-      id: `REQ-${nextNumber}`,
+      id: generatedCode,
       ...form,
       item: form.item.trim(),
       requestedFor: form.requestedFor.trim(),
@@ -225,20 +265,60 @@ function Request() {
       requiredDate: form.requiredDate || today,
     };
 
-    setRequests((current) => [newRequest, ...current]);
+    try {
+      const created = await apiRequest("/api/requests", {
+        method: "POST",
+        body: JSON.stringify({
+          request_code: generatedCode,
+          request_type: form.type || "General",
+          item: form.item.trim(),
+          requested_for: form.requestedFor.trim(),
+          patient_id: form.patientId.trim() || null,
+          requested_by: form.requestedBy.trim(),
+          department: form.department.trim(),
+          priority: form.priority || "Normal",
+          status: "Pending",
+          date: today,
+          required_date: form.requiredDate || today,
+          description: form.description.trim(),
+        }),
+      });
+      setRequests((current) => [created, ...current]);
+    } catch (err) {
+      console.error("Failed to create request via API:", err);
+      setRequests((current) => [newRequest, ...current]);
+    }
+
     setShowAddModal(false);
   };
 
-  const updateStatus = (id, status) => {
+  const updateStatus = async (id, status) => {
     setRequests((current) => current.map((request) => request.id === id ? { ...request, status } : request));
     setSelectedRequest((current) => current?.id === id ? { ...current, status } : current);
+
+    try {
+      await apiRequest(`/api/requests/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+      });
+    } catch (err) {
+      console.error("Failed to update request status on server:", err);
+    }
   };
 
-  const deleteRequest = () => {
+  const deleteRequest = async () => {
     if (!requestToDelete) return;
-    setRequests((current) => current.filter((request) => request.id !== requestToDelete.id));
-    if (selectedRequest?.id === requestToDelete.id) setSelectedRequest(null);
+    const idToDelete = requestToDelete.id;
+
+    setRequests((current) => current.filter((request) => request.id !== idToDelete));
+    if (selectedRequest?.id === idToDelete) setSelectedRequest(null);
     setRequestToDelete(null);
+
+    try {
+      await apiRequest(`/api/requests/${idToDelete}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Failed to delete request on server:", err);
+    }
   };
 
   return (

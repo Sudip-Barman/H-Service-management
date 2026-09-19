@@ -82,6 +82,9 @@ export default function PatientForm({
 }) {
   const [form, setForm] = useState(EMPTY_FORM);
 
+  const [serviceOptions, setServiceOptions] =
+    useState(SERVICE_OPTIONS);
+
   const [selectedServices, setSelectedServices] =
     useState([]);
 
@@ -97,6 +100,45 @@ export default function PatientForm({
   const isDrawingRef = useRef(false);
 
   const isEdit = Boolean(patient);
+
+  // ---------------------------------------------------------------------------
+  // Load Database Services
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchServices = async () => {
+      try {
+        const data = await apiRequest("/api/services");
+        const list = Array.isArray(data)
+          ? data
+          : data?.services || data?.items || data?.data || [];
+
+        if (isMounted && Array.isArray(list) && list.length > 0) {
+          const dbServices = list
+            .filter((s) => s.is_active !== 0 && s.is_active !== false)
+            .map((s) => ({
+              id: s.id,
+              name: s.name,
+              category: s.category || "",
+            }));
+
+          if (dbServices.length > 0) {
+            setServiceOptions(dbServices);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load services from DB:", err);
+      }
+    };
+
+    fetchServices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Toast Helpers
@@ -182,15 +224,28 @@ export default function PatientForm({
       patient.patientServices ||
       [];
 
-    const serviceIds = Array.isArray(
-      patientServices
-    )
-      ? patientServices.map((service) =>
-          typeof service === "string"
-            ? service
-            : service.id
-        )
-      : [];
+    let serviceIds = [];
+    if (Array.isArray(patientServices)) {
+      serviceIds = patientServices.map((service) =>
+        typeof service === "object" && service !== null
+          ? service.id ?? service.name
+          : service
+      );
+    } else if (typeof patientServices === "string") {
+      try {
+        const parsed = JSON.parse(patientServices);
+        if (Array.isArray(parsed)) {
+          serviceIds = parsed;
+        } else {
+          serviceIds = [patientServices];
+        }
+      } catch {
+        serviceIds = patientServices
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
 
     setForm({
       registrationNumber:
@@ -602,13 +657,17 @@ export default function PatientForm({
   const toggleService = (
     serviceId
   ) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId)
-        ? prev.filter(
-            (id) => id !== serviceId
-          )
-        : [...prev, serviceId]
-    );
+    setSelectedServices((prev) => {
+      const exists = prev.some(
+        (id) => id === serviceId || String(id) === String(serviceId)
+      );
+      if (exists) {
+        return prev.filter(
+          (id) => id !== serviceId && String(id) !== String(serviceId)
+        );
+      }
+      return [...prev, serviceId];
+    });
   };
 
   // ---------------------------------------------------------------------------
@@ -733,6 +792,8 @@ export default function PatientForm({
       patient_problem:
         trimmedProblem,
 
+      services: selectedServices,
+
       digital_signature:
         form.digitalSignature || null,
     };
@@ -757,7 +818,7 @@ export default function PatientForm({
 
       if (isEdit) {
         data = await apiRequest(
-          `/patients/${patient.id}`,
+          `/api/patients/${patient.id}`,
           {
             method: "PUT",
             body: JSON.stringify(
@@ -773,7 +834,7 @@ export default function PatientForm({
 
       else {
         data = await apiRequest(
-          "/patients/",
+          "/api/patients",
           {
             method: "POST",
             body: JSON.stringify(
@@ -1508,11 +1569,14 @@ export default function PatientForm({
 
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
-                {SERVICE_OPTIONS.map(
+                {serviceOptions.map(
                   (service) => {
                     const selected =
-                      selectedServices.includes(
-                        service.id
+                      selectedServices.some(
+                        (id) =>
+                          id === service.id ||
+                          id === service.name ||
+                          String(id) === String(service.id)
                       );
 
                     return (

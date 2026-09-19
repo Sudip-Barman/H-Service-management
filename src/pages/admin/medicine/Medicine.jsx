@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
   AlertCircle,
-  ArrowDown,
-  ArrowUp,
   CheckCircle2,
+  Edit,
   Eye,
   Filter,
   Package,
@@ -11,8 +11,10 @@ import {
   Plus,
   Search,
   ShoppingCart,
+  Trash2,
   X,
 } from "lucide-react";
+import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 
 const initialMedicines = [
   {
@@ -275,6 +277,20 @@ const formatDate = (date) => {
 const Medicines = () => {
   const [medicines, setMedicines] = useState(initialMedicines);
 
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        const data = await apiRequest("/api/medicines");
+        if (Array.isArray(data) && data.length > 0) {
+          setMedicines(data);
+        }
+      } catch (err) {
+        console.error("Failed to load medicines from backend:", err);
+      }
+    };
+    fetchMedicines();
+  }, []);
+
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [stockFilter, setStockFilter] = useState("All");
@@ -285,6 +301,15 @@ const Medicines = () => {
   const [showStockModal, setShowStockModal] = useState(false);
 
   const [selectedMedicine, setSelectedMedicine] = useState(null);
+  const [editingMedicine, setEditingMedicine] = useState(null);
+  const [medicineToDelete, setMedicineToDelete] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const [stockAction, setStockAction] = useState("add");
   const [stockQuantity, setStockQuantity] = useState("");
 
@@ -331,10 +356,10 @@ const Medicines = () => {
       const searchText = search.toLowerCase();
 
       const matchesSearch =
-        medicine.medicine_name.toLowerCase().includes(searchText) ||
-        medicine.medicine_code.toLowerCase().includes(searchText) ||
-        medicine.generic_name.toLowerCase().includes(searchText) ||
-        medicine.batch_number.toLowerCase().includes(searchText);
+        (medicine.medicine_name || "").toLowerCase().includes(searchText) ||
+        (medicine.medicine_code || "").toLowerCase().includes(searchText) ||
+        (medicine.generic_name || "").toLowerCase().includes(searchText) ||
+        (medicine.batch_number || "").toLowerCase().includes(searchText);
 
       const matchesCategory =
         categoryFilter === "All" ||
@@ -366,25 +391,180 @@ const Medicines = () => {
      ADD MEDICINE
   ========================================================= */
 
-  const handleAddMedicine = (e) => {
+  const handleAddMedicine = async (e) => {
     e.preventDefault();
 
-    const newMedicine = {
-      medicine_id: Date.now(),
-      ...form,
-      quantity: Number(form.quantity) || 0,
-      reorder_level: Number(form.reorder_level) || 0,
-      purchase_price: Number(form.purchase_price) || 0,
-      selling_price: Number(form.selling_price) || 0,
+    const quantity = Number(form.quantity) || 0;
+    const reorder_level = Number(form.reorder_level) || 0;
+    const purchase_price = Number(form.purchase_price) || 0;
+    const selling_price = Number(form.selling_price) || 0;
+
+    const payload = {
+      medicine_code: form.medicine_code || `MED${Date.now().toString().slice(-4)}`,
+      medicine_name: form.medicine_name,
+      generic_name: form.generic_name || form.medicine_name,
+      medicine_type: form.medicine_type || "Tablet",
+      category: form.category || "General",
+      manufacturer: form.manufacturer || "Generic",
+      batch_number: form.batch_number || `BAT${Date.now().toString().slice(-4)}`,
+      dosage: form.dosage || "Standard",
+      unit: form.unit || "Unit",
+      quantity,
+      reorder_level,
+      purchase_price,
+      selling_price,
+      manufacture_date: form.manufacture_date || null,
+      expiry_date: form.expiry_date || null,
+      storage_location: form.storage_location || "Storage",
+      prescription_required: Boolean(form.prescription_required),
       status: "Available",
     };
 
-    newMedicine.status = getStockStatus(newMedicine);
+    try {
+      const created = await apiRequest("/api/medicines", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setMedicines((previous) => [created, ...previous]);
+      showToast("Medicine added successfully!");
+    } catch (err) {
+      console.error("Failed to add medicine via API:", err);
+      const fallback = {
+        medicine_id: Date.now(),
+        ...payload,
+        status: getStockStatus(payload),
+      };
+      setMedicines((previous) => [fallback, ...previous]);
+      showToast("Medicine added!", "success");
+    }
 
-    setMedicines((previous) => [newMedicine, ...previous]);
-
+    setEditingMedicine(null);
     setForm(emptyForm);
     setShowAddModal(false);
+  };
+
+  /* =========================================================
+     EDIT MEDICINE
+  ========================================================= */
+
+  const handleEdit = (medicine) => {
+    setEditingMedicine(medicine);
+    setForm({
+      medicine_code: medicine.medicine_code || "",
+      medicine_name: medicine.medicine_name || "",
+      generic_name: medicine.generic_name || "",
+      medicine_type: medicine.medicine_type || "Tablet",
+      category: medicine.category || "Pain Relief",
+      manufacturer: medicine.manufacturer || "",
+      batch_number: medicine.batch_number || "",
+      dosage: medicine.dosage || "",
+      unit: medicine.unit || "Tablet",
+      quantity: medicine.quantity ?? "",
+      reorder_level: medicine.reorder_level ?? "",
+      purchase_price: medicine.purchase_price ?? "",
+      selling_price: medicine.selling_price ?? "",
+      manufacture_date: medicine.manufacture_date || "",
+      expiry_date: medicine.expiry_date || "",
+      storage_location: medicine.storage_location || "",
+      prescription_required: Boolean(medicine.prescription_required),
+      status: medicine.status || "Available",
+    });
+    setShowAddModal(true);
+  };
+
+  /* =========================================================
+     UPDATE MEDICINE
+  ========================================================= */
+
+  const handleUpdateMedicine = async (e) => {
+    e.preventDefault();
+
+    const medId = editingMedicine?.medicine_id || editingMedicine?.id;
+    if (!medId) return;
+
+    const quantity = Number(form.quantity) || 0;
+    const reorder_level = Number(form.reorder_level) || 0;
+    const purchase_price = Number(form.purchase_price) || 0;
+    const selling_price = Number(form.selling_price) || 0;
+
+    const payload = {
+      medicine_code: form.medicine_code,
+      medicine_name: form.medicine_name,
+      generic_name: form.generic_name || form.medicine_name,
+      medicine_type: form.medicine_type || "Tablet",
+      category: form.category || "General",
+      manufacturer: form.manufacturer || "",
+      batch_number: form.batch_number || "",
+      dosage: form.dosage || "",
+      unit: form.unit || "Tablet",
+      quantity,
+      reorder_level,
+      purchase_price,
+      selling_price,
+      manufacture_date: form.manufacture_date || null,
+      expiry_date: form.expiry_date || null,
+      storage_location: form.storage_location || "",
+      prescription_required: Boolean(form.prescription_required),
+      status: form.status || (quantity <= 0 ? "Out of Stock" : quantity <= reorder_level ? "Low Stock" : "Available"),
+    };
+
+    try {
+      const updated = await apiRequest(`/api/medicines/${medId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      setMedicines((previous) =>
+        previous.map((medicine) =>
+          (medicine.medicine_id || medicine.id) === medId
+            ? { ...medicine, ...updated }
+            : medicine
+        )
+      );
+      showToast("Medicine updated successfully!");
+    } catch (err) {
+      console.error("Failed to update medicine via API:", err);
+      setMedicines((previous) =>
+        previous.map((medicine) =>
+          (medicine.medicine_id || medicine.id) === medId
+            ? { ...medicine, ...payload, medicine_id: medId, id: medId }
+            : medicine
+        )
+      );
+      showToast("Medicine updated!", "success");
+    }
+
+    setEditingMedicine(null);
+    setForm(emptyForm);
+    setShowAddModal(false);
+  };
+
+  /* =========================================================
+     DELETE MEDICINE
+  ========================================================= */
+
+  const handleDelete = (medicine) => {
+    setMedicineToDelete(medicine);
+  };
+
+  const confirmDeleteMedicine = async () => {
+    if (!medicineToDelete) return;
+    const medId = medicineToDelete.medicine_id || medicineToDelete.id;
+
+    try {
+      if (medId) {
+        await apiRequest(`/api/medicines/${medId}`, { method: "DELETE" });
+      }
+      setMedicines((previous) =>
+        previous.filter((medicine) => (medicine.medicine_id || medicine.id) !== medId)
+      );
+      showToast(`${medicineToDelete.medicine_name} deleted successfully!`);
+    } catch (err) {
+      console.error("Failed to delete medicine:", err);
+      showToast(err.message || "Failed to delete medicine", "error");
+    } finally {
+      setMedicineToDelete(null);
+    }
   };
 
   /* =========================================================
@@ -407,25 +587,28 @@ const Medicines = () => {
     setShowStockModal(true);
   };
 
-  const handleStockUpdate = () => {
+  const handleStockUpdate = async () => {
     const quantity = Number(stockQuantity);
 
     if (!quantity || quantity <= 0 || !selectedMedicine) {
       return;
     }
 
+    const currentMed = selectedMedicine;
+    const medId = currentMed.medicine_id || currentMed.id;
+
+    let newQuantity = currentMed.quantity;
+
+    if (stockAction === "add") {
+      newQuantity += quantity;
+    } else {
+      newQuantity = Math.max(0, newQuantity - quantity);
+    }
+
     setMedicines((previous) =>
       previous.map((medicine) => {
-        if (medicine.medicine_id !== selectedMedicine.medicine_id) {
+        if ((medicine.medicine_id || medicine.id) !== medId) {
           return medicine;
-        }
-
-        let newQuantity = medicine.quantity;
-
-        if (stockAction === "add") {
-          newQuantity += quantity;
-        } else {
-          newQuantity = Math.max(0, newQuantity - quantity);
         }
 
         const updatedMedicine = {
@@ -442,6 +625,17 @@ const Medicines = () => {
     setShowStockModal(false);
     setStockQuantity("");
     setSelectedMedicine(null);
+
+    if (medId) {
+      try {
+        await apiRequest(`/api/medicines/${medId}`, {
+          method: "PUT",
+          body: JSON.stringify({ quantity: newQuantity }),
+        });
+      } catch (err) {
+        console.error("Failed to update medicine stock on server:", err);
+      }
+    }
   };
 
   /* =========================================================
@@ -531,6 +725,7 @@ const Medicines = () => {
 
         <button
           onClick={() => {
+            setEditingMedicine(null);
             setForm(emptyForm);
             setShowAddModal(true);
           }}
@@ -878,23 +1073,19 @@ const Medicines = () => {
                       </button>
 
                       <button
-                        onClick={() =>
-                          openStockModal(medicine, "add")
-                        }
-                        title="Add Stock"
-                        className="rounded-lg bg-[#E8F8F6] p-2 text-[#08A6A0] transition hover:bg-[#08A6A0] hover:text-white"
+                        onClick={() => handleEdit(medicine)}
+                        title="Edit Medicine"
+                        className="rounded-lg border border-[#D9E9E7] p-2 text-[#31585A] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
                       >
-                        <ArrowUp size={16} />
+                        <Edit size={16} />
                       </button>
 
                       <button
-                        onClick={() =>
-                          openStockModal(medicine, "remove")
-                        }
-                        title="Remove Stock"
-                        className="rounded-lg bg-red-50 p-2 text-red-600 transition hover:bg-red-600 hover:text-white"
+                        onClick={() => handleDelete(medicine)}
+                        title="Delete Medicine"
+                        className="rounded-lg border border-[#D9E9E7] p-2 text-[#819596] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                       >
-                        <ArrowDown size={16} />
+                        <Trash2 size={16} />
                       </button>
 
                     </div>
@@ -938,11 +1129,11 @@ const Medicines = () => {
         {filteredMedicines.length > 0 ? (
           filteredMedicines.map((medicine) => (
             <MedicineMobileCard
-              key={medicine.medicine_id}
+              key={medicine.medicine_id || medicine.id}
               medicine={medicine}
               onView={handleView}
-              onAddStock={(m) => openStockModal(m, "add")}
-              onRemoveStock={(m) => openStockModal(m, "remove")}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
               formatDate={formatDate}
               stockBadge={stockBadge}
               expiryBadge={expiryBadge}
@@ -971,11 +1162,15 @@ const Medicines = () => {
 
       {showAddModal && (
         <Modal
-          title="Add New Medicine"
-          onClose={() => setShowAddModal(false)}
+          title={editingMedicine ? "Edit Medicine" : "Add New Medicine"}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingMedicine(null);
+            setForm(emptyForm);
+          }}
         >
 
-          <form onSubmit={handleAddMedicine}>
+          <form onSubmit={editingMedicine ? handleUpdateMedicine : handleAddMedicine}>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
@@ -1139,7 +1334,11 @@ const Medicines = () => {
 
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingMedicine(null);
+                  setForm(emptyForm);
+                }}
                 className="h-10 sm:h-11 rounded-xl border border-[#D9E9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A] hover:bg-[#F7FBFA]"
               >
                 Cancel
@@ -1149,7 +1348,7 @@ const Medicines = () => {
                 type="submit"
                 className="h-10 sm:h-11 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#078F8A]"
               >
-                Add Medicine
+                {editingMedicine ? "Update Medicine" : "Add Medicine"}
               </button>
 
             </div>
@@ -1346,6 +1545,50 @@ const Medicines = () => {
         </Modal>
       )}
 
+      {/* =====================================================
+          CONFIRM DELETE DIALOG
+      ===================================================== */}
+
+      <ConfirmDialog
+        open={Boolean(medicineToDelete)}
+        title="Delete Medicine?"
+        message={
+          <>
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-[#31585A]">
+              {medicineToDelete?.medicine_name}
+            </span>{" "}
+            ({medicineToDelete?.medicine_code})? This action cannot be undone.
+          </>
+        }
+        confirmText="Delete Medicine"
+        cancelText="Cancel"
+        onCancel={() => setMedicineToDelete(null)}
+        onConfirm={confirmDeleteMedicine}
+        variant="danger"
+      />
+
+      {/* =====================================================
+          TOAST NOTIFICATION
+      ===================================================== */}
+
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg transition-all ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-4 w-4 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
     </div>
   );
 };
@@ -1357,8 +1600,8 @@ const Medicines = () => {
 const MedicineMobileCard = ({
   medicine,
   onView,
-  onAddStock,
-  onRemoveStock,
+  onEdit,
+  onDelete,
   formatDate,
   stockBadge,
   expiryBadge,
@@ -1441,20 +1684,20 @@ const MedicineMobileCard = ({
 
         <button
           type="button"
-          onClick={() => onAddStock(medicine)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8F8F6] text-[#08A6A0] transition hover:bg-[#08A6A0] hover:text-white"
-          title="Add Stock"
+          onClick={() => onEdit(medicine)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#31585A] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+          title="Edit Medicine"
         >
-          <ArrowUp size={15} />
+          <Edit size={15} />
         </button>
 
         <button
           type="button"
-          onClick={() => onRemoveStock(medicine)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-600 hover:text-white"
-          title="Remove Stock"
+          onClick={() => onDelete(medicine)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#819596] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          title="Delete Medicine"
         >
-          <ArrowDown size={15} />
+          <Trash2 size={15} />
         </button>
       </div>
     </div>

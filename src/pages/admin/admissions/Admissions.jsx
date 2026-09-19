@@ -558,11 +558,30 @@ const Admission = () => {
   };
 
   /* =======================================================
-     LOAD STAFF
+     LOAD STAFF / DOCTORS
      ======================================================= */
 
   const loadStaff = async () => {
     try {
+      // First attempt to load doctors directly from /api/doctors
+      try {
+        const docRes = await apiRequest("/api/doctors");
+        const rawDocs = Array.isArray(docRes) ? docRes : docRes?.doctors || [];
+        const docList = rawDocs.map((d) => ({
+          id: d.id,
+          name: d.name || `Dr. ${d.first_name || ""} ${d.last_name || ""}`.trim(),
+          role: "Doctor",
+          department: d.department || d.specialization || "General",
+        })).filter((d) => d.id != null);
+
+        if (docList.length > 0) {
+          setDoctors(docList);
+          return docList;
+        }
+      } catch (err) {
+        console.warn("Could not load /api/doctors, trying /api/staff fallback:", err);
+      }
+
       const response = await apiRequest("/api/staff");
 
       const list = extractList(response, [
@@ -602,16 +621,25 @@ const Admission = () => {
         "/api/rooms-beds"
       );
 
-      const list = extractList(response, [
-        "rooms_beds",
-        "room_beds",
-        "roomsBeds",
-        "beds",
-        "items",
-        "results",
-      ]);
+      let rawList = [];
+      if (Array.isArray(response)) {
+        rawList = response;
+      } else if (response && Array.isArray(response.beds) && response.beds.length > 0) {
+        rawList = response.beds;
+      } else if (response && Array.isArray(response.rooms)) {
+        rawList = response.rooms.flatMap((r) =>
+          (r.beds || []).map((b) => ({
+            ...b,
+            room_number: r.room_number,
+            room_type: r.room_type,
+            floor: r.floor,
+            ward: r.ward,
+            department: r.department,
+          }))
+        );
+      }
 
-      const normalized = list
+      const normalized = rawList
         .map(normalizeRoomBed)
         .filter((item) => item.id != null);
 
@@ -1305,40 +1333,6 @@ const Admission = () => {
         </div>
       )}
 
-      {/* ===================================================
-          REFERENCE DATA WARNING
-          =================================================== */}
-
-      {!loading &&
-        (!patients.length ||
-          !doctors.length ||
-          !roomBeds.length) && (
-          <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-
-            <p className="font-semibold">
-              Some admission reference data is unavailable.
-            </p>
-
-            <div className="mt-1 space-y-0.5">
-              {!patients.length && (
-                <p>• Patients could not be loaded.</p>
-              )}
-
-              {!doctors.length && (
-                <p>
-                  • Doctors could not be loaded from staff.
-                </p>
-              )}
-
-              {!roomBeds.length && (
-                <p>
-                  • Room / bed data could not be loaded.
-                </p>
-              )}
-            </div>
-
-          </div>
-        )}
 
       {/* ===================================================
           STATS

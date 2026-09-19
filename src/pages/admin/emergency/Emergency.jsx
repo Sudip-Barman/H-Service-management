@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../../../api/api";
 import {
 	Activity,
 	AlertCircle,
@@ -180,6 +181,21 @@ const DetailItem = ({ label, value, icon: Icon }) => (
 
 function Emergency() {
 	const [patients, setPatients] = useState(initialPatients);
+
+	useEffect(() => {
+		const fetchEmergency = async () => {
+			try {
+				const data = await apiRequest("/api/emergency");
+				if (Array.isArray(data) && data.length > 0) {
+					setPatients(data);
+				}
+			} catch (err) {
+				console.error("Failed to load emergency patients:", err);
+			}
+		};
+		fetchEmergency();
+	}, []);
+
 	const [selectedPatient, setSelectedPatient] = useState(null);
 	const [showAdd, setShowAdd] = useState(false);
 	const [query, setQuery] = useState("");
@@ -204,20 +220,65 @@ function Emergency() {
 		setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 	};
 
-	const updateStatus = (patientId, status) => {
-		setPatients((current) => current.map((patient) => patient.id === patientId ? { ...patient, status } : patient));
-		setSelectedPatient((current) => current && current.id === patientId ? { ...current, status } : current);
+	const updateStatus = async (patientId, status) => {
+		const target = patients.find((p) => p.id === patientId || p.patient_id === patientId);
+		const backendId = target?.patient_id || (typeof patientId === "number" ? patientId : null);
+
+		setPatients((current) => current.map((patient) => (patient.id === patientId || patient.patient_id === patientId) ? { ...patient, status } : patient));
+		setSelectedPatient((current) => current && (current.id === patientId || current.patient_id === patientId) ? { ...current, status } : current);
+
+		if (backendId) {
+			try {
+				await apiRequest(`/api/emergency/${backendId}`, {
+					method: "PUT",
+					body: JSON.stringify({ status }),
+				});
+			} catch (err) {
+				console.error("Failed to update emergency patient status on backend:", err);
+			}
+		}
 	};
 
-	const addPatient = (event) => {
+	const addPatient = async (event) => {
 		event.preventDefault();
+		const generatedCode = `ER-${String(24081 + patients.length).padStart(5, "0")}`;
 		const newPatient = {
 			...form,
-			id: `ER-${String(24081 + patients.length).padStart(5, "0")}`,
+			id: generatedCode,
 			status: "Awaiting Doctor",
-			arrivalTime: "08 Sep, just now",
+			arrivalTime: "Today, just now",
 		};
-		setPatients((current) => [newPatient, ...current]);
+
+		try {
+			const created = await apiRequest("/api/emergency", {
+				method: "POST",
+				body: JSON.stringify({
+					emergency_code: generatedCode,
+					name: form.name,
+					age: form.age,
+					gender: form.gender,
+					blood_group: form.bloodGroup,
+					phone: form.phone,
+					emergency_contact: form.emergencyContact,
+					emergency_phone: form.emergencyPhone,
+					arrival_time: "Today, just now",
+					triage: form.triage || "Urgent",
+					status: "Awaiting Doctor",
+					condition_summary: form.condition,
+					symptoms: form.symptoms,
+					assigned_doctor: form.assignedDoctor,
+					department: form.department,
+					room: form.room,
+					allergies: form.allergies,
+					notes: form.notes,
+				}),
+			});
+			setPatients((current) => [created, ...current]);
+		} catch (err) {
+			console.error("Failed to create emergency patient on backend:", err);
+			setPatients((current) => [newPatient, ...current]);
+		}
+
 		setForm(emptyForm);
 		setShowAdd(false);
 	};

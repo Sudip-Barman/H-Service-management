@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   CheckCircle2,
@@ -13,6 +13,8 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { apiRequest } from "../../../api/api";
+
 
 const initialShifts = [
   {
@@ -208,9 +210,24 @@ function StaffShifts() {
   const [formData, setFormData] = useState(emptyForm);
   const [formError, setFormError] = useState("");
 
+  useEffect(() => {
+    const fetchShifts = async () => {
+      try {
+        const data = await apiRequest("/api/shifts");
+        if (Array.isArray(data) && data.length > 0) {
+          setShifts(data);
+        }
+      } catch (err) {
+        console.error("Failed to load shifts from backend:", err);
+      }
+    };
+    fetchShifts();
+  }, []);
+
   /* =========================
      FILTER SHIFTS
   ========================= */
+
 
   const filteredShifts = useMemo(() => {
     return shifts.filter((shift) => {
@@ -343,7 +360,7 @@ function StaffShifts() {
      SAVE SHIFT
   ========================= */
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -371,6 +388,26 @@ function StaffShifts() {
     }
 
     if (editingShift) {
+      const shiftId = editingShift.shift_id || editingShift.backend_id || (String(editingShift.id).startsWith("SH-") ? String(editingShift.id).replace("SH-", "") : editingShift.id);
+      try {
+        await apiRequest(`/api/shifts/${shiftId}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            staff_name: formData.staff,
+            department: formData.department,
+            date: formData.date,
+            shift: formData.shift,
+            start_time: formData.startTime,
+            end_time: formData.endTime,
+            location: formData.location,
+            status: formData.status,
+            notes: formData.notes,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to update shift on backend:", err);
+      }
+
       setShifts((prev) =>
         prev.map((shift) =>
           shift.id === editingShift.id
@@ -382,9 +419,31 @@ function StaffShifts() {
         )
       );
     } else {
+      let created = null;
+      try {
+        created = await apiRequest("/api/shifts", {
+          method: "POST",
+          body: JSON.stringify({
+            staff_name: formData.staff,
+            department: formData.department,
+            date: formData.date,
+            shift: formData.shift,
+            start_time: formData.startTime,
+            end_time: formData.endTime,
+            location: formData.location,
+            status: formData.status,
+            notes: formData.notes,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to create shift on backend:", err);
+      }
+
       const newShift = {
-        id: `SH-${1001 + shifts.length}`,
+        id: created?.id ? `SH-${1000 + created.id}` : `SH-${1001 + shifts.length}`,
+        backend_id: created?.id,
         employeeId:
+          created?.employeeId ||
           staffMembers.find(
             (member) =>
               member.name === formData.staff
@@ -405,12 +464,19 @@ function StaffShifts() {
      DELETE SHIFT
   ========================= */
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this staff shift?"
     );
 
     if (!confirmDelete) return;
+
+    const shiftId = String(id).startsWith("SH-") ? String(id).replace("SH-", "") : id;
+    try {
+      await apiRequest(`/api/shifts/${shiftId}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Failed to delete shift on backend:", err);
+    }
 
     setShifts((prev) =>
       prev.filter((shift) => shift.id !== id)

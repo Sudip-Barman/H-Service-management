@@ -13,22 +13,31 @@ import {
   X,
   AlertCircle,
 } from "lucide-react";
+import { apiRequest } from "../../api/api";
 
 import {
   getWorkforceAttendance,
   getWorkforceUser,
 } from "../../data/workforceData";
 
-const CURRENT_DATE = "2026-09-10";
+const getTodayDateStr = () => new Date().toISOString().slice(0, 10);
 
 const Attendance = () => {
   // --------------------------------------------------
   // Current workforce user
   // --------------------------------------------------
+  const storedUser = (() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const user = getWorkforceUser("EMP-1001");
-
-  const employeeId = user?.employeeId || "EMP-1001";
+  const user = storedUser || getWorkforceUser("EMP-1001");
+  const employeeId = user?.employeeId || user?.id ? (String(user?.id).startsWith("EMP-") ? user.id : `EMP-${1000 + Number(user.id)}`) : "EMP-1001";
+  const CURRENT_DATE = getTodayDateStr();
 
   // --------------------------------------------------
   // Attendance data
@@ -43,19 +52,48 @@ const Attendance = () => {
   // Today's attendance
   // --------------------------------------------------
 
-  const [todayAttendance, setTodayAttendance] = useState(() => {
-    return (
-      initialAttendance.find(
-        (record) => record.date === CURRENT_DATE
-      ) || {
-        date: CURRENT_DATE,
-        employeeId,
-        checkIn: null,
-        checkOut: null,
-        status: "Not Marked",
-      }
-    );
+  const [todayAttendance, setTodayAttendance] = useState({
+    date: CURRENT_DATE,
+    employeeId,
+    checkIn: null,
+    checkOut: null,
+    status: "Not Marked",
   });
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const data = await apiRequest("/api/attendance");
+        if (Array.isArray(data)) {
+          const mapped = data.map((r) => ({
+            id: r.id,
+            employeeId: r.employee_id || `EMP-${1000 + (r.staff_id || r.id)}`,
+            name: r.staff_name || r.name,
+            date: r.date,
+            checkIn: r.check_in,
+            checkOut: r.check_out,
+            status: r.status,
+            shift: r.shift,
+          }));
+
+          const userRecords = mapped.filter(
+            (r) => r.employeeId === employeeId || r.name === user?.name
+          );
+
+          const recordsToShow = userRecords.length > 0 ? userRecords : mapped;
+          setAttendanceRecords(recordsToShow);
+
+          const todayRec = recordsToShow.find((r) => r.date === CURRENT_DATE);
+          if (todayRec) {
+            setTodayAttendance(todayRec);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load attendance from backend:", err);
+      }
+    };
+    fetchAttendance();
+  }, [employeeId, CURRENT_DATE]);
 
   // --------------------------------------------------
   // Camera states
@@ -292,13 +330,12 @@ const Attendance = () => {
   // Check In
   // --------------------------------------------------
 
-  const handleCheckIn = (time) => {
+  const handleCheckIn = async (time) => {
     if (todayAttendance.checkIn) {
       showMessage(
         "You have already checked in today.",
         "error"
       );
-
       return;
     }
 
@@ -329,23 +366,43 @@ const Attendance = () => {
       return [updatedRecord, ...previous];
     });
 
-    showMessage(
-      `Face verified successfully. Check-in recorded at ${time}.`,
-      "success"
-    );
+    try {
+      await apiRequest("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify({
+          employee_id: employeeId,
+          staff_name: user?.name || "Staff Member",
+          role: user?.role || "Staff",
+          department: user?.department || "General",
+          date: CURRENT_DATE,
+          shift: "09:00 AM - 05:00 PM",
+          check_in: time,
+          status: "Present",
+        }),
+      });
+      showMessage(
+        `Check-in recorded at ${time} and synced with server.`,
+        "success"
+      );
+    } catch (err) {
+      console.error("Failed to sync check-in with server:", err);
+      showMessage(
+        `Check-in recorded locally at ${time}.`,
+        "success"
+      );
+    }
   };
 
   // --------------------------------------------------
   // Check Out
   // --------------------------------------------------
 
-  const handleCheckOut = (time) => {
+  const handleCheckOut = async (time) => {
     if (!todayAttendance.checkIn) {
       showMessage(
         "Please complete your check-in first.",
         "error"
       );
-
       return;
     }
 
@@ -354,7 +411,6 @@ const Attendance = () => {
         "You have already checked out today.",
         "error"
       );
-
       return;
     }
 
@@ -374,10 +430,32 @@ const Attendance = () => {
       );
     });
 
-    showMessage(
-      `Face verified successfully. Check-out recorded at ${time}.`,
-      "success"
-    );
+    try {
+      await apiRequest("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify({
+          employee_id: employeeId,
+          staff_name: user?.name || "Staff Member",
+          role: user?.role || "Staff",
+          department: user?.department || "General",
+          date: CURRENT_DATE,
+          shift: "09:00 AM - 05:00 PM",
+          check_in: todayAttendance.checkIn,
+          check_out: time,
+          status: "Present",
+        }),
+      });
+      showMessage(
+        `Check-out recorded at ${time} and synced with server.`,
+        "success"
+      );
+    } catch (err) {
+      console.error("Failed to sync check-out with server:", err);
+      showMessage(
+        `Check-out recorded locally at ${time}.`,
+        "success"
+      );
+    }
   };
 
   // --------------------------------------------------

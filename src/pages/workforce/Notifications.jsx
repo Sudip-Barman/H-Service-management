@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Bell,
   Check,
@@ -15,6 +15,7 @@ import {
   getWorkforceUser,
   getUserNotifications,
 } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
 const getTypeIcon = (type) => {
   switch (type?.toLowerCase()) {
@@ -83,10 +84,38 @@ export default function Notifications({ user }) {
   const employeeId = user?.id || "EMP-1001";
 
   const profile = getWorkforceUser(employeeId);
-  const initialNotifications = getUserNotifications(employeeId);
-
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await apiRequest("/notifications");
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((n) => ({
+          id: n.id,
+          employeeId: employeeId,
+          type: n.type?.toLowerCase() || "alert",
+          title: n.title,
+          message: n.message,
+          date: n.date || "",
+          read: Boolean(n.read),
+        }));
+        setNotifications(mapped);
+      } else {
+        setNotifications(getUserNotifications(employeeId));
+      }
+    } catch (err) {
+      console.error("Failed to load notifications:", err);
+      setNotifications(getUserNotifications(employeeId));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [employeeId]);
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
@@ -105,7 +134,7 @@ export default function Notifications({ user }) {
     return notifications;
   }, [notifications, filter]);
 
-  const markAsRead = (notificationId) => {
+  const markAsRead = async (notificationId) => {
     setNotifications((current) =>
       current.map((notification) =>
         notification.id === notificationId
@@ -113,21 +142,42 @@ export default function Notifications({ user }) {
           : notification
       )
     );
+    try {
+      await apiRequest(`/notifications/${notificationId}/read`, {
+        method: "PUT",
+      });
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((current) =>
       current.map((notification) => ({
         ...notification,
         read: true,
       }))
     );
+    try {
+      await apiRequest("/notifications/mark-all-read", {
+        method: "PUT",
+      });
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
   };
 
-  const deleteNotification = (notificationId) => {
+  const deleteNotification = async (notificationId) => {
     setNotifications((current) =>
       current.filter((notification) => notification.id !== notificationId)
     );
+    try {
+      await apiRequest(`/notifications/${notificationId}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+    }
   };
 
   return (
