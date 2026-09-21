@@ -25,6 +25,11 @@ import {
   emptyStaffForm,
 } from "../../../data";
 import { apiRequest } from "../../../api/api";
+import {
+  getTemporaryPassword,
+  saveTemporaryPassword,
+  generateTemporaryPassword,
+} from "../../../utils/temporaryPasswords";
 
 const Staff = () => {
   /* =======================================================
@@ -67,7 +72,10 @@ const Staff = () => {
               return {
                 id: doc.registration_number || (doc.id ? `DOC-${1000 + doc.id}` : `DOC-${Math.random()}`),
                 backend_id: doc.id,
+                registration_number: doc.registration_number,
                 source: "doctor",
+                temporary_password: doc.temporary_password || getTemporaryPassword(doc, "doctor"),
+                username: doc.username || "",
                 name: displayName,
                 category: "Doctor",
                 designation: doc.specialization ? `${doc.specialization} Specialist` : "Doctor",
@@ -109,8 +117,11 @@ const Staff = () => {
               return {
                 id: nurse.registration_number || (nurse.id ? `NUR-${1000 + nurse.id}` : `NUR-${Math.random()}`),
                 backend_id: nurse.id,
+                registration_number: nurse.registration_number,
                 staff_id: nurse.staff_id,
                 source: "nurse",
+                temporary_password: nurse.temporary_password || getTemporaryPassword(nurse, "nurse"),
+                username: nurse.username || "",
                 name: fullName || "Nurse",
                 category: nurseCat,
                 designation: nurse.qualification || "Registered Nurse",
@@ -156,7 +167,10 @@ const Staff = () => {
         .map((member) => ({
           id: member.id ? `EMP-${1000 + member.id}` : member.id,
           backend_id: member.id,
+          registration_number: member.id ? `EMP-${1000 + member.id}` : "",
           source: "staff",
+          temporary_password: member.temporary_password || getTemporaryPassword(member, "staff"),
+          username: member.username || "",
           name: member.name,
           category: member.role || "Staff",
           designation: member.role || "Staff",
@@ -347,7 +361,9 @@ const Staff = () => {
 
   const openAddModal = () => {
     setEditingStaff(null);
-    setForm({ ...emptyStaffForm });
+    setForm({
+      ...emptyStaffForm,
+    });
     setFormError("");
     setShowAddModal(true);
   };
@@ -358,7 +374,9 @@ const Staff = () => {
 
   const closeAddModal = () => {
     setEditingStaff(null);
-    setForm({ ...emptyStaffForm });
+    setForm({
+      ...emptyStaffForm,
+    });
     setFormError("");
     setShowAddModal(false);
   };
@@ -407,15 +425,6 @@ const Staff = () => {
       return "Qualification is required.";
     }
 
-    if (!editingStaff) {
-      if (form.username && form.username.trim().length < 3) {
-        return "Username must be at least 3 characters.";
-      }
-      if (form.temporary_password && form.temporary_password.length < 6) {
-        return "Temporary password must be at least 6 characters.";
-      }
-    }
-
     return "";
   };
 
@@ -446,17 +455,31 @@ const Staff = () => {
           qualification: form.qualification || null,
           experience: form.experience || null,
           status: "Active",
-          username: form.username ? form.username.trim() : null,
-          temporary_password: form.temporary_password || null,
         }),
       });
 
       const backendId = created?.id;
+      const finalTempPassword = created?.temporary_password || "";
+      const finalUsername = created?.username || "";
+
+      if (finalTempPassword) {
+        saveTemporaryPassword({
+          role: "staff",
+          id: backendId,
+          registration_number: backendId ? `EMP-${1000 + backendId}` : "",
+          username: finalUsername,
+          email: form.email || "",
+          password: finalTempPassword,
+        });
+      }
+
       const newStaff = {
         ...form,
         id: backendId ? `EMP-${1000 + backendId}` : generateStaffId(),
         backend_id: backendId,
+        username: finalUsername,
         source: "staff",
+        temporary_password: finalTempPassword,
         joiningDate: new Date().toISOString().split("T")[0],
         availability: "Available",
         status: "Active",
@@ -928,7 +951,22 @@ const Staff = () => {
             : "staff"
         }
         onClose={() => setCredentialsStaff(null)}
-        onSuccess={() => showToast("Workforce login credentials updated successfully!")}
+        onSuccess={(updated) => {
+          if (credentialsStaff) {
+            setStaff((current) =>
+              current.map((member) =>
+                member.id === credentialsStaff.id || (member.backend_id && member.backend_id === credentialsStaff.backend_id)
+                  ? {
+                      ...member,
+                      username: updated?.username || member.username,
+                      ...(updated?.temporary_password ? { temporary_password: updated.temporary_password } : {}),
+                    }
+                  : member
+              )
+            );
+          }
+          showToast("Workforce login credentials updated successfully!");
+        }}
       />
 
       {/* FLOATING TOAST NOTIFICATION */}

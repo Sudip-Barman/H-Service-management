@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "../../api/api";
 import { useHospitalSettings } from "../../context/HospitalSettingsContext";
+import { clearTemporaryPassword } from "../../utils/temporaryPasswords";
 
 const FirstTimePassword = () => {
   const navigate = useNavigate();
@@ -102,6 +103,7 @@ const FirstTimePassword = () => {
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
       localStorage.setItem("demoUser", JSON.stringify(updatedUser));
+      clearTemporaryPassword(updatedUser);
       window.dispatchEvent(new CustomEvent("user-updated", { detail: updatedUser }));
 
       setSuccess(true);

@@ -22,6 +22,7 @@ import NurseForm from "../../../components/admin/NurseForm";
 import NurseProfile from "../../../components/admin/NurseProfile";
 import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
 import { apiRequest } from "../../../api/api";
+import { getTemporaryPassword, saveTemporaryPassword } from "../../../utils/temporaryPasswords";
 
 /* -------------------------------------------------------------------------- */
 /*                                Mock Data                                   */
@@ -340,12 +341,17 @@ const Nurses = () => {
       try {
         const data = await apiRequest("/api/nurses");
         if (Array.isArray(data) && data.length > 0) {
-          const formatted = data.map((n) => ({
-            ...n,
-            nurse_id: n.id,
-            staff_id: n.staff_id || (100 + n.id),
-            experience_years: Number(n.experience_years || 0),
-          }));
+          const formatted = data.map((n) => {
+            const storedPwd = getTemporaryPassword(n, "nurse");
+            return {
+              ...n,
+              username: n.username || "",
+              nurse_id: n.id,
+              staff_id: n.staff_id || (100 + n.id),
+              experience_years: Number(n.experience_years || 0),
+              temporary_password: n.temporary_password || storedPwd || "",
+            };
+          });
           setNurses(formatted);
         }
       } catch (err) {
@@ -610,7 +616,6 @@ const Nurses = () => {
             photo: formData.photo || photo || null,
             status: formData.status || "Active",
             username: formData.username || null,
-            temporary_password: formData.temporary_password || null,
           }),
         });
         showToast("Nurse details updated successfully!", "success");
@@ -686,8 +691,21 @@ const Nurses = () => {
           ) + 1
         : 1);
 
+    const finalTempPassword =
+      createdNurse?.temporary_password || formData.temporary_password || "";
+
+    saveTemporaryPassword({
+      role: "nurse",
+      id: nextId,
+      registration_number: createdNurse?.registration_number || formData.registration_number,
+      username: createdNurse?.username || formData.username,
+      email: createdNurse?.email || formData.email,
+      password: finalTempPassword,
+    });
+
     const newNurse = {
       ...formData,
+      username: createdNurse?.username || formData.username || "",
       nurse_id: nextId,
       id: nextId,
       staff_id: Number(formData.staff_id || (100 + nextId)),
@@ -695,6 +713,7 @@ const Nurses = () => {
         formData.experience_years || 0
       ),
       status: formData.status || "Active",
+      temporary_password: finalTempPassword,
       photo:
         formData.photo_file instanceof File
           ? photo
@@ -1192,15 +1211,25 @@ const Nurses = () => {
         />
       )}
 
-      {/* Credentials Modal */}
       <SetCredentialsModal
         open={Boolean(credentialsNurse)}
         employee={credentialsNurse}
         employeeType="nurse"
         onClose={() => setCredentialsNurse(null)}
-        onSuccess={() =>
-          showToast("Nurse login credentials configured successfully!", "success")
-        }
+        onSuccess={(updated) => {
+          setNurses((current) =>
+            current.map((n) =>
+              (n.id === credentialsNurse?.id || n.nurse_id === credentialsNurse?.nurse_id)
+                ? {
+                    ...n,
+                    username: updated?.username || n.username,
+                    ...(updated?.temporary_password ? { temporary_password: updated.temporary_password } : {}),
+                  }
+                : n
+            )
+          );
+          showToast("Nurse login credentials configured successfully!", "success");
+        }}
       />
     </div>
   );

@@ -21,6 +21,7 @@ import DoctorForm from "../../../components/admin/DoctorForm";
 import DoctorProfile from "../../../components/admin/DoctorProfile";
 import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
 import { apiRequest } from "../../../api/api";
+import { getTemporaryPassword, saveTemporaryPassword } from "../../../utils/temporaryPasswords";
 
 /* =========================================================
    CONFIG
@@ -75,18 +76,25 @@ const getPhotoUrl = (photo) => {
 const formatDoctor = (doctor) => {
   if (!doctor) return null;
 
+  const docId = doctor.id ?? doctor.doctor_id;
+  const storedPassword = getTemporaryPassword(doctor, "doctor");
+
   return {
     ...doctor,
 
     // Backend uses `id`.
     // UI uses `doctor_id` for compatibility.
-    doctor_id: doctor.id ?? doctor.doctor_id,
+    doctor_id: docId,
 
     consultation_fee: Number(doctor.consultation_fee || 0),
 
     experience_years: Number(doctor.experience_years || 0),
 
     photo: doctor.photo || "",
+
+    username: doctor.username || "",
+
+    temporary_password: doctor.temporary_password || storedPassword || "",
   };
 };
 
@@ -94,7 +102,7 @@ const appendFormField = (formData, key, value) => {
   formData.append(key, value == null ? "" : String(value));
 };
 
-const buildDoctorFormData = (doctorData) => {
+const buildDoctorFormData = (doctorData, isUpdate = false) => {
   const formData = new FormData();
 
   appendFormField(
@@ -213,7 +221,7 @@ const buildDoctorFormData = (doctorData) => {
     );
   }
 
-  if (doctorData.temporary_password) {
+  if (!isUpdate && doctorData.temporary_password) {
     appendFormField(
       formData,
       "temporary_password",
@@ -668,7 +676,7 @@ const Doctors = () => {
     try {
       setSaving(true);
 
-      const formData = buildDoctorFormData(doctorData);
+      const formData = buildDoctorFormData(doctorData, Boolean(doctorId));
 
       let response;
 
@@ -739,7 +747,23 @@ const Doctors = () => {
           body: formData,
         });
 
-        const formattedDoctor = formatDoctor(response);
+        const finalTempPassword =
+          response?.temporary_password || doctorData?.temporary_password || "";
+
+        saveTemporaryPassword({
+          role: "doctor",
+          id: response?.id,
+          registration_number: response?.registration_number || doctorData?.registration_number,
+          username: response?.username || doctorData?.username,
+          email: response?.email || doctorData?.email,
+          password: finalTempPassword,
+        });
+
+        const formattedDoctor = {
+          ...formatDoctor(response),
+          temporary_password: finalTempPassword,
+          username: response?.username || doctorData?.username || "",
+        };
 
         setDoctors((currentDoctors) => [
           formattedDoctor,
@@ -1490,9 +1514,20 @@ const Doctors = () => {
         employee={credentialsDoctor}
         employeeType="doctor"
         onClose={() => setCredentialsDoctor(null)}
-        onSuccess={() =>
-          showToast("Doctor login credentials configured successfully!", "success")
-        }
+        onSuccess={(updated) => {
+          setDoctors((current) =>
+            current.map((d) =>
+              getDoctorId(d) === getDoctorId(credentialsDoctor)
+                ? {
+                    ...d,
+                    username: updated?.username || d.username,
+                    ...(updated?.temporary_password ? { temporary_password: updated.temporary_password } : {}),
+                  }
+                : d
+            )
+          );
+          showToast("Doctor login credentials configured successfully!", "success");
+        }}
       />
     </div>
   );

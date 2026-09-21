@@ -10,6 +10,7 @@ import AdminDashboard from "../pages/admin/Dashboard";
 // import AdminModulePage from "../pages/admin/AdminModulePage";
 
 import Patients from "../pages/admin/patients/Patients";
+import PatientRecord from "../pages/common/PatientRecord";
 import Doctors from "../pages/admin/doctors/Doctors";
 import Nurses from "../pages/admin/nurses/Nurses";
 import Staff from "../pages/admin/staff/Staff";
@@ -243,6 +244,11 @@ const AppRoutes = () => {
         />
 
         <Route
+          path="patients/:id"
+          element={<PatientRecord portal="admin" />}
+        />
+
+        <Route
           path="follow-up"
           element={<FollowUp />}
         />
@@ -428,6 +434,11 @@ const AppRoutes = () => {
         <Route
           path="patients"
           element={<WorkforcePatients />}
+        />
+
+        <Route
+          path="patients/:id"
+          element={<PatientRecord portal="workforce" />}
         />
 
         {/* 6. Notifications */}

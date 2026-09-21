@@ -93,10 +93,11 @@ const Patients = ({ user }) => {
   };
 
   const openPatient = (patient) => {
-    if (!patient?.patientId) return;
+    const targetId = patient?.id || patient?.patientId || patient?.registrationNumber;
+    if (!targetId) return;
 
     navigate(
-      `/workforce/patients/${patient.patientId}`
+      `/workforce/patients/${targetId}`
     );
   };
 

@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   Check,
@@ -9,6 +10,7 @@ import {
   CalendarDays,
   UserRound,
   Trash2,
+  ExternalLink,
 } from "lucide-react";
 
 import { apiRequest } from "../../api/api";
@@ -90,13 +92,14 @@ export default function Notifications({ user }) {
   const employeeId = currentUser?.id ? String(currentUser.id) : "";
   const profile = currentUser;
 
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
   const fetchNotifications = async () => {
     try {
-      const data = await apiRequest("/notifications");
+      const data = await apiRequest("/api/notifications");
       if (Array.isArray(data)) {
         const mapped = data.map((n) => ({
           id: n.id,
@@ -106,6 +109,9 @@ export default function Notifications({ user }) {
           message: n.message,
           date: n.date || "",
           read: Boolean(n.read),
+          actionUrl: n.action_url,
+          relatedEntityType: n.related_entity_type,
+          relatedEntityId: n.related_entity_id,
         }));
         setNotifications(mapped);
       } else {
@@ -116,6 +122,21 @@ export default function Notifications({ user }) {
       setNotifications([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+    } else if (notification.relatedEntityType === "schedule" || notification.type?.includes("schedule")) {
+      navigate("/workforce/schedule");
+    } else if (notification.relatedEntityType === "appointment" || notification.type?.includes("appointment")) {
+      navigate("/workforce/appointments");
+    } else if (notification.relatedEntityType === "patient" && notification.relatedEntityId) {
+      navigate(`/workforce/patients/${notification.relatedEntityId}`);
     }
   };
 
@@ -357,6 +378,16 @@ export default function Notifications({ user }) {
 
                       {/* Actions */}
                       <div className="mt-3 flex flex-wrap items-center gap-3">
+                        {(notification.actionUrl || notification.relatedEntityType) && (
+                          <button
+                            onClick={() => handleNotificationClick(notification)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8F8F6] px-2.5 py-1 text-xs font-semibold text-[#08A6A0] transition hover:bg-[#D5F3EF]"
+                          >
+                            <ExternalLink size={13} />
+                            View Related
+                          </button>
+                        )}
+
                         {!notification.read && (
                           <button
                             onClick={() => markAsRead(notification.id)}

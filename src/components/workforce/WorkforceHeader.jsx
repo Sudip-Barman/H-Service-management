@@ -9,6 +9,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiRequest } from "../../api/api";
 
 const WorkforceHeader = ({
   title = "Dashboard",
@@ -21,6 +22,7 @@ const WorkforceHeader = ({
   const profileRef = useRef(null);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const storedUser = (() => {
     try {
@@ -40,30 +42,48 @@ const WorkforceHeader = ({
 
   const role = workforceUser.role;
 
+  const initials = workforceUser.name
+    ? workforceUser.name
+        .replace(/^(Dr\.|Mr\.|Mrs\.|Ms\.)\s*/i, "")
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || "WM"
+    : "WM";
+
   const currentEmployeeId = storedUser?.id || user?.id || "";
 
-  // -----------------------------------------
-  // USER INITIALS
-  // -----------------------------------------
+  // Fetch real unread notification count for the workforce user
+  useEffect(() => {
+    let isMounted = true;
 
-  const getInitials = (name) => {
-    if (!name) return "U";
+    const fetchUnread = async () => {
+      try {
+        const data = await apiRequest("/api/notifications");
+        if (isMounted && Array.isArray(data)) {
+          const count = data.filter((n) => !n.read).length;
+          setUnreadCount(count);
+        }
+      } catch (err) {
+        // silent fail in header
+      }
+    };
 
-    return name
-      .replace("Dr. ", "")
-      .split(" ")
-      .filter(Boolean)
-      .map((part) => part.charAt(0))
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  };
+    fetchUnread();
 
-  const initials = getInitials(workforceUser?.name);
+    const handleUpdate = () => fetchUnread();
+    window.addEventListener("notifications-updated", handleUpdate);
+    const interval = setInterval(fetchUnread, 15000);
 
-  // Notification count — will be 0 until real notifications are loaded
-  // Pages that need real counts should fetch from backend
-  const unreadCount = 0;
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener("notifications-updated", handleUpdate);
+    };
+  }, []);
 
   // -----------------------------------------
   // CLOSE PROFILE MENU

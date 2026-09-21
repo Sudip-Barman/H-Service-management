@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../../../api/api";
 import {
 	Bell,
@@ -13,6 +14,7 @@ import {
 	Trash2,
 	TriangleAlert,
 	X,
+	ExternalLink,
 } from "lucide-react";
 
 const initialNotifications = [
@@ -97,6 +99,7 @@ const priorityStyles = {
 };
 
 const Notification = () => {
+	const navigate = useNavigate();
 	const [notifications, setNotifications] = useState([]);
 
 	useEffect(() => {
@@ -457,7 +460,16 @@ const Notification = () => {
 			</main>
 
 			{showForm && <NotificationForm form={form} onChange={updateForm} onSubmit={saveNotification} onClose={() => setShowForm(false)} />}
-			{selectedNotification && <NotificationDetails notification={selectedNotification} onClose={() => setSelectedNotification(null)} />}
+			{selectedNotification && (
+				<NotificationDetails
+					notification={selectedNotification}
+					onClose={() => setSelectedNotification(null)}
+					onNavigate={(url) => {
+						setSelectedNotification(null);
+						navigate(url);
+					}}
+				/>
+			)}
 		</div>
 	);
 };
@@ -479,7 +491,7 @@ const SummaryCard = ({ label, value, icon: Icon, type = "primary" }) => {
 	);
 };
 
-const NotificationDetails = ({ notification, onClose }) => (
+const NotificationDetails = ({ notification, onClose, onNavigate }) => (
 	<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4">
 		<div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl">
 			<div className="flex items-start justify-between border-b border-[#EAF2F0] px-6 py-5">
@@ -501,7 +513,21 @@ const NotificationDetails = ({ notification, onClose }) => (
 					<DetailValue label="Recipient" value={notification.recipient} />
 					<DetailValue label="Status" value={notification.read ? "Read" : "Unread"} />
 				</div>
-				<div className="flex justify-end border-t border-[#EAF2F0] pt-5"><button type="button" onClick={onClose} className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#078F8A]">Close</button></div>
+				<div className="flex justify-end gap-3 border-t border-[#EAF2F0] pt-5">
+					{notification.action_url && (
+						<button
+							type="button"
+							onClick={() => onNavigate(notification.action_url)}
+							className="inline-flex items-center gap-1.5 rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#078F8A]"
+						>
+							<ExternalLink size={15} />
+							Open Related Record
+						</button>
+					)}
+					<button type="button" onClick={onClose} className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A] hover:bg-gray-50">
+						Close
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
