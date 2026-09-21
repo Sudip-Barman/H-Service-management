@@ -18,21 +18,21 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { getWorkforceUser } from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
 
 const Settings = ({ user }) => {
   const navigate = useNavigate();
 
-  const employeeId =
-    user?.employeeId ||
-    user?.id ||
-    localStorage.getItem("employeeId") ||
-    "EMP-1001";
+  const storedUser = (() => {
+    try {
+      const s = localStorage.getItem("user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const profile =
-    getWorkforceUser(employeeId) ||
-    getWorkforceUser("EMP-1001");
+  const profile = storedUser?.profile || {};
 
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -51,12 +51,12 @@ const Settings = ({ user }) => {
     }
     setPasswordLoading(true);
     try {
-      await apiRequest("/auth/change-password", {
+      await apiRequest("/api/auth/change-password", {
         method: "POST",
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword,
-          email: profile?.email || user?.email,
+          email: storedUser?.email || user?.email,
         }),
       });
       setPasswordSuccess("Password updated successfully!");
@@ -145,8 +145,7 @@ const Settings = ({ user }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("jwt");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("user");
     localStorage.removeItem("employeeId");
 
@@ -158,12 +157,12 @@ const Settings = ({ user }) => {
   };
 
   const fullName =
-    profile?.name ||
+    storedUser?.name ||
     user?.name ||
     "Workforce User";
 
   const role =
-    profile?.role ||
+    storedUser?.role ||
     user?.role ||
     "Staff";
 

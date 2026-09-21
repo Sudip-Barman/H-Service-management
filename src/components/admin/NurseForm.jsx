@@ -31,6 +31,9 @@ const emptyNurse = {
   shift_type: "",
   status: "Active",
 
+  username: "",
+  temporary_password: "",
+
   // Photo
   photo: "",
   photo_file: null,
@@ -53,6 +56,8 @@ const buildNurseFormState = (nurse) => {
     license_expiry: nurse.license_expiry ?? "",
     shift_type: nurse.shift_type ?? "",
     status: nurse.status ?? "Active",
+    username: nurse.username ?? "",
+    temporary_password: "",
     photo: nurse.photo ?? nurse.staff?.photo ?? "",
     photo_file: null,
   };
@@ -290,6 +295,26 @@ const NurseForm = ({
       return false;
     }
 
+    if (!isEditing) {
+      if (!form.username?.trim()) {
+        alert("Username is required for workforce login.");
+        return false;
+      }
+      if (form.username.trim().length < 3) {
+        alert("Username must be at least 3 characters long.");
+        return false;
+      }
+      if (!form.temporary_password || form.temporary_password.length < 6) {
+        alert("Temporary password must be at least 6 characters long.");
+        return false;
+      }
+    } else {
+      if (form.temporary_password && form.temporary_password.length < 6) {
+        alert("Temporary password must be at least 6 characters long.");
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -304,6 +329,9 @@ const NurseForm = ({
 
     const nurseData = {
       ...form,
+
+      username: form.username?.trim() || "",
+      temporary_password: form.temporary_password || "",
 
       // VERY IMPORTANT:
       // Keep the existing nurse ID during update.
@@ -787,6 +815,47 @@ const NurseForm = ({
                   />
 
                 </div>
+              </section>
+
+              {/* ============================================================ */}
+              {/* Workforce Login Credentials                                  */}
+              {/* ============================================================ */}
+
+              <section className="mt-6">
+                <SectionTitle>
+                  Workforce Login Credentials
+                </SectionTitle>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+
+                  <InputField
+                    label="Username"
+                    name="username"
+                    value={form.username}
+                    onChange={(e) => {
+                      const val = e.target.value.toLowerCase().replace(/\s+/g, "_");
+                      handleChange({ target: { name: "username", value: val } });
+                    }}
+                    placeholder="e.g. nurse_priya"
+                    required={!isEditing}
+                  />
+
+                  <InputField
+                    label={isEditing ? "Temporary Password (leave empty to keep unchanged)" : "Temporary Password"}
+                    name="temporary_password"
+                    type="password"
+                    value={form.temporary_password}
+                    onChange={handleChange}
+                    placeholder={isEditing ? "Enter new temporary password" : "Enter temporary password (min 6 chars)"}
+                    required={!isEditing}
+                  />
+
+                </div>
+                <p className="mt-2 text-[11px] text-[#6F898A]">
+                  {isEditing
+                    ? "Set a new temporary password to reset the nurse's workforce login access."
+                    : "The nurse will use these credentials to log in, and will be required to change this temporary password upon first login."}
+                </p>
               </section>
 
             </div>

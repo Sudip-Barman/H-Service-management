@@ -36,6 +36,9 @@ const emptyDoctor = {
 
   photo: "",
 
+  username: "",
+  temporary_password: "",
+
   available_status: "Available",
   status: "Active",
 };
@@ -438,6 +441,26 @@ const DoctorForm = ({
       return false;
     }
 
+    if (!isEditing) {
+      if (!form.username?.trim()) {
+        alert("Username is required for workforce login.");
+        return false;
+      }
+      if (form.username.trim().length < 3) {
+        alert("Username must be at least 3 characters long.");
+        return false;
+      }
+      if (!form.temporary_password || form.temporary_password.length < 6) {
+        alert("Temporary password must be at least 6 characters long.");
+        return false;
+      }
+    } else {
+      if (form.temporary_password && form.temporary_password.length < 6) {
+        alert("Temporary password must be at least 6 characters long.");
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -460,6 +483,9 @@ const DoctorForm = ({
      */
     const doctorData = {
       ...form,
+
+      username: form.username?.trim() || "",
+      temporary_password: form.temporary_password || "",
 
       doctor_id:
         doctor?.doctor_id ??
@@ -862,6 +888,47 @@ const DoctorForm = ({
                   />
 
                 </div>
+              </section>
+
+              {/* ========================================================== */}
+              {/* Workforce Login Credentials                                */}
+              {/* ========================================================== */}
+
+              <section className="mt-6">
+                <SectionTitle>
+                  Workforce Login Credentials
+                </SectionTitle>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+
+                  <InputField
+                    label="Username"
+                    name="username"
+                    value={form.username}
+                    onChange={(e) => {
+                      const val = e.target.value.toLowerCase().replace(/\s+/g, "_");
+                      handleChange({ target: { name: "username", value: val } });
+                    }}
+                    placeholder="e.g. dr_arindam"
+                    required={!isEditing}
+                  />
+
+                  <InputField
+                    label={isEditing ? "Temporary Password (leave empty to keep unchanged)" : "Temporary Password"}
+                    name="temporary_password"
+                    type="password"
+                    value={form.temporary_password}
+                    onChange={handleChange}
+                    placeholder={isEditing ? "Enter new temporary password" : "Enter temporary password (min 6 chars)"}
+                    required={!isEditing}
+                  />
+
+                </div>
+                <p className="mt-2 text-[11px] text-[#6F898A]">
+                  {isEditing
+                    ? "Set a new temporary password to reset the doctor's workforce login access."
+                    : "The doctor will use these credentials to log in, and will be required to change this temporary password upon first login."}
+                </p>
               </section>
 
             </div>

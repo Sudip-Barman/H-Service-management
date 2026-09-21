@@ -11,6 +11,7 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
+  KeyRound,
 } from "lucide-react";
 
 import StatCard from "../../../components/admin/StatCard";
@@ -18,6 +19,7 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import DoctorForm from "../../../components/admin/DoctorForm";
 import DoctorProfile from "../../../components/admin/DoctorProfile";
+import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
 import { apiRequest } from "../../../api/api";
 
 /* =========================================================
@@ -203,6 +205,22 @@ const buildDoctorFormData = (doctorData) => {
     doctorData.status || "Active"
   );
 
+  if (doctorData.username) {
+    appendFormField(
+      formData,
+      "username",
+      doctorData.username.trim().toLowerCase()
+    );
+  }
+
+  if (doctorData.temporary_password) {
+    appendFormField(
+      formData,
+      "temporary_password",
+      doctorData.temporary_password
+    );
+  }
+
   /*
     IMPORTANT:
     Only append the real image File.
@@ -277,6 +295,7 @@ const DoctorMobileCard = ({
   doctor,
   onView,
   onEdit,
+  onCredentials,
   onDelete,
 }) => {
   const name = getDoctorName(doctor);
@@ -382,6 +401,15 @@ const DoctorMobileCard = ({
 
         <button
           type="button"
+          onClick={() => onCredentials(doctor)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+          title="Login Account Credentials"
+        >
+          <KeyRound size={15} />
+        </button>
+
+        <button
+          type="button"
           onClick={() => onEdit(doctor)}
           className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
           title="Edit Doctor"
@@ -423,6 +451,7 @@ const Doctors = () => {
   const [editingDoctor, setEditingDoctor] = useState(null);
 
   const [doctorToDelete, setDoctorToDelete] = useState(null);
+  const [credentialsDoctor, setCredentialsDoctor] = useState(null);
 
   const [toast, setToast] = useState(null);
 
@@ -1289,6 +1318,15 @@ const Doctors = () => {
 
                               <button
                                 type="button"
+                                onClick={() => setCredentialsDoctor(doctor)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                                title="Login Account Credentials"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </button>
+
+                              <button
+                                type="button"
                                 onClick={() =>
                                   handleEditDoctor(
                                     doctor
@@ -1365,6 +1403,7 @@ const Doctors = () => {
                   doctor={doctor}
                   onView={setSelectedDoctor}
                   onEdit={handleEditDoctor}
+                  onCredentials={setCredentialsDoctor}
                   onDelete={setDoctorToDelete}
                 />
               ))
@@ -1441,6 +1480,20 @@ const Doctors = () => {
           }}
         />
       )}
+
+      {/* ===================================================
+          CREDENTIALS MODAL
+      =================================================== */}
+
+      <SetCredentialsModal
+        open={Boolean(credentialsDoctor)}
+        employee={credentialsDoctor}
+        employeeType="doctor"
+        onClose={() => setCredentialsDoctor(null)}
+        onSuccess={() =>
+          showToast("Doctor login credentials configured successfully!", "success")
+        }
+      />
     </div>
   );
 };

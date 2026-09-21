@@ -12,6 +12,7 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
+  KeyRound,
 } from "lucide-react";
 
 import StatCard from "../../../components/admin/StatCard";
@@ -19,6 +20,7 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import NurseForm from "../../../components/admin/NurseForm";
 import NurseProfile from "../../../components/admin/NurseProfile";
+import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
 import { apiRequest } from "../../../api/api";
 
 /* -------------------------------------------------------------------------- */
@@ -319,6 +321,7 @@ const Nurses = () => {
   const [editingNurse, setEditingNurse] = useState(null);
 
   const [deleteNurse, setDeleteNurse] = useState(null);
+  const [credentialsNurse, setCredentialsNurse] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -606,6 +609,8 @@ const Nurses = () => {
             shift_type: formData.shift_type || "Morning",
             photo: formData.photo || photo || null,
             status: formData.status || "Active",
+            username: formData.username || null,
+            temporary_password: formData.temporary_password || null,
           }),
         });
         showToast("Nurse details updated successfully!", "success");
@@ -660,6 +665,8 @@ const Nurses = () => {
           shift_type: formData.shift_type || "Morning",
           photo: formData.photo || photo || null,
           status: formData.status || "Active",
+          username: formData.username || null,
+          temporary_password: formData.temporary_password || null,
         }),
       });
       showToast("Nurse registered successfully with photo!", "success");
@@ -1090,6 +1097,15 @@ const Nurses = () => {
 
                         <button
                           type="button"
+                          onClick={() => setCredentialsNurse(nurse)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+                          title="Login Account Credentials"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => handleEditNurse(nurse)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
                           title="Edit Nurse"
@@ -1126,6 +1142,7 @@ const Nurses = () => {
               nurse={nurse}
               onView={setSelectedNurse}
               onEdit={handleEditNurse}
+              onCredentials={setCredentialsNurse}
               onDelete={setDeleteNurse}
             />
           ))
@@ -1174,6 +1191,17 @@ const Nurses = () => {
           }
         />
       )}
+
+      {/* Credentials Modal */}
+      <SetCredentialsModal
+        open={Boolean(credentialsNurse)}
+        employee={credentialsNurse}
+        employeeType="nurse"
+        onClose={() => setCredentialsNurse(null)}
+        onSuccess={() =>
+          showToast("Nurse login credentials configured successfully!", "success")
+        }
+      />
     </div>
   );
 };
@@ -1186,6 +1214,7 @@ const NurseMobileCard = ({
   nurse,
   onView,
   onEdit,
+  onCredentials,
   onDelete,
 }) => {
   const nurseName = getNurseName(nurse);
@@ -1261,6 +1290,15 @@ const NurseMobileCard = ({
         >
           <Eye size={14} />
           View Profile
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onCredentials(nurse)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#527071] transition hover:border-[#08A6A0] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
+          title="Login Account Credentials"
+        >
+          <KeyRound size={15} />
         </button>
 
         <button

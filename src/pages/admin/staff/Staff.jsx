@@ -16,6 +16,7 @@ import HospitalWorkforce from "../../../components/admin/HospitalWorkforce";
 import StaffDetails from "../../../components/admin/StaffDetails";
 import StaffForm from "../../../components/admin/StaffForm";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
+import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
 
 import {
   categoryOptions as defaultCategoryOptions,
@@ -244,6 +245,7 @@ const Staff = () => {
   ======================================================= */
 
   const [staffToRemove, setStaffToRemove] = useState(null);
+  const [credentialsStaff, setCredentialsStaff] = useState(null);
 
   /* =======================================================
      STATISTICS
@@ -405,6 +407,15 @@ const Staff = () => {
       return "Qualification is required.";
     }
 
+    if (!editingStaff) {
+      if (form.username && form.username.trim().length < 3) {
+        return "Username must be at least 3 characters.";
+      }
+      if (form.temporary_password && form.temporary_password.length < 6) {
+        return "Temporary password must be at least 6 characters.";
+      }
+    }
+
     return "";
   };
 
@@ -435,6 +446,8 @@ const Staff = () => {
           qualification: form.qualification || null,
           experience: form.experience || null,
           status: "Active",
+          username: form.username ? form.username.trim() : null,
+          temporary_password: form.temporary_password || null,
         }),
       });
 
@@ -853,6 +866,7 @@ const Staff = () => {
         filteredStaff={filteredStaff}
         onView={handleViewStaff}
         onRemove={handleRemoveStaff}
+        onCredentials={setCredentialsStaff}
         onClearFilters={clearFilters}
       />
 
@@ -900,6 +914,21 @@ const Staff = () => {
         onCancel={cancelRemoveStaff}
         onConfirm={confirmRemoveStaff}
         variant="danger"
+      />
+
+      {/* SET CREDENTIALS MODAL */}
+      <SetCredentialsModal
+        open={Boolean(credentialsStaff)}
+        employee={credentialsStaff}
+        employeeType={
+          (credentialsStaff?.source || credentialsStaff?.category || "staff").toLowerCase().includes("doctor")
+            ? "doctor"
+            : (credentialsStaff?.source || credentialsStaff?.category || "staff").toLowerCase().includes("nurse")
+            ? "nurse"
+            : "staff"
+        }
+        onClose={() => setCredentialsStaff(null)}
+        onSuccess={() => showToast("Workforce login credentials updated successfully!")}
       />
 
       {/* FLOATING TOAST NOTIFICATION */}

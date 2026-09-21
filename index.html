@@ -2,9 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link id="app-favicon" rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("carecore_hospital_settings");
+          if (raw) {
+            var data = JSON.parse(raw);
+            if (data && data.logo && typeof data.logo === "string" && data.logo.trim()) {
+              var fav = document.getElementById("app-favicon");
+              if (fav) {
+                var logo = data.logo.trim();
+                fav.href = logo;
+                if (logo.startsWith("data:")) {
+                  var mime = logo.match(/^data:([^;,]+)/);
+                  if (mime && mime[1]) fav.type = mime[1];
+                }
+              }
+            }
+            if (data && data.hospitalName) {
+              document.title = data.hospitalName + " - Hospital Management System";
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hospital-management-syatem</title>
+    <title>CareCore - Hospital Management System</title>
   </head>
   <body>
     <div id="root"></div>

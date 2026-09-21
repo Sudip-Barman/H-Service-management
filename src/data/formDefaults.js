@@ -8,4 +8,6 @@ export const emptyStaffForm = {
   phone: "",
   email: "",
   address: "",
+  username: "",
+  temporary_password: "",
 };

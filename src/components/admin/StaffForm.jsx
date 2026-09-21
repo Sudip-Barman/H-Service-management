@@ -237,6 +237,45 @@ const StaffForm = ({
           </div>
 
           {/* =================================================
+              WORKFORCE LOGIN CREDENTIALS
+          ================================================= */}
+          <SectionTitle title="Workforce Login Credentials" />
+
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+            <FormField
+              label="Username"
+              value={form.username || ""}
+              onChange={(value) =>
+                onChange("username", value.toLowerCase().replace(/\s+/g, "_"))
+              }
+              placeholder="e.g. staff_john"
+              required={!isEditing}
+            />
+
+            <FormField
+              label={
+                isEditing
+                  ? "Temporary Password (leave blank to keep unchanged)"
+                  : "Temporary Password"
+              }
+              type="password"
+              value={form.temporary_password || ""}
+              onChange={(value) => onChange("temporary_password", value)}
+              placeholder={
+                isEditing
+                  ? "Enter new temporary password"
+                  : "Enter temporary password (min 6 chars)"
+              }
+              required={!isEditing}
+            />
+          </div>
+          <p className="text-[11px] text-[#6F898A]">
+            {isEditing
+              ? "Set a new temporary password to reset this staff member's workforce login access."
+              : "The staff member will use these credentials to log in, and must change the temporary password on first login."}
+          </p>
+
+          {/* =================================================
               ACTION BUTTONS
           ================================================= */}
           <div

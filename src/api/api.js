@@ -59,11 +59,37 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 
   if (!response.ok) {
+    // Centralized 401 handling: expired / invalid token → redirect to login
+    if (response.status === 401) {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("employeeId");
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
+
     throw new Error(
       data?.detail ||
       data?.message ||
       "Something went wrong"
     );
+  }
+
+  // If a mutation succeeds, trigger notifications update instantly across the entire application
+  const method = (options.method || "GET").toUpperCase();
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+    try {
+      window.dispatchEvent(
+        new CustomEvent("notifications-updated", { detail: { endpoint: path, data } })
+      );
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("carecore_notifications");
+        channel.postMessage({ type: "notifications-updated", endpoint: path });
+        channel.close();
+      }
+    } catch {}
   }
 
   return data;

@@ -70,6 +70,29 @@ const EMPTY_FORM = {
 };
 
 // -----------------------------------------------------------------------------
+// Helper: Calculate Age from Date of Birth
+// -----------------------------------------------------------------------------
+
+const calculateAge = (dobString) => {
+  if (!dobString) return "";
+  const dob = new Date(dobString);
+  if (isNaN(dob.getTime())) return "";
+
+  const today = new Date();
+  let calculatedAge = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < dob.getDate())
+  ) {
+    calculatedAge--;
+  }
+
+  return calculatedAge >= 0 ? String(calculatedAge) : "0";
+};
+
+// -----------------------------------------------------------------------------
 // Component
 // -----------------------------------------------------------------------------
 
@@ -273,7 +296,10 @@ export default function PatientForm({
         patient.date_of_birth ||
         "",
 
-      age: patient.age ?? "",
+      age:
+        patient.age !== undefined && patient.age !== null && patient.age !== ""
+          ? patient.age
+          : calculateAge(patient.dateOfBirth || patient.date_of_birth || ""),
 
       gender: patient.gender || "",
 
@@ -394,10 +420,22 @@ export default function PatientForm({
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: value,
+      };
+
+      // Auto-detect age when Date of Birth is filled or changed
+      if (name === "dateOfBirth") {
+        const detectedAge = calculateAge(value);
+        if (detectedAge !== "") {
+          next.age = detectedAge;
+        }
+      }
+
+      return next;
+    });
   };
 
   // ---------------------------------------------------------------------------

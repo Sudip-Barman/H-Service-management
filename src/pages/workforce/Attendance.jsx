@@ -17,7 +17,6 @@ import { apiRequest } from "../../api/api";
 
 import {
   getWorkforceAttendance,
-  getWorkforceUser,
 } from "../../data/workforceData";
 
 const getTodayDateStr = () => new Date().toISOString().slice(0, 10);
@@ -35,8 +34,8 @@ const Attendance = () => {
     }
   })();
 
-  const user = storedUser || getWorkforceUser("EMP-1001");
-  const employeeId = user?.employeeId || user?.id ? (String(user?.id).startsWith("EMP-") ? user.id : `EMP-${1000 + Number(user.id)}`) : "EMP-1001";
+  const user = storedUser || { name: "Workforce Member", role: "staff", id: "" };
+  const employeeId = user?.employeeId || (user?.id ? (String(user.id).startsWith("EMP-") ? user.id : `EMP-${1000 + Number(user.id)}`) : "EMP-1001");
   const CURRENT_DATE = getTodayDateStr();
 
   // --------------------------------------------------

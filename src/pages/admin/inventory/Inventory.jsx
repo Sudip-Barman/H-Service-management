@@ -1,321 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../../api/api";
 import {
+  Activity,
   AlertTriangle,
   Archive,
-  ArrowDownToLine,
-  ArrowUpFromLine,
   Boxes,
+  Building2,
+  Calendar,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
   Clock3,
+  DollarSign,
   Download,
-  Edit3,
   Eye,
-  FileText,
-  FlaskConical,
   Filter,
+  MapPin,
   Package,
   Pill,
   Plus,
   RefreshCw,
   Search,
-  Trash2,
-  Truck,
+  ShieldCheck,
+  Tag,
+  User,
+  Wrench,
+  X,
   XCircle,
-  Droplet,
 } from "lucide-react";
-
-/* =========================================================
-   THEME
-========================================================= */
-
-/* =========================================================
-   SAMPLE DATA
-========================================================= */
-
-const initialItems = [
-  {
-    id: 1,
-    code: "INV-001",
-    name: "Surgical Gloves",
-    category: "Surgical Items",
-    type: "Disposable",
-    unit: "Box",
-    quantity: 500,
-    minimum: 100,
-    maximum: 1000,
-    price: 250,
-    supplier: "MedSupply India",
-    batch: "GLV-2026-01",
-    manufacture: "2026-01-10",
-    expiry: "2028-01-10",
-    location: "Store Room A",
-    condition: "Good",
-    status: "Available",
-  },
-  {
-    id: 2,
-    code: "INV-002",
-    name: "Disposable Syringe",
-    category: "Medical Consumables",
-    type: "Disposable",
-    unit: "Piece",
-    quantity: 75,
-    minimum: 100,
-    maximum: 1000,
-    price: 8,
-    supplier: "HealthCare Supplies",
-    batch: "SYR-2026-05",
-    manufacture: "2026-05-05",
-    expiry: "2030-05-05",
-    location: "Store Room B",
-    condition: "Good",
-    status: "Low Stock",
-  },
-  {
-    id: 3,
-    code: "INV-003",
-    name: "Wheelchair",
-    category: "Medical Equipment",
-    type: "Equipment",
-    unit: "Piece",
-    quantity: 0,
-    minimum: 2,
-    maximum: 20,
-    price: 8500,
-    supplier: "Hospital Equipment Ltd",
-    batch: "WC-2026-02",
-    manufacture: "2026-02-15",
-    expiry: null,
-    location: "Equipment Store",
-    condition: "Good",
-    status: "Out of Stock",
-  },
-  {
-    id: 4,
-    code: "INV-004",
-    name: "Face Mask",
-    category: "PPE",
-    type: "PPE",
-    unit: "Box",
-    quantity: 200,
-    minimum: 50,
-    maximum: 500,
-    price: 180,
-    supplier: "SafeCare",
-    batch: "MSK-2026-03",
-    manufacture: "2026-03-10",
-    expiry: "2027-09-15",
-    location: "PPE Store",
-    condition: "Good",
-    status: "Available",
-  },
-  {
-    id: 5,
-    code: "INV-005",
-    name: "Cleaning Disinfectant",
-    category: "Cleaning Supplies",
-    type: "Cleaning Material",
-    unit: "Bottle",
-    quantity: 40,
-    minimum: 50,
-    maximum: 300,
-    price: 320,
-    supplier: "Clean Hospital",
-    batch: "CLN-2026-06",
-    manufacture: "2026-06-01",
-    expiry: "2027-06-01",
-    location: "Cleaning Store",
-    condition: "Good",
-    status: "Low Stock",
-  },
-  {
-    id: 6,
-    code: "INV-006",
-    name: "Oxygen Mask",
-    category: "Emergency Supplies",
-    type: "Disposable",
-    unit: "Piece",
-    quantity: 120,
-    minimum: 30,
-    maximum: 300,
-    price: 95,
-    supplier: "LifeCare Medical",
-    batch: "OXY-2026-02",
-    manufacture: "2026-02-20",
-    expiry: "2027-02-20",
-    location: "Emergency Store",
-    condition: "Good",
-    status: "Available",
-  },
-  {
-    id: 7,
-    code: "INV-007",
-    name: "ECG Machine",
-    category: "Diagnostic Supplies",
-    type: "Equipment",
-    unit: "Piece",
-    quantity: 3,
-    minimum: 2,
-    maximum: 10,
-    price: 85000,
-    supplier: "MedTech Systems",
-    batch: "ECG-2026-01",
-    manufacture: "2026-01-20",
-    expiry: null,
-    location: "Diagnostic Room",
-    condition: "Under Maintenance",
-    status: "Available",
-  },
-  {
-    id: 8,
-    code: "INV-008",
-    name: "Patient Bed",
-    category: "Furniture",
-    type: "Furniture",
-    unit: "Piece",
-    quantity: 20,
-    minimum: 5,
-    maximum: 50,
-    price: 18000,
-    supplier: "Hospital Furniture Co.",
-    batch: "BED-2026",
-    manufacture: "2026-01-01",
-    expiry: null,
-    location: "Furniture Store",
-    condition: "Good",
-    status: "Available",
-  },
-];
-
-const initialTransactions = [
-  {
-    id: 1,
-    item: "Surgical Gloves",
-    code: "INV-001",
-    type: "Stock In",
-    quantity: 100,
-    date: "2026-09-08",
-    user: "Admin",
-  },
-  {
-    id: 2,
-    item: "Disposable Syringe",
-    code: "INV-002",
-    type: "Stock Out",
-    quantity: 25,
-    date: "2026-09-07",
-    user: "Admin",
-  },
-];
+import AssetsTable from "./AssetsTable";
+import InventoryMedicineView from "./InventoryMedicineView";
 
 const inventoryCategories = [
-  { id: "blood", label: "Blood Stock", icon: Droplet },
-  { id: "medicine", label: "Medicine", icon: Pill },
-  { id: "lab", label: "Lab Tests & Equipment", icon: FlaskConical },
-];
-
-const bloodInventory = [
-  {
-    name: "O Positive Whole Blood",
-    group: "O+",
-    quantity: "12 units",
-    storedDate: "2026-09-02",
-    expiryDate: "2026-10-14",
-    usedDate: "Not used",
-    reason: "Emergency and surgical transfusion",
-    location: "Blood Bank Refrigerator A",
-  },
-  {
-    name: "AB Negative Plasma",
-    group: "AB-",
-    quantity: "4 units",
-    storedDate: "2026-08-29",
-    expiryDate: "2026-09-26",
-    usedDate: "2026-09-05",
-    reason: "Plasma replacement",
-    location: "Blood Bank Refrigerator B",
-  },
-];
-
-const medicineInventory = [
-  {
-    name: "Paracetamol 500mg",
-    batch: "PCM-26-08",
-    quantity: "850 tablets",
-    storedDate: "2026-08-10",
-    expiryDate: "2028-08-09",
-    usedDate: "2026-09-08",
-    reason: "Fever and pain management",
-    location: "Pharmacy Shelf A1",
-  },
-  {
-    name: "Amoxicillin 500mg",
-    batch: "AMX-26-04",
-    quantity: "240 capsules",
-    storedDate: "2026-07-21",
-    expiryDate: "2028-07-20",
-    usedDate: "2026-09-07",
-    reason: "Bacterial infection treatment",
-    location: "Pharmacy Shelf B2",
-  },
-];
-
-const labInventory = [
-  {
-    name: "CBC Test Kit",
-    kind: "Blood Test",
-    quantity: "6 kits",
-    storedDate: "2026-08-25",
-    usedDate: "2026-09-08",
-    reason: "Complete Blood Count testing",
-    location: "Laboratory Cabinet L1",
-  },
-  {
-    name: "ECG Machine",
-    kind: "Lab Equipment",
-    quantity: "3 units",
-    storedDate: "2026-01-20",
-    usedDate: "2026-09-09",
-    reason: "Cardiac examination and monitoring",
-    location: "Diagnostic Room",
-  },
-];
-
-const commonLabTests = [
-  "CBC",
-  "Hemoglobin (Hb)",
-  "Blood Group",
-  "ESR",
-  "Blood Sugar (FBS, PPBS, RBS)",
-  "HbA1c",
-  "Lipid Profile",
-  "LFT",
-  "KFT/RFT",
-  "Thyroid Profile (T3, T4, TSH)",
-  "CRP",
-  "Routine Urine Examination",
-  "Urine Culture",
-  "Stool Routine Examination",
-  "Blood Culture",
-  "Dengue Test",
-  "Malaria Test",
-  "HIV Test",
-  "Hepatitis B (HBsAg)",
-  "Troponin",
-  "Urine Pregnancy Test",
-  "β-hCG",
-  "ABO Blood Group",
-  "Cross Matching",
-  "Pap Smear",
-  "FNAC",
-  "Biopsy",
+  { id: "All", label: "All Items", icon: Boxes },
+  { id: "Medicine", label: "Medicine", icon: Pill },
+  { id: "Assets", label: "Assets", icon: ShieldCheck },
 ];
 
 /* =========================================================
-   STATUS CONFIG
+   STATUS STYLES & BADGES
 ========================================================= */
 
 const statusStyles = {
@@ -324,15 +47,40 @@ const statusStyles = {
     text: "text-emerald-700",
     icon: CheckCircle2,
   },
+  Operational: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    icon: CheckCircle2,
+  },
+  "In Use": {
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    icon: Activity,
+  },
   "Low Stock": {
     bg: "bg-amber-50",
     text: "text-amber-700",
     icon: AlertTriangle,
   },
+  "Under Maintenance": {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    icon: Wrench,
+  },
+  Standby: {
+    bg: "bg-cyan-50",
+    text: "text-cyan-700",
+    icon: Clock3,
+  },
   "Out of Stock": {
     bg: "bg-red-50",
     text: "text-red-700",
     icon: XCircle,
+  },
+  Decommissioned: {
+    bg: "bg-slate-100",
+    text: "text-slate-600",
+    icon: Archive,
   },
   Inactive: {
     bg: "bg-slate-100",
@@ -341,148 +89,57 @@ const statusStyles = {
   },
 };
 
-/* =========================================================
-   STATUS BADGE
-========================================================= */
-
 const StatusBadge = ({ status }) => {
-  const config = statusStyles[status] || statusStyles.Inactive;
-  const Icon = config.icon;
+  const config =
+    statusStyles[status] || statusStyles.Available || statusStyles.Inactive;
+  const Icon = config.icon || CheckCircle2;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${config.bg} ${config.text}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${config.bg} ${config.text}`}
     >
-      <Icon size={14} />
-      {status}
+      <Icon size={13} />
+      {status || "Available"}
     </span>
   );
 };
 
-/* =========================================================
-   CONDITION BADGE
-========================================================= */
-
 const ConditionBadge = ({ condition }) => {
   const styles = {
-    Good: "bg-emerald-50 text-emerald-700",
-    Damaged: "bg-red-50 text-red-700",
-    "Under Maintenance": "bg-amber-50 text-amber-700",
-    Expired: "bg-purple-50 text-purple-700",
+    Good: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    Fair: "bg-blue-50 text-blue-700 border-blue-200",
+    "Needs Repair": "bg-amber-50 text-amber-700 border-amber-200",
+    Damaged: "bg-red-50 text-red-700 border-red-200",
+    "Under Maintenance": "bg-amber-50 text-amber-700 border-amber-200",
+    Expired: "bg-purple-50 text-purple-700 border-purple-200",
   };
 
   return (
     <span
-      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-        styles[condition] || "bg-slate-100 text-slate-600"
+      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
+        styles[condition] || "border-slate-200 bg-slate-100 text-slate-600"
       }`}
     >
-      {condition}
+      {condition || "Good"}
     </span>
   );
 };
 
-const CategoryDetails = ({ category }) => {
-  if (category === "all") return null;
-
-  const isBlood = category === "blood";
-  const isMedicine = category === "medicine";
-  const records = isBlood
-    ? bloodInventory
-    : isMedicine
-      ? medicineInventory
-      : labInventory;
-  const title = isBlood
-    ? "Blood Stock Details"
-    : isMedicine
-      ? "Medicine Details"
-      : "Laboratory Tests & Equipment";
-
-  const columns = isBlood
-    ? ["Blood Product", "Blood Group", "Quantity", "Stored Date", "Expiry Date", "Used Date", "Why Used", "Location"]
-    : isMedicine
-      ? ["Medicine", "Batch", "Quantity", "Stored Date", "Expiry Date", "Used Date", "Why Used", "Location"]
-      : ["Test / Equipment", "Type", "Quantity", "Stored Date", "Used Date", "Why Used", "Location"];
+const TypeBadge = ({ type }) => {
+  if (type === "Medicine") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700">
+        <Pill size={12} />
+        Medicine
+      </span>
+    );
+  }
 
   return (
-    <section
-      id="inventory-items"
-      className="mt-6 overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm"
-    >
-      <div className="border-b border-[#EAF2F0] px-5 py-5">
-        <h2 className="text-lg font-bold text-[#073F42]">{title}</h2>
-        <p className="mt-1 text-sm text-[#819596]">
-          Complete storage, usage and product information
-        </p>
-      </div>
-
-      <div className="hide-scrollbar overflow-x-auto">
-        <table className="w-full min-w-[1100px]">
-          <thead className="bg-[#F7FBFA]">
-            <tr className="border-b border-[#EAF2F0]">
-              {columns.map((column) => (
-                <th
-                  key={column}
-                  className="px-5 py-4 text-left text-xs font-bold uppercase tracking-wide text-[#819596]"
-                >
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#EAF2F0]">
-            {records.map((record) => (
-              <tr key={record.name} className="transition hover:bg-[#FBFDFD]">
-                <td className="px-5 py-4 text-sm font-semibold text-[#173F41]">
-                  {record.name}
-                </td>
-                <td className="px-5 py-4 text-sm text-[#31585A]">
-                  {isBlood ? record.group : isMedicine ? record.batch : record.kind}
-                </td>
-                <td className="px-5 py-4 text-sm font-semibold text-[#31585A]">
-                  {record.quantity}
-                </td>
-                <td className="px-5 py-4 text-sm text-[#31585A]">
-                  {record.storedDate}
-                </td>
-                {record.expiryDate && (
-                  <td className="px-5 py-4 text-sm text-[#31585A]">
-                    {record.expiryDate}
-                  </td>
-                )}
-                <td className="px-5 py-4 text-sm text-[#31585A]">
-                  {record.usedDate}
-                </td>
-                <td className="max-w-[260px] px-5 py-4 text-sm text-[#31585A]">
-                  {record.reason}
-                </td>
-                <td className="px-5 py-4 text-sm text-[#31585A]">
-                  {record.location}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {category === "lab" && (
-        <div className="border-t border-[#EAF2F0] px-5 py-5">
-          <h3 className="text-sm font-bold text-[#073F42]">
-            Common Hospital Laboratory Tests
-          </h3>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {commonLabTests.map((test) => (
-              <span
-                key={test}
-                className="rounded-full bg-[#F1F8F7] px-3 py-1.5 text-xs font-medium text-[#31585A]"
-              >
-                {test}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
+    <span className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-700">
+      <ShieldCheck size={12} />
+      Asset
+    </span>
   );
 };
 
@@ -501,19 +158,27 @@ const StatCard = ({ title, value, subtitle, icon: Icon, type = "primary" }) => {
   };
 
   return (
-    <div className="min-w-0 rounded-lg sm:rounded-xl md:rounded-2xl border border-[#E2EFED] bg-white px-2 py-1.5 sm:px-2.5 sm:py-2.5 md:px-4 md:py-4 shadow-sm transition hover:shadow-md">
+    <div className="min-w-0 rounded-lg border border-[#E2EFED] bg-white px-2 py-1.5 shadow-sm transition hover:shadow-md sm:rounded-xl sm:px-2.5 sm:py-2.5 md:rounded-2xl md:px-4 md:py-4">
       <div className="flex items-center justify-between gap-1.5">
         <span
-          className={`flex h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-md sm:rounded-lg md:rounded-xl ${
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md sm:h-7 sm:w-7 sm:rounded-lg md:h-10 md:w-10 md:rounded-xl ${
             iconClasses[type]
           } [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-3.5 sm:[&>svg]:w-3.5 md:[&>svg]:h-5 md:[&>svg]:w-5`}
         >
           <Icon />
         </span>
-        <strong className="text-base sm:text-lg md:text-2xl font-bold leading-none text-[#073F42]">{value}</strong>
+        <strong className="text-base font-bold leading-none text-[#073F42] sm:text-lg md:text-2xl">
+          {value}
+        </strong>
       </div>
-      <p className="mt-1 sm:mt-1.5 md:mt-2 truncate text-[9px] sm:text-[10px] md:text-xs font-semibold text-[#819596]">{title}</p>
-      {subtitle && <p className="mt-0.5 hidden truncate text-[9px] sm:text-[10px] text-[#9AAEAF] sm:block">{subtitle}</p>}
+      <p className="mt-1 truncate text-[9px] font-semibold text-[#819596] sm:mt-1.5 sm:text-[10px] md:mt-2 md:text-xs">
+        {title}
+      </p>
+      {subtitle && (
+        <p className="mt-0.5 hidden truncate text-[9px] text-[#9AAEAF] sm:block sm:text-[10px]">
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 };
@@ -523,205 +188,218 @@ const StatCard = ({ title, value, subtitle, icon: Icon, type = "primary" }) => {
 ========================================================= */
 
 const Inventory = () => {
-  const [items, setItems] = useState(initialItems);
+  const [medicines, setMedicines] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  // Filters
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All"); // "All", "Medicine", "Assets"
+  const [typeFilter, setTypeFilter] = useState("All"); // "All", "Medicine", "Asset"
+  const [departmentFilter, setDepartmentFilter] = useState("All Departments");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
-    const fetchInventory = async () => {
+    const fetchData = async () => {
       try {
-        const data = await apiRequest("/api/inventory");
-        if (Array.isArray(data)) {
-          const formatted = data.map((item) => ({
-            ...item,
-            condition: item.condition || item.item_condition || "Good",
-            type: item.type || item.item_type || "General",
-          }));
-          setItems(formatted);
-        }
+        setLoading(true);
+        const [medData, assetData] = await Promise.all([
+          apiRequest("/api/medicines"),
+          apiRequest("/api/assets"),
+        ]);
+        if (Array.isArray(medData)) setMedicines(medData);
+        if (Array.isArray(assetData)) setAssets(assetData);
       } catch (err) {
-        console.error("Failed to load inventory items:", err);
+        console.error("Failed to load inventory data:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchInventory();
+    fetchData();
   }, []);
 
-  const [transactions, setTransactions] = useState(initialTransactions);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [showExpiryItems, setShowExpiryItems] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showStockModal, setShowStockModal] = useState(false);
-  const [showItemModal, setShowItemModal] = useState(false);
-  const [itemModalMode, setItemModalMode] = useState("view");
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [stockType, setStockType] = useState("Stock In");
-  const [showHistory, setShowHistory] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("blood");
+  /* =======================================================
+     UNIFIED ALL ITEMS (MEDICINE + ASSETS)
+  ======================================================= */
 
-  const showTransactionHistory = () => {
-    setShowHistory(true);
-    requestAnimationFrame(() => {
-      document.getElementById("inventory-history")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+  const allItems = useMemo(() => {
+    const medList = (medicines || []).map((m) => {
+      const isLow = m.quantity > 0 && m.quantity <= (m.reorder_level || 20);
+      const isOut = m.quantity <= 0;
+      let status =
+        m.status || (isOut ? "Out of Stock" : isLow ? "Low Stock" : "Available");
+      const unitPrice = Number(m.selling_price || m.purchase_price) || 0;
+      const totalVal =
+        (Number(m.quantity) || 0) *
+        (Number(m.purchase_price || m.selling_price) || 0);
+
+      return {
+        id: `med-${m.id}`,
+        rawId: m.id,
+        itemType: "Medicine",
+        code: m.medicine_code || `MED-${String(m.id).padStart(3, "0")}`,
+        name: m.medicine_name,
+        subtitle: m.generic_name || m.manufacturer || "Pharmaceutical",
+        category: m.category || "General Medicine",
+        department: "Pharmacy",
+        quantity: Number(m.quantity) || 0,
+        unit: m.unit || m.medicine_type || "Unit",
+        price: unitPrice,
+        totalValue: totalVal,
+        location: m.storage_location || "Pharmacy Store",
+        supplierOrPerson: m.manufacturer || "Hospital Pharmacy",
+        batch: m.batch_number || "-",
+        expiry: m.expiry_date || "",
+        condition: isOut ? "Out of Stock" : isLow ? "Low Stock" : "Good",
+        status,
+        original: m,
+      };
     });
-  };
 
-  const focusInventoryItems = ({ status = "All", expiry = false } = {}) => {
-    setStatusFilter(status);
-    setShowExpiryItems(expiry);
-    requestAnimationFrame(() => {
-      document.getElementById("inventory-items")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    const astList = (assets || []).map((a) => {
+      const cost = Number(a.purchase_cost) || 0;
+      return {
+        id: `ast-${a.id}`,
+        rawId: a.id,
+        itemType: "Asset",
+        code: a.asset_code || `AST-${String(a.id).padStart(3, "0")}`,
+        name: a.name,
+        subtitle:
+          [a.model_number, a.serial_number].filter(Boolean).join(" • ") ||
+          a.department,
+        category: a.category || "Hospital Asset",
+        department: a.department || "General Ward",
+        quantity: 1,
+        unit: "Unit",
+        price: cost,
+        totalValue: cost,
+        location: a.location || a.department || "Hospital Premises",
+        supplierOrPerson: a.assigned_to
+          ? `Assigned: ${a.assigned_to}`
+          : "Hospital Central",
+        batch: a.serial_number || "-",
+        expiry: a.warranty_expiry || a.next_maintenance || "",
+        condition: a.condition || "Good",
+        status: a.status || "Operational",
+        original: a,
+      };
     });
-  };
 
-  const openItemModal = (item, mode) => {
-    setSelectedItem(item);
-    setItemModalMode(mode);
-    setShowItemModal(true);
-  };
-
-  const handleExport = () => {
-    const csv = [
-      ["Code", "Name", "Category", "Quantity", "Status", "Location"],
-      ...items.map((item) => [
-        item.code,
-        item.name,
-        item.category,
-        item.quantity,
-        item.status,
-        item.location,
-      ]),
-    ]
-      .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
-      .join("\n");
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    link.download = "inventory-items.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-  };
-
-  const handleAddItem = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") || "New Inventory Item";
-    const nextId = Math.max(...items.map((item) => item.id), 0) + 1;
-    const quantity = Number(formData.get("quantity")) || 0;
-    const minimum = Number(formData.get("minimum")) || 0;
-    const code = formData.get("code") || `INV-${String(nextId).padStart(3, "0")}`;
-
-    const payload = {
-      code,
-      name,
-      category: formData.get("category") || "Other",
-      item_type: formData.get("type") || "Consumable",
-      unit: formData.get("unit") || "Piece",
-      quantity,
-      minimum,
-      maximum: Number(formData.get("maximum")) || (minimum * 10),
-      price: Number(formData.get("price")) || 0,
-      supplier: formData.get("supplier") || "Hospital Central Supply",
-      batch: formData.get("batch") || `BATCH-${nextId}`,
-      manufacture: formData.get("manufacture") || null,
-      expiry: formData.get("expiry") || null,
-      location: formData.get("location") || "Main Store",
-      item_condition: formData.get("condition") || "Good",
-      status: formData.get("status") || (quantity > minimum ? "Available" : "Low Stock"),
-    };
-
-    try {
-      const created = await apiRequest("/api/inventory", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      setItems((current) => [created, ...current]);
-    } catch (err) {
-      console.error("Failed to add inventory item via API:", err);
-      setItems((current) => [
-        ...current,
-        {
-          id: nextId,
-          ...payload,
-          type: payload.item_type,
-          condition: payload.item_condition,
-        },
-      ]);
-    }
-    setShowAddModal(false);
-  };
-
-  const handleEditItem = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const updatedFields = {
-      name: formData.get("name") || selectedItem.name,
-      quantity: Number(formData.get("quantity")) || 0,
-      location: formData.get("location") || selectedItem.location,
-      status: formData.get("status") || selectedItem.status,
-    };
-
-    setItems((current) =>
-      current.map((item) =>
-        item.id === selectedItem.id
-          ? {
-              ...item,
-              ...updatedFields,
-            }
-          : item
-      )
-    );
-    setShowItemModal(false);
-
-    if (selectedItem?.id) {
-      try {
-        await apiRequest(`/api/inventory/${selectedItem.id}`, {
-          method: "PUT",
-          body: JSON.stringify(updatedFields),
-        });
-      } catch (err) {
-        console.error("Failed to update inventory item on server:", err);
-      }
-    }
-  };
-
-  const handleQuickAction = (title) => {
-    window.alert(`${title} management will be Unavailable from this inventory.`);
-  };
+    return [...medList, ...astList];
+  }, [medicines, assets]);
 
   /* =======================================================
-     STATS
+     DEPARTMENTS LIST
+  ======================================================= */
+
+  const departmentOptions = useMemo(() => {
+    const depts = new Set(allItems.map((i) => i.department).filter(Boolean));
+    return ["All Departments", ...Array.from(depts)];
+  }, [allItems]);
+
+  /* =======================================================
+     FILTERED ITEMS (FOR "ALL ITEMS" VIEW)
+  ======================================================= */
+
+  const filteredAllItems = useMemo(() => {
+    return allItems.filter((item) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        (item.name || "").toLowerCase().includes(q) ||
+        (item.code || "").toLowerCase().includes(q) ||
+        (item.subtitle || "").toLowerCase().includes(q) ||
+        (item.category || "").toLowerCase().includes(q) ||
+        (item.department || "").toLowerCase().includes(q) ||
+        (item.location || "").toLowerCase().includes(q) ||
+        (item.supplierOrPerson || "").toLowerCase().includes(q);
+
+      const matchesType = typeFilter === "All" || item.itemType === typeFilter;
+
+      const matchesDepartment =
+        departmentFilter === "All Departments" ||
+        item.department === departmentFilter;
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        item.status === statusFilter ||
+        (statusFilter === "Available" &&
+          (item.status === "Available" ||
+            item.status === "Operational" ||
+            item.status === "In Use")) ||
+        (statusFilter === "Low Stock" &&
+          (item.status === "Low Stock" ||
+            item.status === "Under Maintenance")) ||
+        (statusFilter === "Out of Stock" &&
+          (item.status === "Out of Stock" ||
+            item.status === "Decommissioned"));
+
+      return matchesSearch && matchesType && matchesDepartment && matchesStatus;
+    });
+  }, [allItems, search, typeFilter, departmentFilter, statusFilter]);
+
+  /* =======================================================
+     STATS (COMBINED MEDICINE + ASSETS)
   ======================================================= */
 
   const stats = useMemo(() => {
-    const totalItems = items.length;
+    const totalItems = allItems.length;
 
-    const availableItems = items.filter(
-      (item) => item.status === "Available"
+    const availableItems = allItems.filter(
+      (item) =>
+        item.status === "Available" ||
+        item.status === "Operational" ||
+        item.status === "In Use"
     ).length;
 
-    const lowStock = items.filter(
-      (item) => item.status === "Low Stock"
+    const lowStock = allItems.filter(
+      (item) =>
+        item.status === "Low Stock" ||
+        item.status === "Under Maintenance" ||
+        item.status === "Standby"
     ).length;
 
-    const outOfStock = items.filter(
-      (item) => item.status === "Out of Stock"
+    const outOfStock = allItems.filter(
+      (item) =>
+        item.status === "Out of Stock" ||
+        item.status === "Decommissioned"
     ).length;
 
-    const damaged = items.filter(
-      (item) => item.condition === "Damaged"
+    const damaged = allItems.filter(
+      (item) =>
+        (item.condition || "").toLowerCase().includes("damaged") ||
+        (item.condition || "").toLowerCase().includes("repair")
     ).length;
 
-    const expired = items.filter(
-      (item) => item.condition === "Expired"
-    ).length;
+    const now = new Date();
+    const in90Days = new Date();
+    in90Days.setDate(now.getDate() + 90);
 
-    const inventoryValue = items.reduce(
-      (total, item) => total + item.quantity * item.price,
+    const expired = allItems.filter((item) => {
+      if ((item.condition || "").toLowerCase() === "expired") return true;
+      if (item.expiry) {
+        const exp = new Date(item.expiry);
+        return !isNaN(exp.getTime()) && exp < now;
+      }
+      return false;
+    }).length;
+
+    const expiringItems = allItems.filter((item) => {
+      if (item.expiry) {
+        const exp = new Date(item.expiry);
+        return !isNaN(exp.getTime()) && exp >= now && exp <= in90Days;
+      }
+      return false;
+    }).length;
+
+    const inventoryValue = allItems.reduce(
+      (total, item) => total + (Number(item.totalValue) || 0),
       0
     );
 
@@ -732,91 +410,163 @@ const Inventory = () => {
       outOfStock,
       damaged,
       expired,
+      expiringItems,
       inventoryValue,
     };
-  }, [items]);
+  }, [allItems]);
 
   /* =======================================================
-     FILTER
+     EXPORT ACTUAL DATA
   ======================================================= */
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSearch =
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.code.toLowerCase().includes(search.toLowerCase()) ||
-        item.supplier.toLowerCase().includes(search.toLowerCase());
+  const handleExport = () => {
+    let headers = [];
+    let rows = [];
+    let filename = "hospital-inventory-export.csv";
+    const dateStr = new Date().toISOString().slice(0, 10);
 
-      const matchesStatus =
-        statusFilter === "All" || item.status === statusFilter;
-
-      const matchesCategory =
-        categoryFilter === "All" || item.category === categoryFilter;
-
-      const matchesExpiry =
-        !showExpiryItems || (item.expiry && item.condition !== "Expired");
-
-      return matchesSearch && matchesStatus && matchesCategory && matchesExpiry;
-    });
-  }, [items, search, statusFilter, categoryFilter, showExpiryItems]);
-
-  /* =======================================================
-     DELETE
-  ======================================================= */
-
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to deactivate this inventory item?"
-    );
-
-    if (!confirmed) return;
-
-    setItems((current) =>
-      current.map((item) =>
-        item.id === id ? { ...item, status: "Inactive" } : item
-      )
-    );
-
-    try {
-      await apiRequest(`/api/inventory/${id}`, { method: "DELETE" });
-    } catch (err) {
-      console.error("Failed to delete inventory item on server:", err);
+    if (categoryFilter === "Assets") {
+      filename = `hospital-assets-${dateStr}.csv`;
+      headers = [
+        "Asset Code",
+        "Asset Name",
+        "Category",
+        "Department",
+        "Model Number",
+        "Serial Number",
+        "Location",
+        "Purchase Cost (INR)",
+        "Purchase Date",
+        "Warranty Expiry",
+        "Next Maintenance",
+        "Assigned To",
+        "Condition",
+        "Status",
+        "Notes",
+      ];
+      rows = assets.map((a) => [
+        a.asset_code || "",
+        a.name || "",
+        a.category || "",
+        a.department || "",
+        a.model_number || "",
+        a.serial_number || "",
+        a.location || "",
+        a.purchase_cost ?? "",
+        a.purchase_date || "",
+        a.warranty_expiry || "",
+        a.next_maintenance || "",
+        a.assigned_to || "",
+        a.condition || "",
+        a.status || "",
+        a.notes || "",
+      ]);
+    } else if (categoryFilter === "Medicine") {
+      filename = `hospital-pharmacy-${dateStr}.csv`;
+      headers = [
+        "Medicine Code",
+        "Medicine Name",
+        "Generic Name",
+        "Category",
+        "Type",
+        "Unit",
+        "Quantity",
+        "Reorder Level",
+        "Purchase Price (INR)",
+        "Selling Price (INR)",
+        "Storage Location",
+        "Batch Number",
+        "Expiry Date",
+        "Prescription Required",
+        "Status",
+      ];
+      rows = medicines.map((m) => [
+        m.medicine_code || "",
+        m.medicine_name || "",
+        m.generic_name || "",
+        m.category || "",
+        m.medicine_type || "",
+        m.unit || "",
+        m.quantity ?? "",
+        m.reorder_level ?? "",
+        m.purchase_price ?? "",
+        m.selling_price ?? "",
+        m.storage_location || "",
+        m.batch_number || "",
+        m.expiry_date || "",
+        m.prescription_required ? "Yes" : "No",
+        m.status || "",
+      ]);
+    } else {
+      filename = `hospital-inventory-all-items-${dateStr}.csv`;
+      headers = [
+        "Type",
+        "Item Code",
+        "Name",
+        "Details",
+        "Category",
+        "Department",
+        "Quantity",
+        "Unit",
+        "Unit Price / Cost (INR)",
+        "Total Value (INR)",
+        "Location",
+        "Supplier / In-Charge",
+        "Batch / Serial",
+        "Condition",
+        "Status",
+        "Expiry / Warranty Date",
+      ];
+      const dataToExport =
+        filteredAllItems.length > 0 ? filteredAllItems : allItems;
+      rows = dataToExport.map((item) => [
+        item.itemType,
+        item.code,
+        item.name,
+        item.subtitle,
+        item.category,
+        item.department,
+        item.quantity,
+        item.unit,
+        item.price,
+        item.totalValue,
+        item.location,
+        item.supplierOrPerson,
+        item.batch,
+        item.condition,
+        item.status,
+        item.expiry,
+      ]);
     }
-  };
 
-  /* =======================================================
-     STOCK MODAL
-  ======================================================= */
+    if (rows.length === 0) {
+      showToast("No data available to export.", "error");
+      return;
+    }
 
-  const openStockModal = (item, type) => {
-    setSelectedItem(item);
-    setStockType(type);
-    setShowStockModal(true);
-  };
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((val) => {
+            const str = String(val ?? "").replaceAll('"', '""');
+            return `"${str}"`;
+          })
+          .join(",")
+      )
+      .join("\r\n");
 
-  const handleStockSubmit = (event) => {
-    event.preventDefault();
-
-    setTransactions((current) => [
-      {
-        id: Date.now(),
-        item: selectedItem?.name || "Inventory item",
-        code: selectedItem?.code || "-",
-        type: stockType,
-        quantity: "Recorded",
-        date: new Date().toISOString().slice(0, 10),
-        user: "Admin",
-      },
-      ...current,
-    ]);
-    setShowStockModal(false);
-    setShowHistory(true);
-    requestAnimationFrame(() => {
-      document.getElementById("inventory-history")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
     });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    showToast(`Exported ${rows.length} records to ${filename}`);
   };
 
   /* =======================================================
@@ -824,52 +574,39 @@ const Inventory = () => {
   ======================================================= */
 
   return (
-    <div className="min-h-screen bg-[#F7FBFA]">
+    <div className="space-y-6">
       {/* ===================================================
-          HEADER
+          PAGE HEADING
       =================================================== */}
 
-      <div className="border-b border-[#E2EFED] bg-white">
-        <div className="px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-[#E8F8F6] text-[#08A6A0]">
-                  <Boxes className="h-5 w-5 sm:h-6 sm:w-6" />
-                </div>
-
-                <div>
-                  <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl lg:text-3xl">
-                    Inventory Management
-                  </h1>
-
-                  <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">
-                    Manage hospital equipment, consumables and general stock
-                  </p>
-                </div>
-              </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0] sm:h-11 sm:w-11">
+              <Boxes className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
 
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={handleExport}
-                className="inline-flex h-10 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-xl border border-[#D9E9E7] bg-white px-3 sm:px-4 text-xs sm:text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#078F8A]"
-              >
-                <Download size={16} />
-                Export
-              </button>
+            <div>
+              <h1 className="text-xl font-bold text-[#073F42] sm:text-2xl md:text-3xl">
+                Inventory
+              </h1>
 
-              <button
-                type="button"
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex h-10 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-xl bg-[#08A6A0] px-3 sm:px-4 text-xs sm:text-sm font-semibold text-white transition hover:bg-[#078F8A]"
-              >
-                <Plus size={16} className="sm:size-[18px]" />
-                Add New Item
-              </button>
+              <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">
+                Unified inventory management for hospital medicines and medical assets
+              </p>
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#D9E9E7] bg-white px-3 text-xs font-semibold text-[#31585A] shadow-sm transition hover:border-[#08A6A0] hover:text-[#078F8A] sm:h-11 sm:px-4 sm:text-sm"
+          >
+            <Download size={16} />
+            Export
+          </button>
         </div>
       </div>
 
@@ -877,8 +614,7 @@ const Inventory = () => {
           CONTENT
       =================================================== */}
 
-      <main className="px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-
+      <div className="space-y-6">
         {/* =================================================
             STATISTICS
         ================================================= */}
@@ -887,20 +623,20 @@ const Inventory = () => {
           <StatCard
             title="Total Items"
             value={stats.totalItems}
-            subtitle="Inventory item records"
+            subtitle="Medicines & Hospital Assets"
             icon={Package}
           />
 
           <StatCard
             title="Available Items"
             value={stats.availableItems}
-            subtitle="Currently available"
+            subtitle="Operational & in stock"
             icon={CheckCircle2}
             type="success"
           />
 
           <StatCard
-            title="Low Stock"
+            title="Low Stock / Alert"
             value={stats.lowStock}
             subtitle="Needs replenishment"
             icon={AlertTriangle}
@@ -916,1159 +652,662 @@ const Inventory = () => {
           />
 
           <StatCard
-            title="Expiring Items"
-            value="12"
+            title="Expiring / Due Soon"
+            value={stats.expiringItems}
             subtitle="Within next 90 days"
             icon={Clock3}
             type="purple"
           />
 
           <StatCard
-            title="Expired Items"
+            title="Expired / Outdated"
             value={stats.expired}
-            subtitle="Require removal"
+            subtitle="Require removal or check"
             icon={Archive}
             type="danger"
           />
 
           <StatCard
-            title="Damaged Items"
+            title="Needs Inspection"
             value={stats.damaged}
-            subtitle="Require inspection"
+            subtitle="Fair or repair condition"
             icon={AlertTriangle}
             type="warning"
           />
 
           <StatCard
-            title="Inventory Value"
-            value={`₹${stats.inventoryValue.toLocaleString("en-IN")}`}
-            subtitle="Current stock valuation"
+            title="Total Inventory Value"
+            value={`₹${(stats.inventoryValue || 0).toLocaleString("en-IN")}`}
+            subtitle="Total medicines & assets"
             icon={ClipboardList}
             type="blue"
           />
         </div>
 
         {/* =================================================
-            ALERT SECTION
+            Navigation Tabs
         ================================================= */}
-
-        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
-          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
-            <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-white p-3 text-amber-600">
-                <AlertTriangle size={21} />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-amber-900">
-                  Low Stock Alert
-                </p>
-                <p className="mt-1 text-sm text-amber-700">
-                  {stats.lowStock} items are below minimum stock level.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => focusInventoryItems({ status: "Low Stock" })}
-                  className="mt-3 text-sm font-bold text-amber-800 hover:underline"
-                >
-                  View Items →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-5">
-            <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-white p-3 text-red-600">
-                <XCircle size={21} />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-red-900">
-                  Out of Stock
-                </p>
-                <p className="mt-1 text-sm text-red-700">
-                  {stats.outOfStock} items are currently unavailable.
-                </p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    focusInventoryItems({ status: "Out of Stock" })
-                  }
-                  className="mt-3 text-sm font-bold text-red-800 hover:underline"
-                >
-                  View Items →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-purple-100 bg-purple-50 p-5">
-            <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-white p-3 text-purple-600">
-                <Clock3 size={21} />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-purple-900">
-                  Expiry Alert
-                </p>
-                <p className="mt-1 text-sm text-purple-700">
-                  12 items are approaching their expiry date.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => focusInventoryItems({ expiry: true })}
-                  className="mt-3 text-sm font-bold text-purple-800 hover:underline"
-                >
-                  Check Expiry →
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-        {/* =================================================
-            Navigation
-        ================================================= */}
-        <nav className="hide-scrollbar flex select-none gap-2 overflow-x-auto rounded-2xl border border-[#E2EFED] bg-white p-2 shadow-sm mb-6 mt-6">
+        <nav className="hide-scrollbar mb-6 mt-6 flex select-none gap-2 overflow-x-auto rounded-2xl border border-[#E2EFED] bg-white p-2 shadow-sm">
           {inventoryCategories.map(({ id, label, icon: Icon }) => {
-            const isActive = selectedCategory === id;
+            const isActive = categoryFilter === id;
 
             return (
               <button
                 key={id}
                 type="button"
-                onClick={() => setSelectedCategory(id)}
+                onClick={() => setCategoryFilter(id)}
                 className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${
                   isActive
-                    ? "bg-[#08A6A0] text-white"
+                    ? "bg-[#08A6A0] text-white shadow-sm"
                     : "text-[#31585A] hover:bg-[#E8F8F6] hover:text-[#078F8A]"
                 }`}
               >
                 <Icon size={17} />
                 {label}
+                {id === "All" && (
+                  <span
+                    className={`ml-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-[#E8F8F6] text-[#08A6A0]"
+                    }`}
+                  >
+                    {allItems.length}
+                  </span>
+                )}
+                {id === "Medicine" && (
+                  <span
+                    className={`ml-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-[#E8F8F6] text-[#08A6A0]"
+                    }`}
+                  >
+                    {medicines.length}
+                  </span>
+                )}
+                {id === "Assets" && (
+                  <span
+                    className={`ml-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-[#E8F8F6] text-[#08A6A0]"
+                    }`}
+                  >
+                    {assets.length}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
 
         {/* =================================================
-            SEARCH + FILTER
+            VIEW: ASSETS TAB
         ================================================= */}
-
-        <div className="mt-6 rounded-2xl border border-[#E2EFED] bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 xl:flex-row">
-            <div className="relative flex-1">
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9AAEAF]"
-              />
-
-              <input
-                type="text"
-                placeholder="Search item name, code or supplier..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-[#D9E9E7] bg-[#FBFDFD] py-3 pl-11 pr-4 text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
-              />
-            </div>
-
-            <div className="relative min-w-[190px]">
-              <Filter
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#819596]"
-              />
-
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-[#D9E9E7] bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#31585A] outline-none focus:border-[#08A6A0]"
-              >
-                <option value="All">All Status</option>
-                <option value="Available">Available</option>
-                <option value="Low Stock">Low Stock</option>
-                <option value="Out of Stock">Out of Stock</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-
-              <ChevronDown
-                size={16}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#819596]"
-              />
-            </div>
-
-            <div className="relative min-w-[220px]">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-[#D9E9E7] bg-white px-4 py-3 pr-10 text-sm font-medium text-[#31585A] outline-none focus:border-[#08A6A0]"
-              >
-                <option value="All">All Categories</option>
-                <option value="Medical Equipment">
-                  Medical Equipment
-                </option>
-                <option value="Surgical Items">Surgical Items</option>
-                <option value="Medical Consumables">
-                  Medical Consumables
-                </option>
-                <option value="Diagnostic Supplies">
-                  Diagnostic Supplies
-                </option>
-                <option value="Emergency Supplies">
-                  Emergency Supplies
-                </option>
-                <option value="PPE">PPE</option>
-                <option value="Cleaning Supplies">
-                  Cleaning Supplies
-                </option>
-                <option value="Furniture">Furniture</option>
-              </select>
-
-              <ChevronDown
-                size={16}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#819596]"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setStatusFilter("All");
-                setCategoryFilter("All");
-                setShowExpiryItems(false);
-              }}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D9E9E7] px-5 py-3 text-sm font-semibold text-[#31585A] hover:border-[#08A6A0] hover:text-[#078F8A]"
-            >
-              <RefreshCw size={17} />
-              Reset
-            </button>
+        {categoryFilter === "Assets" && (
+          <div className="mt-6">
+            <AssetsTable
+              assets={assets}
+              setAssets={setAssets}
+              showToast={showToast}
+            />
           </div>
-        </div>
-
-        {/* =================================================
-            ITEMS TABLE
-        ================================================= */}
-
-        {selectedCategory === "all" ? (
-          <div
-            id="inventory-items"
-            className="mt-6 scroll-mt-6 overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm"
-          >
-          <div className="flex flex-col gap-3 border-b border-[#EAF2F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="font-bold text-[#073F42]">All Inventory Items</h2>
-              <p className="mt-1 text-xs text-[#819596]">
-                Showing {filteredItems.length} of {items.length} items
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={showTransactionHistory}
-              className="inline-flex items-center gap-2 self-start rounded-xl bg-[#E8F8F6] px-4 py-2 text-sm font-semibold text-[#078F8A]"
-            >
-              <FileText size={16} />
-              Transaction History
-            </button>
-          </div>
-
-          {/* DESKTOP TABLE */}
-
-          <div className="hide-scrollbar hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[1200px]">
-              <thead>
-                <tr className="border-b border-[#EAF2F0] bg-[#FBFDFD] text-left">
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Item
-                  </th>
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Category
-                  </th>
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Stock
-                  </th>
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Supplier
-                  </th>
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Location
-                  </th>
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Condition
-                  </th>
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Status
-                  </th>
-                  <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-wide text-[#819596]">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-[#EAF2F0]">
-                {filteredItems.map((item) => (
-                  <tr key={item.id} className="transition hover:bg-[#FBFDFD]">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
-                          <Package size={19} />
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-[#173F41]">
-                            {item.name}
-                          </p>
-                          <p className="mt-0.5 text-xs text-[#9AAEAF]">
-                            {item.code} • {item.unit}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <p className="text-sm font-medium text-[#31585A]">
-                        {item.category}
-                      </p>
-                      <p className="mt-1 text-xs text-[#9AAEAF]">
-                        {item.type}
-                      </p>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <p className="font-bold text-[#173F41]">
-                        {item.quantity}
-                      </p>
-                      <p className="mt-1 text-xs text-[#9AAEAF]">
-                        Min: {item.minimum} / Max: {item.maximum}
-                      </p>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <p className="text-sm font-medium text-[#31585A]">
-                        {item.supplier}
-                      </p>
-                      <p className="mt-1 text-xs text-[#9AAEAF]">
-                        ₹{item.price.toLocaleString("en-IN")} / {item.unit}
-                      </p>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <span className="text-sm text-[#31585A]">
-                        {item.location}
-                      </span>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <ConditionBadge condition={item.condition} />
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <StatusBadge status={item.status} />
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          type="button"
-                          title="View"
-                          onClick={() => openItemModal(item, "view")}
-                          className="rounded-lg p-2 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
-                        >
-                          <Eye size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Edit"
-                          onClick={() => openItemModal(item, "edit")}
-                          className="rounded-lg p-2 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
-                        >
-                          <Edit3 size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Stock In"
-                          onClick={() => openStockModal(item, "Stock In")}
-                          className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50"
-                        >
-                          <ArrowDownToLine size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Stock Out"
-                          onClick={() => openStockModal(item, "Stock Out")}
-                          className="rounded-lg p-2 text-orange-600 hover:bg-orange-50"
-                        >
-                          <ArrowUpFromLine size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Deactivate"
-                          onClick={() => handleDelete(item.id)}
-                          className="rounded-lg p-2 text-red-500 hover:bg-red-50"
-                        >
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* MOBILE CARDS */}
-
-          <div className="divide-y divide-[#EAF2F0] lg:hidden">
-            {filteredItems.map((item) => (
-              <div key={item.id} className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
-                      <Package size={20} />
-                    </div>
-
-                    <div>
-                      <h3 className="font-bold text-[#173F41]">
-                        {item.name}
-                      </h3>
-
-                      <p className="text-xs text-[#9AAEAF]">
-                        {item.code} • {item.unit}
-                      </p>
-                    </div>
-                  </div>
-
-                  <StatusBadge status={item.status} />
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#FBFDFD] p-3">
-                  <div>
-                    <p className="text-xs text-[#9AAEAF]">Category</p>
-                    <p className="mt-1 text-sm font-semibold text-[#31585A]">
-                      {item.category}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-[#9AAEAF]">Quantity</p>
-                    <p className="mt-1 text-sm font-semibold text-[#31585A]">
-                      {item.quantity} {item.unit}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-[#9AAEAF]">Supplier</p>
-                    <p className="mt-1 text-sm font-semibold text-[#31585A]">
-                      {item.supplier}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-[#9AAEAF]">Location</p>
-                    <p className="mt-1 text-sm font-semibold text-[#31585A]">
-                      {item.location}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-                  <ConditionBadge condition={item.condition} />
-
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openItemModal(item, "view")}
-                      className="rounded-lg p-2 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
-                    >
-                      <Eye size={17} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => openItemModal(item, "edit")}
-                      className="rounded-lg p-2 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#08A6A0]"
-                    >
-                      <Edit3 size={17} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => openStockModal(item, "Stock In")}
-                      className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50"
-                    >
-                      <ArrowDownToLine size={17} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => openStockModal(item, "Stock Out")}
-                      className="rounded-lg p-2 text-orange-600 hover:bg-orange-50"
-                    >
-                      <ArrowUpFromLine size={17} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredItems.length === 0 && (
-            <div className="px-5 py-16 text-center">
-              <Package
-                size={42}
-                className="mx-auto text-[#9AAEAF]"
-              />
-
-              <h3 className="mt-4 font-bold text-[#073F42]">
-                No inventory items found
-              </h3>
-
-              <p className="mt-1 text-sm text-[#819596]">
-                Try changing your search or filters.
-              </p>
-            </div>
-          )}
-          </div>
-        ) : (
-          <CategoryDetails category={selectedCategory} />
-        )}
-
-        {showHistory && (
-          <section
-            id="inventory-history"
-            className="mt-6 overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm"
-          >
-            <div className="flex items-center justify-between border-b border-[#EAF2F0] px-5 py-4">
-              <div>
-                <h2 className="font-bold text-[#073F42]">Transaction History</h2>
-                <p className="mt-1 text-xs text-[#819596]">
-                  Recent stock movement across inventory items
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowHistory(false)}
-                className="text-sm font-semibold text-[#078F8A] hover:underline"
-              >
-                Hide
-              </button>
-            </div>
-
-            <div className="hide-scrollbar overflow-x-auto">
-              <table className="w-full min-w-[680px]">
-                <thead>
-                  <tr className="border-b border-[#EAF2F0] bg-[#FBFDFD] text-left">
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                      Item
-                    </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                      Type
-                    </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                      Quantity
-                    </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                      Date
-                    </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#819596]">
-                      Performed By
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EAF2F0]">
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td className="px-5 py-4">
-                        <p className="text-sm font-semibold text-[#173F41]">
-                          {transaction.item}
-                        </p>
-                        <p className="mt-1 text-xs text-[#9AAEAF]">
-                          {transaction.code}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`text-sm font-semibold ${
-                            transaction.type === "Stock In"
-                              ? "text-emerald-700"
-                              : "text-orange-700"
-                          }`}
-                        >
-                          {transaction.type}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-sm font-semibold text-[#31585A]">
-                        {transaction.quantity}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-[#31585A]">
-                        {transaction.date}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-[#31585A]">
-                        {transaction.user}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
         )}
 
         {/* =================================================
-            QUICK MANAGEMENT
+            VIEW: MEDICINE TAB
         ================================================= */}
+        {categoryFilter === "Medicine" && (
+          <div className="mt-6">
+            <InventoryMedicineView medicines={medicines} />
+          </div>
+        )}
 
-        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <QuickCard
-            icon={ArrowDownToLine}
-            title="Stock In"
-            description="Receive new inventory items"
-            onClick={() => {
-              setSelectedItem(null);
-              setStockType("Stock In");
-              setShowStockModal(true);
-            }}
-          />
+        {/* =================================================
+            VIEW: ALL ITEMS (MEDICINE + ASSETS)
+        ================================================= */}
+        {categoryFilter === "All" && (
+          <>
+            {/* SEARCH + FILTER TOOLBAR */}
+            <div className="mt-6 rounded-2xl border border-[#E2EFED] bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+                <div className="relative flex-1">
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9AAEAF]"
+                  />
 
-          <QuickCard
-            icon={ArrowUpFromLine}
-            title="Stock Out"
-            description="Issue items to departments"
-            onClick={() => {
-              setSelectedItem(null);
-              setStockType("Stock Out");
-              setShowStockModal(true);
-            }}
-          />
-
-          <QuickCard
-            icon={Truck}
-            title="Suppliers"
-            description="Manage inventory suppliers"
-            onClick={() => handleQuickAction("Supplier")}
-          />
-
-          <QuickCard
-            icon={FileText}
-            title="Reports"
-            description="View stock and usage reports"
-            onClick={handleExport}
-          />
-        </div>
-      </main>
-
-      {/* ===================================================
-          ADD ITEM MODAL
-      =================================================== */}
-
-      {showAddModal && (
-        <Modal
-          title="Add New Inventory Item"
-          subtitle="Create a new hospital inventory item"
-          onClose={() => setShowAddModal(false)}
-        >
-          <form
-            onSubmit={handleAddItem}
-            className="space-y-5"
-          >
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormInput name="code" label="Item Code" placeholder="INV-009" />
-              <FormInput name="name" label="Item Name" placeholder="Enter item name" />
-
-              <FormSelect
-                name="category"
-                label="Category"
-                options={[
-                  "Medical Equipment",
-                  "Surgical Items",
-                  "Medical Consumables",
-                  "Diagnostic Supplies",
-                  "Laboratory Supplies",
-                  "Emergency Supplies",
-                  "ICU Supplies",
-                  "Operation Theatre Supplies",
-                  "PPE",
-                  "Cleaning Supplies",
-                  "Office/Stationery",
-                  "Electrical Items",
-                  "Furniture",
-                  "Other",
-                ]}
-              />
-
-              <FormSelect
-                name="type"
-                label="Item Type"
-                options={[
-                  "Equipment",
-                  "Consumable",
-                  "Surgical Instrument",
-                  "Disposable",
-                  "PPE",
-                  "Laboratory Item",
-                  "Cleaning Material",
-                  "Stationery",
-                  "Furniture",
-                  "Electrical Equipment",
-                  "Other",
-                ]}
-              />
-
-              <FormInput name="unit" label="Unit" placeholder="Piece / Box / Bottle" />
-              <FormInput name="quantity" label="Quantity" type="number" placeholder="0" />
-
-              <FormInput
-                name="minimum"
-                label="Minimum Stock"
-                type="number"
-                placeholder="0"
-              />
-
-              <FormInput
-                name="maximum"
-                label="Maximum Stock"
-                type="number"
-                placeholder="0"
-              />
-
-              <FormInput
-                name="price"
-                label="Purchase Price"
-                type="number"
-                placeholder="0.00"
-              />
-
-              <FormInput
-                name="supplier"
-                label="Supplier Name"
-                placeholder="Supplier name"
-              />
-
-              <FormInput
-                name="batch"
-                label="Batch Number"
-                placeholder="Batch number"
-              />
-
-              <FormInput
-                name="location"
-                label="Storage Location"
-                placeholder="Store Room A"
-              />
-
-              <FormInput
-                name="manufacture"
-                label="Manufacture Date"
-                type="date"
-              />
-
-              <FormInput name="expiry" label="Expiry Date" type="date" />
-
-              <FormSelect
-                name="condition"
-                label="Condition Status"
-                options={[
-                  "Good",
-                  "Damaged",
-                  "Under Maintenance",
-                  "Expired",
-                ]}
-              />
-
-              <FormSelect
-                name="status"
-                label="Status"
-                options={[
-                  "Available",
-                  "Low Stock",
-                  "Out of Stock",
-                  "Inactive",
-                ]}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#31585A]">
-                Description
-              </label>
-
-              <textarea
-                rows="3"
-                placeholder="Enter item description..."
-                className="w-full rounded-xl border border-[#D9E9E7] px-4 py-3 text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-[#EAF2F0] pt-5">
-              <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A]"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#078F8A]"
-              >
-                Add Item
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {showItemModal && selectedItem && (
-        <Modal
-          title={itemModalMode === "edit" ? "Edit Inventory Item" : selectedItem.name}
-          subtitle={`${selectedItem.code} • ${selectedItem.category}`}
-          onClose={() => setShowItemModal(false)}
-        >
-          {itemModalMode === "view" ? (
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {[
-                ["Item Name", selectedItem.name],
-                ["Code", selectedItem.code],
-                ["Category", selectedItem.category],
-                ["Type", selectedItem.type],
-                ["Quantity", `${selectedItem.quantity} ${selectedItem.unit}`],
-                ["Supplier", selectedItem.supplier],
-                ["Batch", selectedItem.batch],
-                ["Location", selectedItem.location],
-                ["Condition", selectedItem.condition],
-                ["Status", selectedItem.status],
-                ["Expiry Date", selectedItem.expiry || "Not applicable"],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-[#FBFDFD] p-4">
-                  <dt className="text-xs text-[#819596]">{label}</dt>
-                  <dd className="mt-1 font-semibold text-[#31585A]">{value}</dd>
+                  <input
+                    type="text"
+                    placeholder="Search medicines or assets by name, code, model, department..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full rounded-xl border border-[#D9E9E7] bg-[#FBFDFD] py-3 pl-11 pr-4 text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
+                  />
                 </div>
-              ))}
-            </dl>
-          ) : (
-            <form onSubmit={handleEditItem} className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormInput name="name" label="Item Name" defaultValue={selectedItem.name} />
-                <FormInput name="quantity" label="Quantity" type="number" defaultValue={selectedItem.quantity} />
-                <FormInput name="location" label="Storage Location" defaultValue={selectedItem.location} />
-                <FormSelect
-                  name="status"
-                  label="Status"
-                  defaultValue={selectedItem.status}
-                  options={["Available", "Low Stock", "Out of Stock", "Inactive"]}
-                />
-              </div>
-              <div className="flex justify-end gap-3 border-t border-[#EAF2F0] pt-5">
+
+                {/* TYPE FILTER */}
+                <div className="relative min-w-[150px]">
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-[#D9E9E7] bg-white px-4 py-3 pr-10 text-sm font-medium text-[#31585A] outline-none focus:border-[#08A6A0]"
+                  >
+                    <option value="All">All Types</option>
+                    <option value="Medicine">Medicine ({medicines.length})</option>
+                    <option value="Asset">Asset ({assets.length})</option>
+                  </select>
+
+                  <ChevronDown
+                    size={16}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#819596]"
+                  />
+                </div>
+
+                {/* DEPARTMENT FILTER */}
+                <div className="relative min-w-[190px]">
+                  <Building2
+                    size={17}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#819596]"
+                  />
+
+                  <select
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-[#D9E9E7] bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#31585A] outline-none focus:border-[#08A6A0]"
+                  >
+                    {departmentOptions.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+
+                  <ChevronDown
+                    size={16}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#819596]"
+                  />
+                </div>
+
+                {/* STATUS FILTER */}
+                <div className="relative min-w-[170px]">
+                  <Filter
+                    size={17}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#819596]"
+                  />
+
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-[#D9E9E7] bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#31585A] outline-none focus:border-[#08A6A0]"
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Available">Available / Operational</option>
+                    <option value="In Use">In Use</option>
+                    <option value="Low Stock">Low Stock / Maintenance</option>
+                    <option value="Out of Stock">Out of Stock</option>
+                  </select>
+
+                  <ChevronDown
+                    size={16}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#819596]"
+                  />
+                </div>
+
+                {/* RESET */}
                 <button
                   type="button"
-                  onClick={() => setShowItemModal(false)}
-                  className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A]"
+                  onClick={() => {
+                    setSearch("");
+                    setTypeFilter("All");
+                    setDepartmentFilter("All Departments");
+                    setStatusFilter("All");
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D9E9E7] px-4 py-3 text-sm font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#078F8A]"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#078F8A]"
-                >
-                  Save Changes
+                  <RefreshCw size={17} />
+                  Reset
                 </button>
               </div>
-            </form>
-          )}
-        </Modal>
-      )}
+            </div>
 
-      {/* ===================================================
-          STOCK MODAL
-      =================================================== */}
-
-      {showStockModal && (
-        <Modal
-          title={stockType}
-          subtitle={
-            selectedItem
-              ? `${selectedItem.name} • ${selectedItem.code}`
-              : "Update hospital inventory stock"
-          }
-          onClose={() => setShowStockModal(false)}
-        >
-          <form
-            onSubmit={handleStockSubmit}
-            className="space-y-5"
-          >
-            {selectedItem && (
-              <div className="rounded-xl bg-[#E8F8F6] p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-[#819596]">
-                      Current Quantity
-                    </p>
-                    <p className="mt-1 text-2xl font-bold text-[#073F42]">
-                      {selectedItem.quantity}
-                    </p>
-                  </div>
-
-                  <Package className="text-[#08A6A0]" />
+            {/* ALL ITEMS TABLE */}
+            <div
+              id="inventory-items"
+              className="mt-6 scroll-mt-6 overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm"
+            >
+              <div className="flex flex-col gap-3 border-b border-[#EAF2F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-bold text-[#073F42]">
+                    Unified Hospital Inventory
+                  </h2>
+                  <p className="mt-1 text-xs text-[#819596]">
+                    Showing {filteredAllItems.length} of {allItems.length} records (Medicines & Assets)
+                  </p>
                 </div>
               </div>
-            )}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {!selectedItem && (
-                <FormSelect
-                  label="Item"
-                  options={items.map((item) => item.name)}
-                />
-              )}
+              {/* DESKTOP TABLE */}
+              <div className="hide-scrollbar hidden overflow-x-auto lg:block">
+                <table className="w-full min-w-[1100px]">
+                  <thead>
+                    <tr className="border-b border-[#EAF2F0] bg-[#FBFDFD] text-left">
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Item & Code
+                      </th>
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Type
+                      </th>
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Category & Dept
+                      </th>
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Stock / Qty
+                      </th>
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Price / Valuation
+                      </th>
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Location
+                      </th>
+                      <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Status
+                      </th>
+                      <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-wide text-[#819596]">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
 
-              {stockType === "Stock In" ? (
-                <>
-                  <FormInput
-                    label="Supplier"
-                    placeholder="Supplier name"
-                  />
+                  <tbody className="divide-y divide-[#EAF2F0]">
+                    {filteredAllItems.map((item) => {
+                      const isMed = item.itemType === "Medicine";
+                      return (
+                        <tr
+                          key={item.id}
+                          className="transition hover:bg-[#FBFDFD]"
+                        >
+                          {/* Item & Code */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                                  isMed
+                                    ? "bg-teal-50 text-teal-600"
+                                    : "bg-sky-50 text-sky-600"
+                                }`}
+                              >
+                                {isMed ? <Pill size={19} /> : <ShieldCheck size={19} />}
+                              </div>
 
-                  <FormInput
-                    label="Purchase / Reference Number"
-                    placeholder="PUR-001"
-                  />
+                              <div className="min-w-0">
+                                <p className="font-semibold text-[#173F41]">
+                                  {item.name}
+                                </p>
+                                <p className="mt-0.5 text-xs text-[#9AAEAF]">
+                                  {item.code}
+                                  {item.subtitle && ` • ${item.subtitle}`}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
 
-                  <FormInput
-                    label="Batch Number"
-                    placeholder="Batch number"
-                  />
+                          {/* Type */}
+                          <td className="px-5 py-4">
+                            <TypeBadge type={item.itemType} />
+                          </td>
 
-                  <FormInput
-                    label="Quantity"
-                    type="number"
-                    placeholder="Enter quantity"
-                  />
+                          {/* Category & Department */}
+                          <td className="px-5 py-4">
+                            <p className="text-sm font-medium text-[#31585A]">
+                              {item.category}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#9AAEAF]">
+                              {item.department}
+                            </p>
+                          </td>
 
-                  <FormInput
-                    label="Purchase Price"
-                    type="number"
-                    placeholder="0.00"
-                  />
+                          {/* Stock / Quantity */}
+                          <td className="px-5 py-4">
+                            <p className="font-bold text-[#173F41]">
+                              {item.quantity} {item.unit}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#9AAEAF]">
+                              {isMed ? "Available Stock" : "Asset Registry"}
+                            </p>
+                          </td>
 
-                  <FormInput
-                    label="Received Date"
-                    type="date"
-                  />
+                          {/* Price / Valuation */}
+                          <td className="px-5 py-4">
+                            <p className="font-bold text-[#173F41]">
+                              ₹{(item.totalValue || 0).toLocaleString("en-IN")}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#9AAEAF]">
+                              {isMed
+                                ? `₹${item.price.toLocaleString("en-IN")} / ${item.unit}`
+                                : "Purchase Cost"}
+                            </p>
+                          </td>
 
-                  <FormInput
-                    label="Expiry Date"
-                    type="date"
-                  />
+                          {/* Location */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-1.5 text-sm text-[#31585A]">
+                              <MapPin size={14} className="shrink-0 text-[#819596]" />
+                              <span className="truncate">{item.location}</span>
+                            </div>
+                          </td>
 
-                  <FormInput
-                    label="Storage Location"
-                    placeholder="Store Room"
-                  />
+                          {/* Status */}
+                          <td className="px-5 py-4">
+                            <StatusBadge status={item.status} />
+                          </td>
 
-                  <FormInput
-                    label="Received By"
-                    placeholder="Staff name"
-                  />
-                </>
-              ) : (
-                <>
-                  <FormInput
-                    label="Quantity"
-                    type="number"
-                    placeholder="Enter quantity"
-                  />
+                          {/* Action */}
+                          <td className="px-5 py-4 text-right">
+                            <button
+                              type="button"
+                              title="View Details"
+                              onClick={() => setSelectedItem(item)}
+                              className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#08A6A0] hover:bg-[#E8F8F6]"
+                            >
+                              <Eye size={15} />
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-                  <FormSelect
-                    label="Department"
-                    options={[
-                      "Emergency",
-                      "ICU",
-                      "OPD",
-                      "IPD",
-                      "Laboratory",
-                      "Operation Theatre",
-                      "Blood Bank",
-                      "Nursing Department",
-                      "Pharmacy",
-                      "Administration",
-                      "Other Departments",
-                    ]}
-                  />
+              {/* MOBILE CARDS */}
+              <div className="divide-y divide-[#EAF2F0] lg:hidden">
+                {filteredAllItems.map((item) => {
+                  const isMed = item.itemType === "Medicine";
+                  return (
+                    <div key={item.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                              isMed
+                                ? "bg-teal-50 text-teal-600"
+                                : "bg-sky-50 text-sky-600"
+                            }`}
+                          >
+                            {isMed ? <Pill size={19} /> : <ShieldCheck size={19} />}
+                          </div>
 
-                  <FormInput
-                    label="Issued To"
-                    placeholder="Employee / Department"
-                  />
+                          <div>
+                            <p className="font-semibold text-[#173F41]">
+                              {item.name}
+                            </p>
+                            <p className="text-xs text-[#9AAEAF]">
+                              {item.code} • {item.department}
+                            </p>
+                          </div>
+                        </div>
 
-                  <FormInput
-                    label="Purpose"
-                    placeholder="Purpose of issue"
-                  />
+                        <TypeBadge type={item.itemType} />
+                      </div>
 
-                  <FormInput
-                    label="Issue Date"
-                    type="date"
-                  />
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-lg bg-[#F8FCFB] p-2">
+                          <span className="text-[#819596]">Quantity:</span>
+                          <p className="font-bold text-[#173F41]">
+                            {item.quantity} {item.unit}
+                          </p>
+                        </div>
 
-                  <FormInput
-                    label="Issued By"
-                    placeholder="Staff name"
-                  />
-                </>
+                        <div className="rounded-lg bg-[#F8FCFB] p-2">
+                          <span className="text-[#819596]">Valuation:</span>
+                          <p className="font-bold text-[#173F41]">
+                            ₹{(item.totalValue || 0).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <StatusBadge status={item.status} />
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedItem(item)}
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold text-[#08A6A0] hover:bg-[#E8F8F6]"
+                        >
+                          <Eye size={14} />
+                          Details
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* EMPTY STATE */}
+              {filteredAllItems.length === 0 && (
+                <div className="px-5 py-16 text-center">
+                  <Package size={42} className="mx-auto text-[#9AAEAF]" />
+                  <h3 className="mt-4 font-bold text-[#073F42]">
+                    No items found
+                  </h3>
+                  <p className="mt-1 text-sm text-[#819596]">
+                    Try changing your search query or filters.
+                  </p>
+                </div>
               )}
             </div>
+          </>
+        )}
+      </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#31585A]">
-                Remarks
-              </label>
+      {/* ===================================================
+          ITEM DETAIL MODAL
+      =================================================== */}
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-[#EAF2F0] px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                    selectedItem.itemType === "Medicine"
+                      ? "bg-teal-50 text-teal-600"
+                      : "bg-sky-50 text-sky-600"
+                  }`}
+                >
+                  {selectedItem.itemType === "Medicine" ? (
+                    <Pill size={22} />
+                  ) : (
+                    <ShieldCheck size={22} />
+                  )}
+                </div>
 
-              <textarea
-                rows="3"
-                placeholder="Add remarks..."
-                className="w-full rounded-xl border border-[#D9E9E7] px-4 py-3 text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
-              />
-            </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-[#073F42]">
+                      {selectedItem.name}
+                    </h2>
+                    <TypeBadge type={selectedItem.itemType} />
+                  </div>
+                  <p className="text-xs text-[#819596]">
+                    {selectedItem.code} • {selectedItem.department}
+                  </p>
+                </div>
+              </div>
 
-            <div className="flex justify-end gap-3 border-t border-[#EAF2F0] pt-5">
               <button
                 type="button"
-                onClick={() => setShowStockModal(false)}
-                className="rounded-xl border border-[#D9E9E7] px-5 py-2.5 text-sm font-semibold text-[#31585A]"
+                onClick={() => setSelectedItem(null)}
+                className="rounded-xl p-2 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#078F8A]"
               >
-                Cancel
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="max-h-[calc(92vh-140px)] space-y-5 overflow-y-auto p-6">
+              {/* Top Highlights */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-xl border border-[#E2EFED] bg-[#FBFDFD] p-3 text-center">
+                  <p className="text-xs text-[#819596]">Quantity</p>
+                  <p className="mt-1 text-base font-bold text-[#073F42]">
+                    {selectedItem.quantity} {selectedItem.unit}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-[#FBFDFD] p-3 text-center">
+                  <p className="text-xs text-[#819596]">Unit Price</p>
+                  <p className="mt-1 text-base font-bold text-[#073F42]">
+                    ₹{(selectedItem.price || 0).toLocaleString("en-IN")}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-[#FBFDFD] p-3 text-center">
+                  <p className="text-xs text-[#819596]">Total Value</p>
+                  <p className="mt-1 text-base font-bold text-[#08A6A0]">
+                    ₹{(selectedItem.totalValue || 0).toLocaleString("en-IN")}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-[#FBFDFD] p-3 text-center">
+                  <p className="text-xs text-[#819596]">Status</p>
+                  <div className="mt-1">
+                    <StatusBadge status={selectedItem.status} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Specs Grid */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#E2EFED] bg-white p-3">
+                  <span className="text-xs text-[#819596]">Category</span>
+                  <p className="mt-1 text-sm font-semibold text-[#173F41]">
+                    {selectedItem.category}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-white p-3">
+                  <span className="text-xs text-[#819596]">Department</span>
+                  <p className="mt-1 text-sm font-semibold text-[#173F41]">
+                    {selectedItem.department}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-white p-3">
+                  <span className="text-xs text-[#819596]">Storage Location</span>
+                  <p className="mt-1 text-sm font-semibold text-[#173F41]">
+                    {selectedItem.location || "N/A"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-white p-3">
+                  <span className="text-xs text-[#819596]">
+                    {selectedItem.itemType === "Medicine"
+                      ? "Manufacturer"
+                      : "Assigned Personnel"}
+                  </span>
+                  <p className="mt-1 text-sm font-semibold text-[#173F41]">
+                    {selectedItem.supplierOrPerson || "N/A"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-white p-3">
+                  <span className="text-xs text-[#819596]">
+                    {selectedItem.itemType === "Medicine"
+                      ? "Batch Number"
+                      : "Serial Number"}
+                  </span>
+                  <p className="mt-1 text-sm font-semibold text-[#173F41]">
+                    {selectedItem.batch || "N/A"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#E2EFED] bg-white p-3">
+                  <span className="text-xs text-[#819596]">
+                    {selectedItem.itemType === "Medicine"
+                      ? "Expiry Date"
+                      : "Warranty / Maintenance"}
+                  </span>
+                  <p className="mt-1 text-sm font-semibold text-[#173F41]">
+                    {selectedItem.expiry || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Medicine specific details */}
+              {selectedItem.itemType === "Medicine" && selectedItem.original && (
+                <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-4 text-xs">
+                  <p className="font-semibold text-teal-800">Pharmaceutical Specs:</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-teal-900">
+                    <div>Generic Name: <strong>{selectedItem.original.generic_name || "N/A"}</strong></div>
+                    <div>Dosage: <strong>{selectedItem.original.dosage || "N/A"}</strong></div>
+                    <div>Prescription: <strong>{selectedItem.original.prescription_required ? "Required" : "Not Required"}</strong></div>
+                    <div>Reorder Level: <strong>{selectedItem.original.reorder_level || "20"}</strong></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Asset specific details */}
+              {selectedItem.itemType === "Asset" && selectedItem.original && (
+                <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-4 text-xs">
+                  <p className="font-semibold text-sky-800">Asset Specifications:</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-sky-900">
+                    <div>Model: <strong>{selectedItem.original.model_number || "N/A"}</strong></div>
+                    <div>Purchase Date: <strong>{selectedItem.original.purchase_date || "N/A"}</strong></div>
+                    <div>Next Maintenance: <strong>{selectedItem.original.next_maintenance || "N/A"}</strong></div>
+                    <div>Condition: <strong>{selectedItem.original.condition || "Good"}</strong></div>
+                  </div>
+                  {selectedItem.original.notes && (
+                    <p className="mt-2 text-sky-700 italic">Notes: {selectedItem.original.notes}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-[#EAF2F0] px-6 py-4">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetCat =
+                    selectedItem.itemType === "Medicine" ? "Medicine" : "Assets";
+                  setCategoryFilter(targetCat);
+                  setSelectedItem(null);
+                }}
+                className="text-xs font-semibold text-[#08A6A0] hover:underline"
+              >
+                Open in {selectedItem.itemType} View &rarr;
               </button>
 
               <button
-                type="submit"
-                className="rounded-xl bg-[#08A6A0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#078F8A]"
+                type="button"
+                onClick={() => setSelectedItem(null)}
+                className="rounded-xl border border-[#D9E9E7] px-4 py-2 text-xs font-semibold text-[#31585A] hover:bg-slate-50"
               >
-                Save {stockType}
+                Close
               </button>
             </div>
-          </form>
-        </Modal>
-      )}
-    </div>
-  );
-};
-
-/* =========================================================
-   QUICK CARD
-========================================================= */
-
-const QuickCard = ({ icon: Icon, title, description, onClick }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group rounded-2xl border border-[#E2EFED] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#08A6A0] hover:shadow-md"
-    >
-      <div className="flex items-center gap-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0] transition group-hover:bg-[#08A6A0] group-hover:text-white">
-          <Icon size={21} />
-        </div>
-
-        <div>
-          <h3 className="font-bold text-[#073F42]">{title}</h3>
-          <p className="mt-1 text-xs text-[#819596]">{description}</p>
-        </div>
-      </div>
-    </button>
-  );
-};
-
-/* =========================================================
-   MODAL
-========================================================= */
-
-const Modal = ({ title, subtitle, children, onClose }) => {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-4">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-[#EAF2F0] px-6 py-5">
-          <div>
-            <h2 className="text-xl font-bold text-[#073F42]">{title}</h2>
-            <p className="mt-1 text-sm text-[#819596]">{subtitle}</p>
           </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-2 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#078F8A]"
-          >
-            <XCircle size={21} />
-          </button>
         </div>
+      )}
 
-        <div className="max-h-[calc(92vh-90px)] overflow-y-auto p-6">
-          {children}
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg transition-all ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+          }`}
+        >
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>{toast.message}</span>
         </div>
-      </div>
-    </div>
-  );
-};
-
-/* =========================================================
-   FORM INPUT
-========================================================= */
-
-const FormInput = ({
-  name,
-  label,
-  placeholder,
-  type = "text",
-  defaultValue,
-}) => {
-  return (
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-[#31585A]">
-        {label}
-      </label>
-
-      <input
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        className="w-full rounded-xl border border-[#D9E9E7] bg-white px-4 py-3 text-sm text-[#173F41] outline-none transition placeholder:text-[#9AAEAF] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
-      />
-    </div>
-  );
-};
-
-/* =========================================================
-   FORM SELECT
-========================================================= */
-
-const FormSelect = ({ name, label, options, defaultValue }) => {
-  return (
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-[#31585A]">
-        {label}
-      </label>
-
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="w-full rounded-xl border border-[#D9E9E7] bg-white px-4 py-3 text-sm text-[#173F41] outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]"
-      >
-        <option value="">Select {label}</option>
-
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      )}
     </div>
   );
 };

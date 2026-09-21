@@ -2,6 +2,7 @@ import {
   Activity,
   Bell,
   CalendarDays,
+  CalendarPlus,
   ClipboardList,
   FileText,
   HelpCircle,
@@ -13,6 +14,7 @@ import {
   Clock3,
   X,
 } from "lucide-react";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 
 const WorkforceSidebar = ({
   activePage,
@@ -21,7 +23,19 @@ const WorkforceSidebar = ({
   mobileMenuOpen,
   onClose,
 }) => {
-  const role = user?.role?.toLowerCase() || "staff";
+  const { settings } = useHospitalSettings();
+  const hospitalName = settings?.hospitalName || "CareCore";
+  const logo = settings?.logo;
+  // Read role from localStorage user object (centralized auth)
+  const storedUser = (() => {
+    try {
+      const s = localStorage.getItem("user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const role = user?.role?.toLowerCase() || storedUser?.role?.toLowerCase() || "staff";
 
   const navigate = (path) => {
     onNavigate(path);
@@ -30,13 +44,18 @@ const WorkforceSidebar = ({
 
   const isActive = (path) => {
     if (path === "/workforce") {
-      return activePage === "/workforce";
+      return activePage === "/workforce" || activePage === "/workforce/";
     }
 
     return activePage === path;
   };
 
-  const navItems = [
+  const allNavItems = [
+    {
+      label: "Dashboard",
+      path: "/workforce",
+      icon: LayoutDashboard,
+    },
     {
       label: "My Profile",
       path: "/workforce/profile",
@@ -56,11 +75,18 @@ const WorkforceSidebar = ({
       label: "Appointments",
       path: "/workforce/appointments",
       icon: ClipboardList,
+      roles: ["doctor"],
     },
     {
       label: "My Patients",
       path: "/workforce/patients",
       icon: Users,
+      roles: ["doctor", "nurse"],
+    },
+    {
+      label: "Leave Requests",
+      path: "/workforce/leave",
+      icon: CalendarPlus,
     },
     {
       label: "Notifications",
@@ -79,6 +105,11 @@ const WorkforceSidebar = ({
     },
   ];
 
+  const navItems = allNavItems.filter((item) => {
+    if (!item.roles) return true;
+    return item.roles.includes(role);
+  });
+
   return (
     <aside
       className={`fixed left-0 top-0 z-50 flex h-screen w-[260px] flex-col bg-[#073F42] shadow-xl transition-transform duration-300 ease-in-out ${
@@ -89,14 +120,23 @@ const WorkforceSidebar = ({
           SIDEBAR HEADER
       ========================================== */}
       <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/10 px-5">
-        <div className="min-w-0">
-          <h2 className="truncate text-xl font-bold tracking-tight text-white">
-            CareCore
-          </h2>
+        <div className="flex min-w-0 items-center gap-3">
+          {logo ? (
+            <img
+              src={logo}
+              alt={hospitalName}
+              className="h-9 w-9 shrink-0 rounded-xl bg-white/10 p-1 object-contain"
+            />
+          ) : null}
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-bold tracking-tight text-white">
+              {hospitalName}
+            </h2>
 
-          <p className="mt-0.5 truncate text-[11px] text-[#9DB7B7]">
-            Workforce Portal
-          </p>
+            <p className="mt-0.5 truncate text-[11px] capitalize text-[#9DB7B7]">
+              {role} Portal
+            </p>
+          </div>
         </div>
 
         {/* Mobile Close Button */}
@@ -159,7 +199,12 @@ const WorkforceSidebar = ({
         {/* Logout */}
         <button
           type="button"
-          onClick={() => navigate("/login")}
+          onClick={() => {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("employeeId");
+            navigate("/login");
+          }}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#B8CDCD] transition-colors hover:bg-white/10 hover:text-white"
         >
           <LogOut className="h-[18px] w-[18px]" />

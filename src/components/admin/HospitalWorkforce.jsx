@@ -2,6 +2,7 @@ import {
   Eye,
   Trash2,
   Users,
+  KeyRound,
 } from "lucide-react";
 
 /* =========================
@@ -13,6 +14,7 @@ const HospitalWorkforce = ({
   filteredStaff = [],
   onView,
   onRemove,
+  onCredentials,
   onClearFilters,
 }) => {
   return (
@@ -75,6 +77,7 @@ const HospitalWorkforce = ({
                     member={member}
                     onView={() => onView(member)}
                     onRemove={() => onRemove && onRemove(member)}
+                    onCredentials={() => onCredentials && onCredentials(member)}
                   />
                 ))}
               </tbody>
@@ -89,6 +92,7 @@ const HospitalWorkforce = ({
                 member={member}
                 onView={() => onView(member)}
                 onRemove={() => onRemove && onRemove(member)}
+                onCredentials={() => onCredentials && onCredentials(member)}
               />
             ))}
           </div>
@@ -116,7 +120,7 @@ const TableHeader = ({ children, align = "left" }) => {
    DESKTOP ROW
 ========================= */
 
-const StaffRow = ({ member, onView, onRemove }) => {
+const StaffRow = ({ member, onView, onRemove, onCredentials }) => {
   return (
     <tr className="border-b border-[#EAF2F0] last:border-0 hover:bg-[#FAFDFC]">
       {/* Staff */}
@@ -178,6 +182,14 @@ const StaffRow = ({ member, onView, onRemove }) => {
         <div className="flex justify-end gap-2">
           <button
             type="button"
+            onClick={onCredentials}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+            title="Workforce Login Credentials"
+          >
+            <KeyRound className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
             onClick={onView}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
             title="View staff details"
@@ -202,7 +214,7 @@ const StaffRow = ({ member, onView, onRemove }) => {
    MOBILE CARD
 ========================= */
 
-const StaffMobileCard = ({ member, onView, onRemove }) => {
+const StaffMobileCard = ({ member, onView, onRemove, onCredentials }) => {
   return (
     <div className="flex w-full items-start gap-2.5 p-3 text-left transition hover:bg-[#FAFDFC] sm:gap-3 sm:p-4">
       {/* Avatar */}
@@ -220,7 +232,7 @@ const StaffMobileCard = ({ member, onView, onRemove }) => {
               {member.name}
             </p>
 
-            <p className="mt-0.5 text-[10px] text-[#819596] sm:mt-1 sm:text-xs">
+            <p className="mt-0.5 truncate text-[10px] text-[#819596] sm:text-xs">
               {member.id} · {member.designation}
             </p>
           </div>
@@ -244,6 +256,14 @@ const StaffMobileCard = ({ member, onView, onRemove }) => {
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={onCredentials}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9E9E7] text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]"
+          title="Workforce Login Credentials"
+        >
+          <KeyRound className="h-3.5 w-3.5" />
+        </button>
         <button
           type="button"
           onClick={onView}

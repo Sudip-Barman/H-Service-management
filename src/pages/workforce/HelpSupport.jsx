@@ -7,6 +7,7 @@ import {
   Phone,
   Send,
 } from "lucide-react";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 
 const faqItems = [
   {
@@ -32,6 +33,7 @@ const faqItems = [
 ];
 
 export default function HelpSupport({ user }) {
+  const { settings } = useHospitalSettings();
   const [openFaq, setOpenFaq] = useState(0);
 
   const employeeName = user?.name?.split(" ")[0] || "Team member";
@@ -74,14 +76,14 @@ export default function HelpSupport({ user }) {
             <div className="flex items-center gap-3 rounded-xl bg-[#F7FBFB] p-3">
               <Phone className="h-4 w-4 text-[#08A6A0]" />
               <span className="text-sm text-[#1D3D3F]">
-                +91 98765 43210
+                {settings?.phone || "+91 98765 43210"}
               </span>
             </div>
 
             <div className="flex items-center gap-3 rounded-xl bg-[#F7FBFB] p-3">
               <Mail className="h-4 w-4 text-[#08A6A0]" />
               <span className="text-sm text-[#1D3D3F]">
-                support@carecore.health
+                {settings?.email || "support@carecore.health"}
               </span>
             </div>
           </div>

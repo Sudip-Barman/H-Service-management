@@ -11,10 +11,6 @@ import {
   Trash2,
 } from "lucide-react";
 
-import {
-  getWorkforceUser,
-  getUserNotifications,
-} from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
 
 const getTypeIcon = (type) => {
@@ -81,9 +77,19 @@ const formatNotificationDate = (date) => {
 };
 
 export default function Notifications({ user }) {
-  const employeeId = user?.id || "EMP-1001";
+  const storedUser = (() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const profile = getWorkforceUser(employeeId);
+  const currentUser = user || storedUser;
+  const employeeId = currentUser?.id ? String(currentUser.id) : "";
+  const profile = currentUser;
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -91,7 +97,7 @@ export default function Notifications({ user }) {
   const fetchNotifications = async () => {
     try {
       const data = await apiRequest("/notifications");
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const mapped = data.map((n) => ({
           id: n.id,
           employeeId: employeeId,
@@ -103,11 +109,11 @@ export default function Notifications({ user }) {
         }));
         setNotifications(mapped);
       } else {
-        setNotifications(getUserNotifications(employeeId));
+        setNotifications([]);
       }
     } catch (err) {
       console.error("Failed to load notifications:", err);
-      setNotifications(getUserNotifications(employeeId));
+      setNotifications([]);
     } finally {
       setLoading(false);
     }

@@ -10,11 +10,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  getUserNotifications,
-  getWorkforceUser,
-} from "../../data/workforceData";
-
 const WorkforceHeader = ({
   title = "Dashboard",
   subtitle = "Welcome back to your workforce portal.",
@@ -27,32 +22,25 @@ const WorkforceHeader = ({
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // -----------------------------------------
-  // CURRENT USER
-  // -----------------------------------------
+  const storedUser = (() => {
+    try {
+      const s = localStorage.getItem("user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const employeeId =
-    user?.employeeId ||
-    user?.id ||
-    localStorage.getItem("employeeId") ||
-    "EMP-1001";
+  const workforceUser = {
+    name: user?.name || storedUser?.name || "Workforce Member",
+    email: user?.email || storedUser?.email || "staff@carecore.com",
+    role: user?.role || storedUser?.role || "staff",
+    designation: storedUser?.profile?.specialization || storedUser?.profile?.qualification || storedUser?.role || "staff",
+  };
 
-  const workforceUser = user || getWorkforceUser(employeeId);
+  const role = workforceUser.role;
 
-  const role = workforceUser?.role || "staff";
-
-  // -----------------------------------------
-  // CURRENT EMPLOYEE ID
-  //
-  // workforceData uses "id", while some
-  // authenticated user objects may use
-  // "employeeId".
-  // -----------------------------------------
-
-  const currentEmployeeId =
-    workforceUser?.employeeId ||
-    workforceUser?.id ||
-    employeeId;
+  const currentEmployeeId = storedUser?.id || user?.id || "";
 
   // -----------------------------------------
   // USER INITIALS
@@ -73,17 +61,9 @@ const WorkforceHeader = ({
 
   const initials = getInitials(workforceUser?.name);
 
-  // -----------------------------------------
-  // NOTIFICATIONS
-  // -----------------------------------------
-
-  const notifications = currentEmployeeId
-    ? getUserNotifications(currentEmployeeId)
-    : [];
-
-  const unreadCount = notifications.filter(
-    (notification) => !notification.read
-  ).length;
+  // Notification count — will be 0 until real notifications are loaded
+  // Pages that need real counts should fetch from backend
+  const unreadCount = 0;
 
   // -----------------------------------------
   // CLOSE PROFILE MENU
@@ -149,8 +129,7 @@ const WorkforceHeader = ({
   const handleLogout = () => {
     setShowProfileMenu(false);
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("jwt");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("user");
     localStorage.removeItem("employeeId");
 

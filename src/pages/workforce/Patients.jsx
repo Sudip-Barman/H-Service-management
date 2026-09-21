@@ -13,24 +13,22 @@ import {
   Clock3,
 } from "lucide-react";
 
-import {
-  getWorkforceUser,
-  getUserPatients,
-} from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
 
 const Patients = ({ user }) => {
   const navigate = useNavigate();
 
-  const employeeId =
-    user?.employeeId ||
-    user?.id ||
-    localStorage.getItem("employeeId") ||
-    "EMP-1001";
+  const storedUser = (() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const profile =
-    getWorkforceUser(employeeId) ||
-    getWorkforceUser("EMP-1001");
+  const currentUser = user || storedUser;
+  const employeeId = currentUser?.id ? String(currentUser.id) : "";
 
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +37,7 @@ const Patients = ({ user }) => {
     const fetchPatients = async () => {
       try {
         const data = await apiRequest("/patients");
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const mapped = data.map((p) => ({
             id: p.id,
             patientId: p.registration_number || `PAT-${1000 + p.id}`,
@@ -64,17 +62,17 @@ const Patients = ({ user }) => {
           }));
           setPatients(mapped);
         } else {
-          setPatients(getUserPatients(profile?.id || employeeId));
+          setPatients([]);
         }
       } catch (err) {
         console.error("Failed to load patients:", err);
-        setPatients(getUserPatients(profile?.id || employeeId));
+        setPatients([]);
       } finally {
         setLoading(false);
       }
     };
     fetchPatients();
-  }, [employeeId, profile?.id]);
+  }, [employeeId]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");

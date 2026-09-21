@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 // ================= AUTH =================
 import Login from "../pages/auth/Login";
+import FirstTimePassword from "../pages/auth/FirstTimePassword";
 
 // ================= ADMIN =================
 import AdminLayout from "../layouts/AdminLayout";
@@ -40,6 +41,7 @@ import Billings from "../pages/admin/billings/Billings";
 
 // ================= WORKFORCE =================
 import WorkforceLayout from "../layouts/WorkforceLayout";
+import WorkforceDashboard from "../pages/workforce/Dashboard";
 import WorkforceProfile from "../pages/workforce/Profile";
 import WorkforceSchedule from "../pages/workforce/Schedule";
 import WorkforceAttendance from "../pages/workforce/Attendance";
@@ -47,6 +49,8 @@ import WorkforceAppointments from "../pages/workforce/Appointments";
 import WorkforcePatients from "../pages/workforce/Patients";
 import WorkforceNotifications from "../pages/workforce/Notifications";
 import WorkforceSettings from "../pages/workforce/Settings";
+import WorkforceLeave from "../pages/workforce/Leave";
+import WorkforceAssignments from "../pages/workforce/Assignments";
 import HelpSupport from "../pages/workforce/HelpSupport";
 
 // ================= LOGOUT =================
@@ -89,6 +93,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Force password change on first login
+  if (user.must_change_password) {
+    return <Navigate to="/first-time-password" replace />;
+  }
+
   // Role restriction
   if (
     allowedRoles.length > 0 &&
@@ -124,6 +133,10 @@ const LoginRoute = () => {
 
   // Already logged in
   if (token && user) {
+    if (user.must_change_password) {
+      return <Navigate to="/first-time-password" replace />;
+    }
+
     if (user.role === "admin") {
       return <Navigate to="/admin" replace />;
     }
@@ -142,6 +155,31 @@ const LoginRoute = () => {
 
 
 // ============================================================
+// FIRST TIME PASSWORD ROUTE
+// ============================================================
+
+const FirstTimePasswordRoute = () => {
+  const token = getToken();
+  const user = getUser();
+
+  // Not logged in
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Password change not needed -> send to portal
+  if (!user.must_change_password) {
+    if (user.role === "admin") {
+      return <Navigate to="/admin" replace />;
+    }
+    return <Navigate to="/workforce" replace />;
+  }
+
+  return <FirstTimePassword />;
+};
+
+
+// ============================================================
 // APP ROUTES
 // ============================================================
 
@@ -156,6 +194,11 @@ const AppRoutes = () => {
       <Route
         path="/login"
         element={<LoginRoute />}
+      />
+
+      <Route
+        path="/first-time-password"
+        element={<FirstTimePasswordRoute />}
       />
 
       <Route
@@ -351,10 +394,10 @@ const AppRoutes = () => {
         }
       >
 
-        {/* Default /workforce redirects to profile */}
+        {/* Default /workforce shows Dashboard */}
         <Route
           index
-          element={<Navigate to="/workforce/profile" replace />}
+          element={<WorkforceDashboard />}
         />
 
         {/* 1. Profile */}
@@ -399,7 +442,19 @@ const AppRoutes = () => {
           element={<WorkforceSettings />}
         />
 
-        {/* 8. Help & Support */}
+        {/* 8. Leave Requests */}
+        <Route
+          path="leave"
+          element={<WorkforceLeave />}
+        />
+
+        {/* 9. Assignments */}
+        <Route
+          path="assignments"
+          element={<WorkforceAssignments />}
+        />
+
+        {/* 10. Help & Support */}
         <Route
           path="help"
           element={<HelpSupport />}

@@ -13,9 +13,11 @@ import {
 } from "lucide-react";
 
 import { login } from "../../api/auth";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { settings } = useHospitalSettings();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,11 +34,13 @@ const Login = () => {
     {
       value: "admin",
       label: "Admin",
+      subtitle: "Admin Portal",
       icon: UserCog,
     },
     {
       value: "staff",
       label: "Staff",
+      subtitle: "Workforce",
       icon: UsersRound,
     },
   ];
@@ -117,6 +121,15 @@ const Login = () => {
         "userRole",
         data.user.role
       );
+
+      // ========================================================
+      // FIRST-TIME PASSWORD CHANGE CHECK
+      // ========================================================
+
+      if (data.user.must_change_password) {
+        navigate("/first-time-password");
+        return;
+      }
 
       // ========================================================
       // ROLE-BASED REDIRECT
@@ -243,8 +256,12 @@ const Login = () => {
 
                 <div className="text-center">
 
-                  <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-[#E5F8F5] text-lg font-bold text-[#08A6A0]">
-                    +
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[#E5F8F5] text-lg font-bold text-[#08A6A0] overflow-hidden">
+                    {settings?.logo ? (
+                      <img src={settings.logo} alt="Logo" className="h-full w-full object-contain p-1" />
+                    ) : (
+                      "+"
+                    )}
                   </div>
 
                   <h2 className="mt-2.5 text-xl font-bold text-[#073F42]">
@@ -252,7 +269,7 @@ const Login = () => {
                   </h2>
 
                   <p className="mt-1 text-xs text-[#789092]">
-                    Access your CareCore account
+                    Access your {settings?.hospitalName || "CareCore"} account
                   </p>
 
                 </div>
@@ -277,7 +294,7 @@ const Login = () => {
                       Login as
                     </label>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
 
                       {roles.map((item) => {
 
@@ -303,26 +320,29 @@ const Login = () => {
                               items-center
                               justify-center
                               gap-1
-                              rounded-lg
+                              rounded-xl
                               border
-                              px-1
-                              text-[11px]
-                              font-semibold
-                              transition
+                              px-3
+                              transition-all
                               disabled:cursor-not-allowed
                               disabled:opacity-60
                               ${
                                 isSelected
-                                  ? "border-[#08A6A0] bg-[#E5F8F5] text-[#08A6A0] shadow-sm"
+                                  ? "border-[#08A6A0] bg-[#E5F8F5] text-[#08A6A0] shadow-sm ring-1 ring-[#08A6A0]"
                                   : "border-[#D9E9E7] bg-[#FAFDFC] text-[#708789] hover:border-[#08A6A0] hover:text-[#08A6A0]"
                               }
                             `}
                           >
 
-                            <Icon className="h-4 w-4" />
+                            <div className="flex items-center gap-1.5">
+                              <Icon className="h-4 w-4" />
+                              <span className="text-xs font-bold">
+                                {item.label}
+                              </span>
+                            </div>
 
-                            <span>
-                              {item.label}
+                            <span className="text-[10px] font-medium opacity-80">
+                              {item.subtitle}
                             </span>
 
                           </button>
@@ -335,7 +355,7 @@ const Login = () => {
 
 
                   {/* ==================================================
-                      EMAIL
+                      USERNAME / EMAIL
                   ================================================== */}
 
                   <div>
@@ -344,7 +364,7 @@ const Login = () => {
                       htmlFor="email"
                       className="mb-1 block text-xs font-semibold text-[#31585A]"
                     >
-                      Email Address
+                      {role === "admin" ? "Admin Email or Username" : "Staff Username or Email"}
                     </label>
 
                     <div className="relative">
@@ -354,12 +374,16 @@ const Login = () => {
                       <input
                         id="email"
                         name="email"
-                        type="email"
+                        type="text"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="Enter your email"
+                        placeholder={
+                          role === "admin"
+                            ? "Enter admin email or username"
+                            : "Enter doctor, nurse, or staff username/email"
+                        }
                         disabled={loading}
-                        autoComplete="email"
+                        autoComplete="username"
                         className="
                           h-10
                           w-full
@@ -586,9 +610,7 @@ const Login = () => {
                 <div className="mt-4 rounded-lg border border-[#DDECEA] bg-[#F4FBF9] px-3 py-2">
 
                   <p className="text-center text-[11px] leading-4 text-[#708789]">
-                    Employee accounts such as doctors,
-                    nurses, and staff require administrator
-                    approval.
+                    Workforce portal access for Doctors, Nurses, and Staff is managed by Hospital Administration.
                   </p>
 
                 </div>

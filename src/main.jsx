@@ -4,13 +4,16 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
 import ScrollToTop from "./components/common/ScrollToTop";
+import { HospitalSettingsProvider } from "./context/HospitalSettingsContext";
 import "./index.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-    <ScrollToTop />
-    <App />
+      <HospitalSettingsProvider>
+        <ScrollToTop />
+        <App />
+      </HospitalSettingsProvider>
     </BrowserRouter>
   </StrictMode>
 );

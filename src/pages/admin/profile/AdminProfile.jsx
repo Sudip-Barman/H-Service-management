@@ -10,8 +10,11 @@ import {
   AlertCircle,
   Save,
   Lock,
+  Camera,
+  Trash2,
 } from "lucide-react";
 import { apiRequest } from "../../../api/api";
+import { useHospitalSettings } from "../../../context/HospitalSettingsContext";
 
 const AdminProfile = () => {
   const [user, setUser] = useState(() => {
@@ -23,13 +26,17 @@ const AdminProfile = () => {
     }
   });
 
+  const { settings: hospitalSettings } = useHospitalSettings();
+  const hospitalName = hospitalSettings?.hospitalName || "CareCore General Hospital";
+
   const [formData, setFormData] = useState({
     name: user?.name || "System Administrator",
     email: user?.email || "admin@carecore.com",
     username: user?.username || "admin",
-    phone: "+1 (555) 234-5678",
+    phone: user?.phone || "+91 98765 43210",
     department: "Executive & Hospital Operations",
-    hospitalName: "CareCore General Hospital",
+    hospitalName: hospitalName,
+    avatar: user?.avatar || "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -53,6 +60,32 @@ const AdminProfile = () => {
     setToast({ message, type });
   };
 
+  // Fetch freshest profile from backend/database on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await apiRequest("/api/auth/me");
+        if (data) {
+          setUser(data);
+          setFormData((prev) => ({
+            ...prev,
+            name: data.name || prev.name,
+            username: data.username || prev.username,
+            email: data.email || prev.email,
+            phone: data.phone || prev.phone,
+            avatar: data.avatar || prev.avatar,
+          }));
+          try {
+            localStorage.setItem("user", JSON.stringify(data));
+          } catch {}
+        }
+      } catch (err) {
+        console.error("Failed to load profile from backend:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   const handleProfileChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -61,14 +94,53 @@ const AdminProfile = () => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
   };
 
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Profile image must be less than 2MB.", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setFormData((prev) => ({ ...prev, avatar: event.target.result }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      // Update local storage user
-      const updatedUser = { ...user, name: formData.name, email: formData.email };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      const res = await apiRequest("/api/auth/profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          phone: formData.phone,
+          avatar: formData.avatar,
+        }),
+      });
+
+      const updatedUser = {
+        ...(user || {}),
+        ...(res || {}),
+        name: formData.name,
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+        avatar: formData.avatar,
+      };
+
+      try {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } catch {}
+
       setUser(updatedUser);
+      window.dispatchEvent(new CustomEvent("user-updated", { detail: updatedUser }));
       showToast("Profile details updated successfully!", "success");
     } catch (err) {
       showToast(err.message || "Failed to update profile", "error");
@@ -88,18 +160,19 @@ const AdminProfile = () => {
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast("New passwords do not match.", "error");
+      showToast("New password and confirmation do not match.", "error");
       return;
     }
 
     setChangingPassword(true);
     try {
-      // Call auth change password or user update
       await apiRequest("/api/auth/change-password", {
         method: "POST",
         body: JSON.stringify({
-          old_password: passwordData.oldPassword,
+          current_password: passwordData.oldPassword,
           new_password: passwordData.newPassword,
+          confirm_password: passwordData.confirmPassword,
+          email: formData.email,
         }),
       });
       showToast("Password changed successfully!", "success");
@@ -135,22 +208,47 @@ const AdminProfile = () => {
       <div className="relative overflow-hidden rounded-2xl border border-[#DCEBE9] bg-gradient-to-r from-[#073F42] to-[#087F7A] p-6 text-white shadow-sm sm:p-8">
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold backdrop-blur-sm border border-white/20">
-              {formData.name.slice(0, 2).toUpperCase()}
+            <div className="relative group flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold backdrop-blur-sm border border-white/20 overflow-hidden">
+              {formData.avatar ? (
+                <img
+                  src={formData.avatar}
+                  alt={formData.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                formData.name ? formData.name.slice(0, 2).toUpperCase() : "AD"
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold sm:text-2xl">{formData.name}</h1>
+                <h1 className="text-xl font-bold sm:text-2xl">{formData.name || "Administrator"}</h1>
                 <span className="rounded-full bg-[#08A6A0]/40 px-2.5 py-0.5 text-xs font-semibold tracking-wide border border-[#08A6A0]/60">
-                  Super Admin
+                  {user?.role === "admin" ? "Super Admin" : "Administrator"}
                 </span>
               </div>
               <p className="mt-1 text-sm text-[#C8E9E6]">{formData.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/15 hover:bg-white/25 px-2.5 py-1 text-xs font-semibold text-white transition backdrop-blur-sm border border-white/20">
+                  <Camera className="h-3.5 w-3.5" />
+                  <span>{formData.avatar ? "Change Photo" : "Upload Photo"}</span>
+                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                </label>
+                {formData.avatar && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, avatar: "" }))}
+                    className="inline-flex items-center gap-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 px-2.5 py-1 text-xs font-semibold text-red-200 transition border border-red-400/30"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-[#E1F3F1]">
             <Building2 className="h-4 w-4" />
-            <span>CareCore General Hospital • System ID: #ADM-001</span>
+            <span>{hospitalName} • System ID: #ADM-001</span>
           </div>
         </div>
       </div>
@@ -193,8 +291,9 @@ const AdminProfile = () => {
                     type="text"
                     name="username"
                     value={formData.username}
-                    disabled
-                    className="h-10 w-full rounded-xl border border-[#DCEBE9] bg-[#F1F6F5] pl-10 pr-3 text-sm text-[#718889] outline-none cursor-not-allowed"
+                    onChange={handleProfileChange}
+                    placeholder="Enter username"
+                    className="h-10 w-full rounded-xl border border-[#DCEBE9] bg-[#F8FCFB] pl-10 pr-3 text-sm text-[#173F41] outline-none transition focus:border-[#08A6A0] focus:bg-white focus:ring-2 focus:ring-[#08A6A0]/10"
                   />
                 </div>
               </div>
@@ -225,6 +324,7 @@ const AdminProfile = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleProfileChange}
+                    placeholder="+91 98765 00000"
                     className="h-10 w-full rounded-xl border border-[#DCEBE9] bg-[#F8FCFB] pl-10 pr-3 text-sm text-[#173F41] outline-none transition focus:border-[#08A6A0] focus:bg-white focus:ring-2 focus:ring-[#08A6A0]/10"
                   />
                 </div>

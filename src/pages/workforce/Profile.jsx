@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   UserRound,
@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 
 import {
-  getWorkforceUser,
   getRolePermissions,
 } from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
@@ -42,19 +41,38 @@ export default function Profile({ user }) {
     }
   }, []);
 
-  const employeeId = user?.id || storedUser?.id || "EMP-1001";
+  const [currentUser, setCurrentUser] = useState(storedUser);
+
+  useEffect(() => {
+    const fetchFreshProfile = async () => {
+      try {
+        const fresh = await apiRequest("/api/auth/me");
+        if (fresh) {
+          setCurrentUser(fresh);
+          localStorage.setItem("user", JSON.stringify(fresh));
+        }
+      } catch (err) {
+        console.warn("Could not fetch fresh me profile:", err);
+      }
+    };
+    fetchFreshProfile();
+  }, []);
 
   const workforceUser = useMemo(() => {
-    const base = getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001") || {};
+    const prof = currentUser?.profile || {};
     return {
-      ...base,
-      name: storedUser?.name || base.name || "Workforce User",
-      email: storedUser?.email || base.email || "staff@carecore.com",
-      role: storedUser?.role || base.role || "staff",
-      employeeId: storedUser?.id ? `EMP-${1000 + storedUser.id}` : (base.employeeId || "EMP-1001"),
-      status: "Active",
+      name: currentUser?.name || prof.name || "Workforce User",
+      email: currentUser?.email || prof.email || "",
+      phone: currentUser?.phone || prof.phone || "",
+      role: currentUser?.role || "staff",
+      designation: prof.specialization || prof.qualification || currentUser?.role || "Hospital Staff",
+      department: prof.department || "General",
+      employeeId: prof.registration_number || (currentUser?.id ? `EMP-${1000 + currentUser.id}` : ""),
+      qualification: prof.qualification || "",
+      experience: prof.experience_years ? `${prof.experience_years} Years` : (prof.experience || ""),
+      status: prof.status || "Active",
     };
-  }, [employeeId, storedUser]);
+  }, [currentUser]);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",

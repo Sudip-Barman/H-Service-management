@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -13,10 +13,10 @@ import {
   FileText,
   UserRound,
   Stethoscope,
+  HeartPulse,
 } from "lucide-react";
 
 import {
-  getWorkforceUser,
   getUserSchedule,
   getUserAppointments,
   getUserPatients,
@@ -25,16 +25,50 @@ import {
   getUserNotifications,
   getRolePermissions,
 } from "../../data/workforceData";
+import { apiRequest } from "../../api/api";
 
-export default function Dashboard({ user }) {
+export default function Dashboard() {
   const navigate = useNavigate();
 
-  const employeeId = user?.id || "EMP-1001";
-  const workforceUser = getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001");
+  // Read user from centralized auth
+  const storedUser = useMemo(() => {
+    try {
+      const s = localStorage.getItem("user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  const role = workforceUser?.role?.toLowerCase() || "staff";
+  const [currentUser, setCurrentUser] = useState(storedUser);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const fresh = await apiRequest("/api/auth/me");
+        if (fresh) {
+          setCurrentUser(fresh);
+          localStorage.setItem("user", JSON.stringify(fresh));
+        }
+      } catch (err) {
+        console.warn("Dashboard: Could not fetch profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const role = currentUser?.role?.toLowerCase() || "staff";
   const permissions = getRolePermissions(role);
+  const userName = currentUser?.name || currentUser?.profile?.name || "User";
+  const userDepartment = currentUser?.profile?.department || "Hospital Services";
+  const userDesignation = currentUser?.profile?.specialization || currentUser?.profile?.qualification || role;
+  const userEmployeeId = currentUser?.id ? `EMP-${1000 + currentUser.id}` : "";
 
+  // Use mock data for schedule/appointments/patients (no user-specific API exists yet)
+  const employeeId = "EMP-1001";
   const schedules = getUserSchedule(employeeId);
   const appointments = getUserAppointments(employeeId);
   const patients = getUserPatients(employeeId);
@@ -94,7 +128,7 @@ export default function Dashboard({ user }) {
   );
 
   const firstName =
-    workforceUser?.name?.replace("Dr. ", "").split(" ")[0] || "User";
+    userName?.replace("Dr. ", "").split(" ")[0] || "User";
 
   const getGreeting = () => {
     const hour = today.getHours();
@@ -204,6 +238,17 @@ export default function Dashboard({ user }) {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#08A6A0] border-t-transparent" />
+          <p className="text-sm text-slate-500">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
@@ -215,7 +260,7 @@ export default function Dashboard({ user }) {
             </span>
             <span className="h-1 w-1 rounded-full bg-[#A6BDBD]" />
             <span className="text-sm text-slate-500">
-              {workforceUser?.employeeId || employeeId}
+              {userEmployeeId}
             </span>
           </div>
 
@@ -683,12 +728,12 @@ export default function Dashboard({ user }) {
 
           <div>
             <p className="text-sm font-semibold text-[#073F42]">
-              {workforceUser?.designation || getRoleLabel()}
+              {userDesignation || getRoleLabel()}
             </p>
 
             <p className="mt-0.5 text-xs text-[#5E7777]">
-              {workforceUser?.department || "Hospital Services"} •{" "}
-              {workforceUser?.qualification || "Professional Staff"}
+              {userDepartment || "Hospital Services"} •{" "}
+              {currentUser?.profile?.qualification || "Professional Staff"}
             </p>
           </div>
         </div>

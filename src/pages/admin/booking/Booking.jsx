@@ -580,6 +580,7 @@ const Booking = () => {
         nurseData,
         serviceData,
         doctorData,
+        billingData,
       ] = await Promise.all([
         apiRequest("/api/bookings"),
         apiRequest("/api/patients"),
@@ -587,6 +588,7 @@ const Booking = () => {
         apiRequest("/api/nurses").catch(() => []),
         apiRequest("/api/services"),
         apiRequest("/api/doctors").catch(() => []),
+        apiRequest("/api/billing").catch(() => []),
       ]);
 
       const patientList = Array.isArray(
@@ -642,6 +644,26 @@ const Booking = () => {
           bookingData?.bookings ??
           bookingData?.data ??
           [];
+
+      // Build a map: booking_id → payment_status derived from actual bill data
+      // This is the authoritative source — billing is always the source of truth.
+      const billList = Array.isArray(billingData) ? billingData : [];
+      const billPaymentByBookingId = {};
+      billList.forEach((bill) => {
+        const bkId = bill.booking_id ?? bill.bookingId;
+        if (bkId == null) return;
+        const paidAmt = Number(bill.paidAmount ?? bill.paid_amount ?? 0);
+        const totalAmt = Number(bill.totalAmount ?? bill.total_amount ?? 0);
+        let derivedStatus;
+        if (totalAmt > 0 && paidAmt >= totalAmt - 0.01) {
+          derivedStatus = "Paid";
+        } else if (paidAmt > 0) {
+          derivedStatus = "Partial";
+        } else {
+          derivedStatus = "Pending";
+        }
+        billPaymentByBookingId[String(bkId)] = derivedStatus;
+      });
 
       const normalizedPatients =
         patientList
@@ -714,15 +736,21 @@ const Booking = () => {
       setServices(normalizedServices);
 
       setBookings(
-        bookingList.map((booking) =>
-          normalizeBooking(
+        bookingList.map((booking) => {
+          const normalized = normalizeBooking(
             booking,
             normalizedPatients,
             normalizedDoctors,
             normalizedServices,
             allStaffAndNurses
-          )
-        )
+          );
+          // Override payment_status from the bill (authoritative source)
+          const bkIdStr = String(normalized.booking_id ?? booking.booking_id ?? "");
+          if (bkIdStr && billPaymentByBookingId[bkIdStr] !== undefined) {
+            normalized.payment_status = billPaymentByBookingId[bkIdStr];
+          }
+          return normalized;
+        })
       );
     } catch (error) {
       console.error(
@@ -2557,6 +2585,13 @@ const PriorityBadge = ({
    PAYMENT BADGE
    ========================================================= */
 
+const PAYMENT_LABELS = {
+  Pending: "Unpaid",
+  Partial: "Partially Paid",
+  Paid: "Paid",
+  Refunded: "Refunded",
+};
+
 const PaymentBadge = ({
   status,
 }) => {
@@ -2564,11 +2599,13 @@ const PaymentBadge = ({
     paymentStyles[status] ||
     "bg-gray-50 text-gray-700 border-gray-100";
 
+  const label = PAYMENT_LABELS[status] || status;
+
   return (
     <span
       className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${style}`}
     >
-      {status}
+      {label}
     </span>
   );
 };
@@ -2961,6 +2998,7 @@ const BookingDetails = ({
                   icon={CheckCircle2}
                   label="Payment Status"
                   value={
+                    PAYMENT_LABELS[booking.payment_status] ||
                     booking.payment_status
                   }
                 />

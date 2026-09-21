@@ -13,8 +13,6 @@ import {
 } from "lucide-react";
 
 import {
-  getWorkforceUser,
-  getUserAppointments,
   getRolePermissions,
 } from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
@@ -22,12 +20,18 @@ import { apiRequest } from "../../api/api";
 const Appointments = ({ user }) => {
   const navigate = useNavigate();
 
-  const employeeId = user?.id || "EMP-1001";
+  const storedUser = (() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const profile =
-    getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001");
-
-  const role = profile?.role?.toLowerCase() || "doctor";
+  const currentUser = user || storedUser;
+  const employeeId = currentUser?.id ? String(currentUser.id) : "";
+  const role = currentUser?.role?.toLowerCase() || "doctor";
   const permissions = getRolePermissions(role);
 
   const [appointments, setAppointments] = useState([]);
@@ -37,10 +41,10 @@ const Appointments = ({ user }) => {
     const fetchAppointments = async () => {
       try {
         const data = await apiRequest("/bookings");
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const mapped = data.map((b) => ({
             id: b.booking_number || `BK-${b.id}`,
-            employeeId: b.doctor_id ? `EMP-${b.doctor_id}` : employeeId,
+            employeeId: b.doctor_id ? String(b.doctor_id) : employeeId,
             patientId: b.patient_id ? `PAT-${b.patient_id}` : `PAT-001`,
             patientName: b.patient_name || "Patient",
             date: b.booking_date ? String(b.booking_date) : "",
@@ -51,11 +55,11 @@ const Appointments = ({ user }) => {
           }));
           setAppointments(mapped);
         } else {
-          setAppointments(getUserAppointments(employeeId));
+          setAppointments([]);
         }
       } catch (err) {
         console.error("Failed to load bookings from backend:", err);
-        setAppointments(getUserAppointments(employeeId));
+        setAppointments([]);
       } finally {
         setLoading(false);
       }

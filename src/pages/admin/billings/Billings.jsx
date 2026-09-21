@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import ManualBillModal from "../../../components/admin/ManualBillModal";
 import { apiRequest } from "../../../api/api";
+import { useHospitalSettings } from "../../../context/HospitalSettingsContext";
 import {
   AlertCircle,
   Banknote,
@@ -55,24 +57,9 @@ const BILL_TYPES = [
     icon: Receipt,
   },
   {
-    key: "Patient",
-    label: "Patient",
+    key: "Services",
+    label: "Services",
     icon: Stethoscope,
-  },
-  {
-    key: "Lab",
-    label: "Laboratory",
-    icon: FlaskConical,
-  },
-  {
-    key: "Food",
-    label: "Food",
-    icon: Utensils,
-  },
-  {
-    key: "Blood",
-    label: "Blood",
-    icon: Banknote,
   },
 ];
 
@@ -80,309 +67,7 @@ const BILL_TYPES = [
    INITIAL BILL DATA
 ========================================================= */
 
-const INITIAL_BILLS = [
-  {
-    id: "INV-2026-001",
-    patientId: "PAT-1001",
-    patientName: "Rahul Sharma",
-    patientAge: 42,
-    patientGender: "Male",
-    patientPhone: "+91 98765 12345",
-    patientEmail: "rahul@example.com",
-    address: "Kolkata, West Bengal",
-
-    type: "Patient",
-    description: "General Consultation",
-    doctor: "Dr. Amit Sen",
-    department: "General Medicine",
-
-    visitDate: "2026-09-08",
-    date: "2026-09-08",
-
-    items: [
-      {
-        description: "Doctor Consultation",
-        category: "Consultation",
-        quantity: 1,
-        rate: 700,
-        discount: 0,
-      },
-      {
-        description: "Registration Fee",
-        category: "Hospital",
-        quantity: 1,
-        rate: 100,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 0,
-    status: "Unpaid",
-  },
-
-  {
-    id: "INV-2026-002",
-    patientId: "PAT-1002",
-    patientName: "Priya Das",
-    patientAge: 31,
-    patientGender: "Female",
-    patientPhone: "+91 98765 22222",
-    patientEmail: "priya@example.com",
-    address: "Howrah, West Bengal",
-
-    type: "Lab",
-    description: "Complete Blood Count",
-    doctor: "Dr. Neha Roy",
-    department: "Pathology",
-
-    visitDate: "2026-09-07",
-    date: "2026-09-07",
-
-    items: [
-      {
-        description: "Complete Blood Count",
-        category: "Laboratory",
-        quantity: 1,
-        rate: 500,
-        discount: 0,
-      },
-      {
-        description: "Blood Group Test",
-        category: "Laboratory",
-        quantity: 1,
-        rate: 250,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 0,
-    status: "Pending",
-  },
-
-  {
-    id: "INV-2026-003",
-    patientId: "PAT-1003",
-    patientName: "Arjun Gupta",
-    patientAge: 56,
-    patientGender: "Male",
-    patientPhone: "+91 98765 33333",
-    patientEmail: "arjun@example.com",
-    address: "Salt Lake, Kolkata",
-
-    type: "Patient",
-    description: "Cardiology Consultation",
-    doctor: "Dr. S. Mukherjee",
-    department: "Cardiology",
-
-    visitDate: "2026-09-06",
-    date: "2026-09-06",
-
-    items: [
-      {
-        description: "Cardiology Consultation",
-        category: "Consultation",
-        quantity: 1,
-        rate: 1200,
-        discount: 100,
-      },
-      {
-        description: "ECG",
-        category: "Diagnostic",
-        quantity: 1,
-        rate: 500,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 1680,
-    status: "Paid",
-    paymentMethod: "Card",
-    paymentId: "PAY-847291",
-    paidAt: "2026-09-06T15:32:00",
-  },
-
-  {
-    id: "INV-2026-004",
-    patientId: "PAT-1004",
-    patientName: "Sneha Roy",
-    patientAge: 28,
-    patientGender: "Female",
-    patientPhone: "+91 98765 44444",
-    patientEmail: "sneha@example.com",
-    address: "Dum Dum, Kolkata",
-
-    type: "Lab",
-    description: "Liver Function Test",
-    doctor: "Dr. P. Ghosh",
-    department: "Pathology",
-
-    visitDate: "2026-09-05",
-    date: "2026-09-05",
-
-    items: [
-      {
-        description: "Liver Function Test",
-        category: "Laboratory",
-        quantity: 1,
-        rate: 800,
-        discount: 50,
-      },
-      {
-        description: "Kidney Function Test",
-        category: "Laboratory",
-        quantity: 1,
-        rate: 750,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 500,
-    status: "Pending",
-    paymentMethod: "Cash",
-    paymentId: "PAY-381920",
-  },
-
-  {
-    id: "INV-2026-005",
-    patientId: "PAT-1005",
-    patientName: "Ankit Das",
-    patientAge: 39,
-    patientGender: "Male",
-    patientPhone: "+91 98765 55555",
-    patientEmail: "ankit@example.com",
-    address: "Ballygunge, Kolkata",
-
-    type: "Patient",
-    description: "Orthopedic Consultation",
-    doctor: "Dr. R. Chatterjee",
-    department: "Orthopedics",
-
-    visitDate: "2026-09-04",
-    date: "2026-09-04",
-
-    items: [
-      {
-        description: "Orthopedic Consultation",
-        category: "Consultation",
-        quantity: 1,
-        rate: 900,
-        discount: 100,
-      },
-      {
-        description: "X-Ray",
-        category: "Radiology",
-        quantity: 1,
-        rate: 700,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 1575,
-    status: "Paid",
-    paymentMethod: "UPI",
-    paymentId: "PAY-912736",
-    paidAt: "2026-09-04T12:20:00",
-  },
-
-  {
-    id: "INV-2026-006",
-    patientId: "PAT-1006",
-    patientName: "Riya Sen",
-    patientAge: 35,
-    patientGender: "Female",
-    patientPhone: "+91 98765 66666",
-    patientEmail: "riya@example.com",
-    address: "New Town, Kolkata",
-
-    type: "Food",
-    description: "Patient Food Services",
-    doctor: "Dr. A. Das",
-    department: "Dietary Services",
-
-    visitDate: "2026-09-08",
-    date: "2026-09-08",
-
-    items: [
-      {
-        description: "Breakfast",
-        category: "Food",
-        quantity: 1,
-        rate: 120,
-        discount: 0,
-      },
-      {
-        description: "Lunch",
-        category: "Food",
-        quantity: 1,
-        rate: 180,
-        discount: 0,
-      },
-      {
-        description: "Dinner",
-        category: "Food",
-        quantity: 1,
-        rate: 180,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 0,
-    status: "Unpaid",
-  },
-
-  {
-    id: "INV-2026-007",
-    patientId: "PAT-1007",
-    patientName: "Sourav Ghosh",
-    patientAge: 48,
-    patientGender: "Male",
-    patientPhone: "+91 98765 77777",
-    patientEmail: "sourav@example.com",
-    address: "Behala, Kolkata",
-
-    type: "Blood",
-    description: "Blood Bank Services",
-    doctor: "Dr. R. Sen",
-    department: "Blood Bank",
-
-    visitDate: "2026-09-08",
-    date: "2026-09-08",
-
-    items: [
-      {
-        description: "Packed Red Blood Cells",
-        category: "Blood Component",
-        quantity: 1,
-        rate: 1800,
-        discount: 0,
-      },
-      {
-        description: "Blood Processing Fee",
-        category: "Blood Bank",
-        quantity: 1,
-        rate: 250,
-        discount: 0,
-      },
-    ],
-
-    discount: 0,
-    taxRate: 5,
-    amountPaid: 0,
-    status: "Pending",
-  },
-];
+const INITIAL_BILLS = [];
 
 /* =========================================================
    HELPERS
@@ -490,7 +175,7 @@ const calculateBill = (
   const total = taxableAmount + tax;
 
   const amountPaid = Math.min(
-    Number(bill.amountPaid || 0),
+    Number(bill.amountPaid !== undefined ? bill.amountPaid : (bill.paidAmount || 0)),
     total
   );
 
@@ -498,6 +183,11 @@ const calculateBill = (
     0,
     total - amountPaid
   );
+
+  const status =
+    balance <= 0.01 && total > 0 && amountPaid > 0
+      ? "Paid"
+      : "Due";
 
   return {
     subtotal,
@@ -510,6 +200,7 @@ const calculateBill = (
     total,
     amountPaid,
     balance,
+    status,
   };
 };
 
@@ -518,30 +209,21 @@ const calculateBill = (
 ========================================================= */
 
 const StatusBadge = ({ status }) => {
-  const styles = {
-    Paid:
-      "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Unpaid:
-      "bg-red-50 text-red-700 border-red-200",
-    Pending:
-      "bg-amber-50 text-amber-700 border-amber-200",
-  };
+  const isPaid = status === "Paid";
 
-  const icons = {
-    Paid: CheckCircle2,
-    Unpaid: AlertCircle,
-    Pending: AlertCircle,
-  };
-
-  const Icon =
-    icons[status] || AlertCircle;
+  if (isPaid) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+        <CheckCircle2 size={13} />
+        Paid
+      </span>
+    );
+  }
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${styles[status] || "border-gray-200 bg-gray-50 text-gray-700"}`}
-    >
-      <Icon size={13} />
-      {status}
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+      <AlertCircle size={13} />
+      Due
     </span>
   );
 };
@@ -556,6 +238,18 @@ const TypeBadge = ({ type }) => {
       icon: Stethoscope,
       className:
         "border-blue-200 bg-blue-50 text-blue-700",
+    },
+
+    Services: {
+      icon: Stethoscope,
+      className:
+        "border-teal-200 bg-[#E9F6F3] text-[#178B7E]",
+    },
+
+    Service: {
+      icon: Stethoscope,
+      className:
+        "border-teal-200 bg-[#E9F6F3] text-[#178B7E]",
     },
 
     Lab: {
@@ -684,6 +378,7 @@ const InvoicePreview = ({
   isAdmin,
   onEditTax,
   printMode = false,
+  hospitalSettings,
 }) => {
   if (!bill) return null;
 
@@ -691,6 +386,16 @@ const InvoicePreview = ({
     bill,
     defaultTaxRate
   );
+
+  const hospital = {
+    name: hospitalSettings?.hospitalName || HOSPITAL.name,
+    address: hospitalSettings?.address || HOSPITAL.address,
+    phone: hospitalSettings?.phone || HOSPITAL.phone,
+    email: hospitalSettings?.email || HOSPITAL.email,
+    website: hospitalSettings?.website || HOSPITAL.website,
+    gstin: hospitalSettings?.gstin || HOSPITAL.gstin,
+    logo: hospitalSettings?.logo,
+  };
 
   return (
     <div
@@ -705,30 +410,38 @@ const InvoicePreview = ({
       <div className="border-b-2 border-gray-900 pb-4 sm:pb-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#178B7E] text-white sm:h-16 sm:w-16 sm:rounded-xl">
-              <Receipt
-                size={24}
-                className="sm:size-8"
+            {hospital.logo ? (
+              <img
+                src={hospital.logo}
+                alt={hospital.name}
+                className="h-12 w-12 shrink-0 rounded-lg object-contain bg-white border border-gray-200 p-1 sm:h-16 sm:w-16 sm:rounded-xl"
               />
-            </div>
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#178B7E] text-white sm:h-16 sm:w-16 sm:rounded-xl">
+                <Receipt
+                  size={24}
+                  className="sm:size-8"
+                />
+              </div>
+            )}
 
             <div className="min-w-0">
               <h1 className="break-words text-base font-bold tracking-wide text-gray-900 sm:text-xl">
-                {HOSPITAL.name}
+                {hospital.name}
               </h1>
 
               <p className="mt-1 text-[10px] text-gray-600 sm:text-xs">
-                {HOSPITAL.address}
+                {hospital.address}
               </p>
 
               <p className="mt-1 break-words text-[10px] text-gray-600 sm:text-xs">
-                Phone: {HOSPITAL.phone} | Email:{" "}
-                {HOSPITAL.email}
+                Phone: {hospital.phone} | Email:{" "}
+                {hospital.email}
               </p>
 
               <p className="mt-1 text-[10px] text-gray-600 sm:text-xs">
-                {HOSPITAL.website} | GSTIN:{" "}
-                {HOSPITAL.gstin}
+                {hospital.website} | GSTIN:{" "}
+                {hospital.gstin}
               </p>
             </div>
           </div>
@@ -853,19 +566,10 @@ const InvoicePreview = ({
               </span>
 
               <span className="text-right font-semibold">
-                {bill.department || "-"}
+                HomeCare
               </span>
             </div>
 
-            <div className="flex items-start justify-between gap-3">
-              <span className="shrink-0 text-gray-500">
-                Doctor
-              </span>
-
-              <span className="text-right font-semibold">
-                {bill.doctor || "-"}
-              </span>
-            </div>
 
             <div className="flex items-start justify-between gap-3">
               <span className="shrink-0 text-gray-500">
@@ -896,7 +600,7 @@ const InvoicePreview = ({
               </span>
 
               <StatusBadge
-                status={bill.status}
+                status={calculated.status}
               />
             </div>
           </div>
@@ -912,7 +616,7 @@ const InvoicePreview = ({
           </h3>
 
           {isAdmin &&
-            bill.status !== "Paid" && (
+            calculated.balance > 0.01 && (
               <button
                 type="button"
                 onClick={onEditTax}
@@ -1284,13 +988,16 @@ const PaymentModal = ({
         newPaidAmount;
 
       const newStatus =
-        newBalance <= 0
+        newBalance <= 0.01
           ? "Paid"
-          : "Pending";
+          : "Due";
 
       onSuccess({
         ...bill,
         amountPaid: newPaidAmount,
+        paidAmount: newPaidAmount,
+        totalAmount: calculated.total,
+        balance: Math.max(0, newBalance),
         status: newStatus,
         paymentMethod: method,
         paymentId: generatePaymentId(),
@@ -1354,9 +1061,14 @@ const PaymentModal = ({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-gray-700">
-            Payment Amount
-          </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-xs font-semibold text-gray-700">
+              Payment Amount
+            </label>
+            <span className="text-[11px] text-gray-500">
+              Max: {formatCurrency(calculated.balance)}
+            </span>
+          </div>
 
           <div className="relative">
             <IndianRupee
@@ -1376,6 +1088,25 @@ const PaymentModal = ({
               }
               className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#178B7E] focus:ring-2 focus:ring-[#178B7E]/10"
             />
+          </div>
+
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setAmount(String(calculated.balance))}
+              className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-[#E9F6F3] hover:text-[#178B7E]"
+            >
+              Pay Full ({formatCurrency(calculated.balance)})
+            </button>
+            {calculated.balance > 100 && (
+              <button
+                type="button"
+                onClick={() => setAmount(String(Math.round(calculated.balance / 2)))}
+                className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-[#E9F6F3] hover:text-[#178B7E]"
+              >
+                Pay 50% ({formatCurrency(Math.round(calculated.balance / 2))})
+              </button>
+            )}
           </div>
         </div>
 
@@ -1777,12 +1508,23 @@ const EditTaxModal = ({
 
 const generateInvoicePDF = (
   bill,
-  defaultTaxRate
+  defaultTaxRate,
+  hospitalSettings
 ) => {
   const calculated = calculateBill(
     bill,
     defaultTaxRate
   );
+
+  const hospital = {
+    name: hospitalSettings?.hospitalName || HOSPITAL.name,
+    address: hospitalSettings?.address || HOSPITAL.address,
+    phone: hospitalSettings?.phone || HOSPITAL.phone,
+    email: hospitalSettings?.email || HOSPITAL.email,
+    website: hospitalSettings?.website || HOSPITAL.website,
+    gstin: hospitalSettings?.gstin || HOSPITAL.gstin,
+    logo: hospitalSettings?.logo,
+  };
 
   const doc = new jsPDF({
     orientation: "portrait",
@@ -1807,7 +1549,7 @@ const generateInvoicePDF = (
     doc.setTextColor(130);
 
     doc.text(
-      `${HOSPITAL.name} | ${HOSPITAL.phone}`,
+      `${hospital.name} | ${hospital.phone}`,
       margin,
       pageHeight - 8
     );
@@ -1822,36 +1564,32 @@ const generateInvoicePDF = (
     );
   };
 
-  doc.setFillColor(23, 139, 126);
-
-  doc.roundedRect(
-    margin,
-    margin,
-    18,
-    18,
-    3,
-    3,
-    "F"
-  );
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-
-  doc.text(
-    "H",
-    margin + 9,
-    margin + 12,
-    {
-      align: "center",
+  if (hospital.logo && typeof hospital.logo === "string" && (hospital.logo.startsWith("data:image/") || hospital.logo.startsWith("http"))) {
+    try {
+      const format = hospital.logo.includes("png") ? "PNG" : "JPEG";
+      doc.addImage(hospital.logo, format, margin, margin, 18, 18);
+    } catch (e) {
+      doc.setFillColor(23, 139, 126);
+      doc.roundedRect(margin, margin, 18, 18, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("H", margin + 9, margin + 12, { align: "center" });
     }
-  );
+  } else {
+    doc.setFillColor(23, 139, 126);
+    doc.roundedRect(margin, margin, 18, 18, 3, 3, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text("H", margin + 9, margin + 12, { align: "center" });
+  }
 
   doc.setTextColor(25, 25, 25);
   doc.setFontSize(14);
 
   doc.text(
-    HOSPITAL.name,
+    hospital.name,
     margin + 23,
     margin + 7
   );
@@ -1861,19 +1599,19 @@ const generateInvoicePDF = (
   doc.setTextColor(90);
 
   doc.text(
-    HOSPITAL.address,
+    hospital.address,
     margin + 23,
     margin + 12
   );
 
   doc.text(
-    `Phone: ${HOSPITAL.phone} | Email: ${HOSPITAL.email}`,
+    `Phone: ${hospital.phone} | Email: ${hospital.email}`,
     margin + 23,
     margin + 16
   );
 
   doc.text(
-    `GSTIN: ${HOSPITAL.gstin}`,
+    `GSTIN: ${hospital.gstin}`,
     margin + 23,
     margin + 20
   );
@@ -2000,19 +1738,12 @@ const generateInvoicePDF = (
         "Patient ID",
         bill.patientId,
         "Department",
-        bill.department || "-",
+        "HomeCare",
       ],
 
       [
         "Age / Gender",
         `${bill.patientAge} / ${bill.patientGender}`,
-        "Doctor",
-        bill.doctor || "-",
-      ],
-
-      [
-        "Phone",
-        bill.patientPhone || "-",
         "Visit Date",
         formatDate(
           bill.visitDate ||
@@ -2021,10 +1752,17 @@ const generateInvoicePDF = (
       ],
 
       [
-        "Email",
-        bill.patientEmail || "-",
+        "Phone",
+        bill.patientPhone || "-",
         "Description",
         bill.description || "-",
+      ],
+
+      [
+        "Email",
+        bill.patientEmail || "-",
+        "Payment Status",
+        calculated.status,
       ],
     ],
   });
@@ -2405,7 +2143,7 @@ const generateInvoicePDF = (
     title: `Hospital Invoice ${bill.id}`,
     subject:
       "Hospital Billing Invoice",
-    author: HOSPITAL.name,
+    author: hospital.name,
     creator:
       "Hospital Management System",
   });
@@ -2425,8 +2163,19 @@ const generateInvoicePDF = (
 ========================================================= */
 
 const Billings = () => {
+  const { settings: hospitalSettings } = useHospitalSettings();
   const [bills, setBills] =
     useState(INITIAL_BILLS);
+
+  const [
+    servicesList,
+    setServicesList,
+  ] = useState([]);
+
+  const [
+    selectedService,
+    setSelectedService,
+  ] = useState("All");
 
   const [
     billingSettings,
@@ -2458,74 +2207,103 @@ const Billings = () => {
   const [editTaxBill, setEditTaxBill] =
     useState(null);
 
+  const [
+    manualBillOpen,
+    setManualBillOpen,
+  ] = useState(false);
+
   /* =======================================================
-     LOAD BILLING DATA
+     LOAD BILLING DATA & SERVICES
   ======================================================= */
 
-  useEffect(() => {
-    const fetchBillingData = async () => {
-      try {
-        const backendBills = await apiRequest("/api/billing");
-        if (Array.isArray(backendBills) && backendBills.length > 0) {
-          const formatted = backendBills.map((b) => ({
-            id: b.invoiceNumber || b.id,
-            patientId: b.patientId,
-            patientName: b.patientName,
-            patientAge: b.patientAge,
-            patientGender: b.patientGender,
-            patientPhone: b.patientPhone,
-            patientEmail: b.patientEmail,
-            address: b.address,
-            type: b.type,
-            description: b.description,
-            doctor: b.doctor,
-            department: b.department,
-            visitDate: b.visitDate,
-            date: b.date,
-            items: b.items && b.items.length > 0 ? b.items : [
-              {
-                description: b.description || "Medical Consultation",
-                category: b.type || "Consultation",
-                quantity: 1,
-                rate: b.totalAmount || 500,
-                discount: b.discount || 0,
-              }
-            ],
-            discount: b.discount || 0,
-            taxRate: 5,
-            amountPaid: b.paidAmount || 0,
-            status: b.status || (b.paidAmount >= b.totalAmount ? "Paid" : b.paidAmount > 0 ? "Partial" : "Unpaid"),
-            paymentMethod: b.paymentMethod || "Cash",
-            paymentId: b.paymentId || `PAY-${b.bill_id || 1001}`,
-            paidAt: b.paidAt || "",
-          }));
-          setBills(formatted);
-          return;
-        }
+  const fetchBillingData = useCallback(async () => {
+    // Clear out any old legacy cached dummy bills
+    try {
+      const cached = localStorage.getItem("hospital-bills");
+      if (cached && cached.includes("Rahul Sharma")) {
+        localStorage.removeItem("hospital-bills");
+      }
+    } catch (_) {}
 
-        const savedBills = localStorage.getItem("hospital-bills");
-        if (savedBills) {
-          setBills(JSON.parse(savedBills));
-        }
-      } catch (error) {
-        console.error("Failed to load billing data from server, falling back to local:", error);
-        const savedBills = localStorage.getItem("hospital-bills");
-        if (savedBills) {
-          setBills(JSON.parse(savedBills));
-        }
+    try {
+      const [backendBills, srvData] = await Promise.allSettled([
+        apiRequest("/api/billing"),
+        apiRequest("/api/services")
+      ]);
+
+      if (srvData.status === "fulfilled" && Array.isArray(srvData.value)) {
+        setServicesList(srvData.value);
       }
 
-      try {
-        const savedSettings = localStorage.getItem("hospital-billing-settings");
-        if (savedSettings) {
-          setBillingSettings(JSON.parse(savedSettings));
-        }
-      } catch (error) {
-        console.error("Failed to load settings:", error);
+      if (backendBills.status === "fulfilled" && Array.isArray(backendBills.value)) {
+        const formatted = backendBills.value.map((b) => ({
+          id: b.invoiceNumber || b.id,
+          patientId: b.patientId,
+          patientName: b.patientName,
+          patientAge: b.patientAge,
+          patientGender: b.patientGender,
+          patientPhone: b.patientPhone,
+          patientEmail: b.patientEmail,
+          address: b.address,
+          type: b.type || "Service",
+          serviceName: b.serviceName || b.description || "General Service",
+          serviceId: b.serviceId,
+          description: b.description || b.serviceName || "Hospital Service",
+          department: "HomeCare",
+          visitDate: b.visitDate || b.date,
+          date: b.date,
+          items: b.items && b.items.length > 0 ? b.items : [
+            {
+              description: b.description || b.serviceName || "Medical Service",
+              category: b.serviceName || b.type || "Service",
+              quantity: 1,
+              rate: b.totalAmount || 500,
+              discount: b.discount || 0,
+            }
+          ],
+          discount: b.discount || 0,
+          taxRate: 5,
+          amountPaid: Number(b.paidAmount || 0),
+          paidAmount: Number(b.paidAmount || 0),
+          totalAmount: Number(b.totalAmount || 0),
+          balance: Math.max(0, Number(b.totalAmount || 0) - Number(b.paidAmount || 0)),
+          status: Number(b.paidAmount || 0) >= (Number(b.totalAmount || 0) - 0.01) && Number(b.totalAmount || 0) > 0 ? "Paid" : "Due",
+          paymentMethod: b.paymentMethod || "Cash",
+          paymentId: b.paymentId || `PAY-${b.bill_id || 1001}`,
+          paidAt: b.paidAt || "",
+        }));
+        setBills(formatted);
       }
-    };
-    fetchBillingData();
+    } catch (error) {
+      console.error("Failed to load billing data:", error);
+    }
+
+    // Load tax rate from backend settings (persistent)
+    try {
+      const settingsData = await apiRequest("/api/settings");
+      if (settingsData && settingsData.settings && settingsData.settings.billingTaxRate !== undefined) {
+        const savedTax = Number(settingsData.settings.billingTaxRate);
+        if (!isNaN(savedTax) && savedTax >= 0) {
+          setBillingSettings({ taxRate: savedTax });
+          return; // skip localStorage fallback
+        }
+      }
+    } catch (_) {}
+
+    // Fallback: load from localStorage
+    try {
+      const savedSettings = localStorage.getItem("hospital-billing-settings");
+      if (savedSettings) {
+        setBillingSettings(JSON.parse(savedSettings));
+      }
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchBillingData();
+  }, [fetchBillingData]);
 
   /* =======================================================
      SAVE BILLS
@@ -2574,6 +2352,10 @@ const Billings = () => {
       search.trim().toLowerCase();
 
     return bills.filter((bill) => {
+      const calculated = calculateBill(bill, billingSettings.taxRate);
+      const isPaid = calculated.balance <= 0.01 && calculated.total > 0 && calculated.amountPaid > 0;
+      const isDue = calculated.balance > 0.01;
+
       const matchesSearch =
         !query ||
         bill.id
@@ -2582,20 +2364,38 @@ const Billings = () => {
         bill.patientName
           .toLowerCase()
           .includes(query) ||
-        bill.patientId
-          .toLowerCase()
-          .includes(query) ||
-        bill.description
-          .toLowerCase()
-          .includes(query);
+        (bill.patientId &&
+          bill.patientId
+            .toLowerCase()
+            .includes(query)) ||
+        (bill.description &&
+          bill.description
+            .toLowerCase()
+            .includes(query)) ||
+        (bill.serviceName &&
+          bill.serviceName
+            .toLowerCase()
+            .includes(query));
 
       const matchesType =
-        typeFilter === "All" ||
-        bill.type === typeFilter;
+        typeFilter === "All"
+          ? true
+          : typeFilter === "Services"
+          ? selectedService === "All"
+            ? true
+            : (bill.serviceId && String(bill.serviceId) === String(selectedService)) ||
+              (bill.serviceName && bill.serviceName.toLowerCase() === selectedService.toLowerCase()) ||
+              (bill.description && bill.description.toLowerCase().includes(selectedService.toLowerCase()))
+          : bill.type === typeFilter;
 
       const matchesStatus =
-        statusFilter === "All" ||
-        bill.status === statusFilter;
+        statusFilter === "All"
+          ? true
+          : statusFilter === "Paid"
+          ? isPaid
+          : statusFilter === "Due" || statusFilter === "Pending" || statusFilter === "Unpaid"
+          ? isDue
+          : bill.status === statusFilter;
 
       return (
         matchesSearch &&
@@ -2607,7 +2407,9 @@ const Billings = () => {
     bills,
     search,
     typeFilter,
+    selectedService,
     statusFilter,
+    billingSettings.taxRate,
   ]);
 
   /* =======================================================
@@ -2617,7 +2419,7 @@ const Billings = () => {
   const stats = useMemo(() => {
     let totalOutstanding = 0;
     let paidThisMonth = 0;
-    let pendingBills = 0;
+    let dueBills = 0;
 
     bills.forEach((bill) => {
       const calculated =
@@ -2629,11 +2431,11 @@ const Billings = () => {
       totalOutstanding +=
         calculated.balance;
 
-      if (bill.status === "Pending") {
-        pendingBills += 1;
+      if (calculated.balance > 0.01) {
+        dueBills += 1;
       }
 
-      if (bill.status === "Paid") {
+      if (calculated.balance <= 0.01 && calculated.total > 0) {
         paidThisMonth +=
           calculated.amountPaid;
       }
@@ -2642,7 +2444,8 @@ const Billings = () => {
     return {
       totalOutstanding,
       paidThisMonth,
-      pendingBills,
+      dueBills,
+      pendingBills: dueBills,
       totalBills: bills.length,
     };
   }, [
@@ -2673,6 +2476,7 @@ const Billings = () => {
         method: "PUT",
         body: JSON.stringify({
           paid_amount: updatedBill.amountPaid,
+          total_amount: updatedBill.totalAmount || updatedBill.total,
           payment_status: updatedBill.status,
           payment_method: updatedBill.paymentMethod || "UPI",
         }),
@@ -2686,13 +2490,33 @@ const Billings = () => {
      SAVE SETTINGS
   ======================================================= */
 
-  const handleSaveBillingSettings = (
+  const handleSaveBillingSettings = async (
     newTaxRate,
     applyToOpenBills
   ) => {
     setBillingSettings({
       taxRate: newTaxRate,
     });
+
+    // Persist to backend settings (permanent across page reloads)
+    try {
+      await apiRequest("/api/settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          settings: { billingTaxRate: newTaxRate },
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save billing tax rate to backend:", err);
+    }
+
+    // Also keep localStorage as a fallback
+    try {
+      localStorage.setItem(
+        "hospital-billing-settings",
+        JSON.stringify({ taxRate: newTaxRate })
+      );
+    } catch (_) {}
 
     if (applyToOpenBills) {
       setBills((previousBills) =>
@@ -2879,9 +2703,7 @@ const Billings = () => {
               </div>
 
               <p className="mt-1 text-xs text-gray-500 sm:text-sm">
-                Manage patient, laboratory,
-                food and blood bills, payments
-                and invoices.
+                Manage all hospital bills, service bookings, invoices, and payment records.
               </p>
             </div>
 
@@ -2892,6 +2714,15 @@ const Billings = () => {
                   {billingSettings.taxRate}%
                 </span>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setManualBillOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#178B7E] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#11766B] sm:px-3 sm:py-2.5 sm:text-sm"
+              >
+                <IndianRupee size={15} />
+                Create Manual Bill
+              </button>
 
               <button
                 type="button"
@@ -2931,9 +2762,9 @@ const Billings = () => {
 
             <StatCard
               icon={AlertCircle}
-              label="Pending Bills"
-              value={stats.pendingBills}
-              description="Bills awaiting completion"
+              label="Due Bills"
+              value={stats.dueBills}
+              description="Bills with remaining balance"
             />
 
             <StatCard
@@ -2962,27 +2793,30 @@ const Billings = () => {
                       ? bills.length
                       : bills.filter(
                           (bill) =>
-                            bill.type ===
-                            item.key
+                            bill.serviceName ||
+                            bill.serviceId ||
+                            bill.type === "Service" ||
+                            bill.type === "Services"
                         ).length;
 
                   return (
                     <button
                       key={item.key}
                       type="button"
-                      onClick={() =>
-                        setTypeFilter(
-                          item.key
-                        )
-                      }
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-semibold transition sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
+                      onClick={() => {
+                        setTypeFilter(item.key);
+                        if (item.key === "All") {
+                          setSelectedService("All");
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                         isActive
                           ? "bg-[#178B7E] text-white shadow-sm"
                           : "text-gray-600 hover:bg-[#E9F6F3] hover:text-[#178B7E]"
                       }`}
                     >
                       <Icon
-                        size={14}
+                        size={15}
                         className="sm:size-4"
                       />
 
@@ -2991,7 +2825,7 @@ const Billings = () => {
                       </span>
 
                       <span
-                        className={`rounded-full px-1.5 py-0.5 text-[9px] sm:px-2 sm:text-[10px] ${
+                        className={`rounded-full px-1.5 py-0.5 text-[9px] sm:px-2 sm:text-[10px] font-bold ${
                           isActive
                             ? "bg-white/20 text-white"
                             : "bg-gray-100 text-gray-500"
@@ -3005,6 +2839,97 @@ const Billings = () => {
               )}
             </div>
           </div>
+
+          {/* =================================================
+              DYNAMIC SERVICES SUB-NAVIGATION (WHEN SERVICES ACTIVE)
+          ================================================= */}
+
+          {typeFilter === "Services" && (
+            <div className="mb-3 rounded-xl border border-[#E2EFED] bg-gradient-to-r from-[#F7FBFA] via-white to-[#F7FBFA] p-3 shadow-sm sm:mb-4 sm:p-4">
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#E9F6F3] text-[#178B7E]">
+                    <Stethoscope size={14} />
+                  </span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Hospital Services ({servicesList.length})
+                  </span>
+                </div>
+
+                {selectedService !== "All" && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedService("All")}
+                    className="text-xs font-semibold text-[#178B7E] hover:underline"
+                  >
+                    Show All Services
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedService("All")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                    selectedService === "All"
+                      ? "bg-[#178B7E] text-white shadow-sm"
+                      : "border border-gray-200 bg-white text-gray-700 hover:bg-[#E9F6F3] hover:text-[#178B7E]"
+                  }`}
+                >
+                  <span>All Services</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                      selectedService === "All"
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {bills.length}
+                  </span>
+                </button>
+
+                {servicesList.map((srv) => {
+                  const srvBills = bills.filter(
+                    (b) =>
+                      (b.serviceId && String(b.serviceId) === String(srv.id)) ||
+                      (b.serviceName &&
+                        b.serviceName.toLowerCase() === srv.name.toLowerCase()) ||
+                      (b.description &&
+                        b.description
+                          .toLowerCase()
+                          .includes(srv.name.toLowerCase()))
+                  );
+
+                  const isSelected = selectedService === srv.name;
+
+                  return (
+                    <button
+                      key={srv.id}
+                      type="button"
+                      onClick={() => setSelectedService(srv.name)}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                        isSelected
+                          ? "bg-[#178B7E] text-white shadow-sm"
+                          : "border border-gray-200 bg-white text-gray-700 hover:bg-[#E9F6F3] hover:text-[#178B7E]"
+                      }`}
+                    >
+                      <span>{srv.name}</span>
+                      <span
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {srvBills.length}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* =================================================
               SEARCH + STATUS
@@ -3034,9 +2959,8 @@ const Billings = () => {
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {[
                   "All",
+                  "Due",
                   "Paid",
-                  "Pending",
-                  "Unpaid",
                 ].map((status) => (
                   <button
                     key={status}
@@ -3194,13 +3118,15 @@ const Billings = () => {
                           <td className="px-4 py-4">
                             <StatusBadge
                               status={
-                                bill.status
+                                calculated.balance <= 0.01 && calculated.total > 0 && calculated.amountPaid > 0
+                                  ? "Paid"
+                                  : "Due"
                               }
                             />
                           </td>
 
                           <td className="px-4 py-4">
-                            <div className="flex justify-end gap-1.5">
+                            <div className="flex items-center justify-end gap-1.5">
                               <button
                                 type="button"
                                 onClick={() =>
@@ -3216,8 +3142,7 @@ const Billings = () => {
                                 />
                               </button>
 
-                              {bill.status !==
-                                "Paid" && (
+                              {calculated.balance > 0.01 && (
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -3297,7 +3222,9 @@ const Billings = () => {
 
                       <StatusBadge
                         status={
-                          bill.status
+                          calculated.balance <= 0.01 && calculated.total > 0 && calculated.amountPaid > 0
+                            ? "Paid"
+                            : "Due"
                         }
                       />
                     </div>
@@ -3377,8 +3304,7 @@ const Billings = () => {
                         Invoice
                       </button>
 
-                      {bill.status !==
-                        "Paid" && (
+                      {calculated.balance > 0.01 && (
                         <button
                           type="button"
                           onClick={() =>
@@ -3472,6 +3398,20 @@ const Billings = () => {
       )}
 
       {/* ===================================================
+          MANUAL BILL MODAL
+      =================================================== */}
+
+      <ManualBillModal
+        open={manualBillOpen}
+        onClose={() => setManualBillOpen(false)}
+        defaultTaxRate={billingSettings.taxRate}
+        onSuccess={() => {
+          setManualBillOpen(false);
+          fetchBillingData();
+        }}
+      />
+
+      {/* ===================================================
           SCREEN INVOICE MODAL
       =================================================== */}
 
@@ -3495,30 +3435,50 @@ const Billings = () => {
               </div>
 
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {invoiceBill.status !==
-                  "Paid" && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditTaxBill(
-                        invoiceBill
-                      )
-                    }
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#178B7E] px-2.5 py-1.5 text-[10px] font-semibold text-[#178B7E] hover:bg-[#E9F6F3] sm:px-3 sm:py-2 sm:text-xs"
-                  >
-                    <Pencil
-                      size={13}
-                    />
-                    Edit Tax
-                  </button>
-                )}
+                {(() => {
+                  const invCalc = calculateBill(
+                    invoiceBill,
+                    billingSettings.taxRate
+                  );
+                  return (
+                    <>
+                      {invCalc.balance > 0.01 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentBill(invoiceBill);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#178B7E] px-2.5 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-[#137368] sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
+                        >
+                          <CreditCard size={13} />
+                          Pay Due (
+                          {formatCurrency(invCalc.balance)})
+                        </button>
+                      )}
+
+                      {invCalc.balance > 0.01 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditTaxBill(invoiceBill)
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#178B7E] px-2.5 py-1.5 text-[10px] font-semibold text-[#178B7E] hover:bg-[#E9F6F3] sm:px-3 sm:py-2 sm:text-xs"
+                        >
+                          <Pencil size={13} />
+                          Edit Tax
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
 
                 <button
                   type="button"
                   onClick={() =>
                     generateInvoicePDF(
                       invoiceBill,
-                      billingSettings.taxRate
+                      billingSettings.taxRate,
+                      hospitalSettings
                     )
                   }
                   className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-[10px] font-semibold text-gray-700 hover:bg-gray-50 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
@@ -3564,6 +3524,7 @@ const Billings = () => {
                   billingSettings.taxRate
                 }
                 isAdmin
+                hospitalSettings={hospitalSettings}
                 onEditTax={() =>
                   setEditTaxBill(
                     invoiceBill
@@ -3587,6 +3548,7 @@ const Billings = () => {
               billingSettings.taxRate
             }
             isAdmin={false}
+            hospitalSettings={hospitalSettings}
             printMode
           />
         </div>

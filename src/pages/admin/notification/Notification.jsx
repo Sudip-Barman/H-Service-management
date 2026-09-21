@@ -76,10 +76,17 @@ const emptyForm = {
 };
 
 const typeStyles = {
+	Services: "bg-teal-50 text-teal-700",
+	Patients: "bg-indigo-50 text-indigo-700",
+	Staff: "bg-amber-50 text-amber-700",
+	Admissions: "bg-cyan-50 text-cyan-700",
+	Bookings: "bg-emerald-50 text-emerald-700",
+	Requests: "bg-violet-50 text-violet-700",
+	Feedback: "bg-rose-50 text-rose-700",
+	"Follow-up": "bg-orange-50 text-orange-700",
 	"Blood Bank": "bg-red-50 text-red-700",
 	Pharmacy: "bg-blue-50 text-blue-700",
 	Laboratory: "bg-purple-50 text-purple-700",
-	Staff: "bg-amber-50 text-amber-700",
 	General: "bg-slate-100 text-slate-700",
 };
 
@@ -98,7 +105,6 @@ const Notification = () => {
 				const data = await apiRequest("/api/notifications");
 				if (Array.isArray(data)) {
 					setNotifications(data);
-					window.dispatchEvent(new Event("notifications-updated"));
 				}
 			} catch (err) {
 				console.error("Failed to load notifications from server:", err);
@@ -106,6 +112,16 @@ const Notification = () => {
 			}
 		};
 		fetchNotifications();
+
+		// Fast real-time sync
+		const interval = setInterval(fetchNotifications, 4000);
+		const handleUpdate = () => fetchNotifications();
+		window.addEventListener("notifications-updated", handleUpdate);
+
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener("notifications-updated", handleUpdate);
+		};
 	}, []);
 
 	const [search, setSearch] = useState("");
@@ -296,10 +312,17 @@ const Notification = () => {
 							<Filter size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#819596]" />
 							<select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} className="h-10 sm:h-11 w-full appearance-none rounded-xl border border-[#D9E9E7] bg-white pl-10 pr-3.5 text-xs sm:text-sm font-medium text-[#31585A] outline-none focus:border-[#08A6A0]">
 								<option value="All">All Types</option>
+								<option value="Services">Services</option>
+								<option value="Patients">Patients</option>
+								<option value="Staff">Staff</option>
+								<option value="Admissions">Admissions</option>
+								<option value="Bookings">Bookings</option>
+								<option value="Requests">Requests</option>
+								<option value="Feedback">Feedback</option>
+								<option value="Follow-up">Follow-up</option>
 								<option value="Blood Bank">Blood Bank</option>
 								<option value="Pharmacy">Pharmacy</option>
 								<option value="Laboratory">Laboratory</option>
-								<option value="Staff">Staff</option>
 								<option value="General">General</option>
 							</select>
 						</div>
@@ -494,7 +517,7 @@ const NotificationForm = ({ form, onChange, onSubmit, onClose }) => (
 				<Field label="Title" value={form.title} onChange={(value) => onChange("title", value)} placeholder="Notification title" />
 				<div><label className="mb-1.5 block text-xs font-semibold text-[#31585A]">Message</label><textarea required rows="4" value={form.message} onChange={(event) => onChange("message", event.target.value)} placeholder="Write the hospital update..." className="w-full rounded-xl border border-[#D9E9E7] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]" /></div>
 				<div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
-					<SelectField label="Type" value={form.type} onChange={(value) => onChange("type", value)} options={["General", "Blood Bank", "Pharmacy", "Laboratory", "Staff"]} />
+					<SelectField label="Type" value={form.type} onChange={(value) => onChange("type", value)} options={["General", "Services", "Patients", "Staff", "Admissions", "Bookings", "Requests", "Feedback", "Follow-up", "Blood Bank", "Pharmacy", "Laboratory"]} />
 					<SelectField label="Priority" value={form.priority} onChange={(value) => onChange("priority", value)} options={["Normal", "High", "Urgent"]} />
 					<Field label="Department" value={form.department} onChange={(value) => onChange("department", value)} placeholder="All Departments" />
 					<Field label="Recipient" value={form.recipient} onChange={(value) => onChange("recipient", value)} placeholder="All Hospital Staff" />

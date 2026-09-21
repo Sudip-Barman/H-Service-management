@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 import {
   LayoutDashboard,
   UserRound,
@@ -24,6 +25,7 @@ import {
   Settings,
   UserCog,
   LogIn,
+  LogOut,
   ChevronDown,
 } from "lucide-react";
 
@@ -205,6 +207,16 @@ const menuSections = [
 ];
 
 const AdminSidebar = ({ onClose }) => {
+  const navigate = useNavigate();
+  const { settings } = useHospitalSettings();
+  const hospitalName = settings?.hospitalName || "CareCore Hospital";
+  const logo = settings?.logo;
+
+  const handleLogout = () => {
+    if (onClose) onClose();
+    navigate("/logout");
+  };
+
   return (
     <aside className="flex h-full w-72 flex-col bg-[#073F42] text-white">
       {/* =====================================================
@@ -212,14 +224,23 @@ const AdminSidebar = ({ onClose }) => {
           ===================================================== */}
 
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">
-            Care<span className="text-[#08A6A0]">Core</span>
-          </h1>
+        <div className="flex min-w-0 items-center gap-3">
+          {logo ? (
+            <img
+              src={logo}
+              alt={hospitalName}
+              className="h-9 w-9 shrink-0 rounded-xl bg-white/10 p-1 object-contain"
+            />
+          ) : null}
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold tracking-tight text-white">
+              {hospitalName}
+            </h1>
 
-          <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.15em] text-[#A8C0C0]">
-            Reception Portal
-          </p>
+            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.15em] text-[#A8C0C0]">
+              Reception Portal
+            </p>
+          </div>
         </div>
 
         {/* Mobile close button */}
@@ -277,20 +298,18 @@ const AdminSidebar = ({ onClose }) => {
       </div>
 
       {/* =====================================================
-          BOTTOM INFO
+          LOGOUT
           ===================================================== */}
 
-      <div className="border-t border-white/10 p-4">
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-xs font-semibold text-white">
-            CareCore Reception
-          </p>
-
-          <p className="mt-1 text-[11px] leading-4 text-[#91AEAE]">
-            Manage patients, medical services, staff, hospital operations
-            and finances from one place.
-          </p>
-        </div>
+      <div className="shrink-0 border-t border-white/10 p-3">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#B8CDCD] transition-all duration-200 hover:bg-red-500/15 hover:text-red-200"
+        >
+          <LogOut className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
+          <span>Logout</span>
+        </button>
       </div>
     </aside>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../../api/api";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 import {
   Bell,
   Menu,
@@ -9,13 +10,25 @@ import {
   User,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
 
 const AdminHeader = ({ onMenuClick }) => {
   const navigate = useNavigate();
+  const { settings } = useHospitalSettings();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(() => {
+    try {
+      const cached = localStorage.getItem("carecore_unread_count");
+      return cached !== null ? parseInt(cached, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [newAlertToast, setNewAlertToast] = useState(null);
+  const lastSeenNotifIdRef = useRef(null);
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
@@ -25,29 +38,81 @@ const AdminHeader = ({ onMenuClick }) => {
     }
   });
 
+  // Listen for user profile updates
+  useEffect(() => {
+    const handleUserUpdate = (e) => {
+      if (e.detail) {
+        setCurrentUser(e.detail);
+      }
+    };
+    window.addEventListener("user-updated", handleUserUpdate);
+    return () => window.removeEventListener("user-updated", handleUserUpdate);
+  }, []);
+
+  // Auto-dismiss alert toast after 6 seconds
+  useEffect(() => {
+    if (newAlertToast) {
+      const timer = setTimeout(() => setNewAlertToast(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [newAlertToast]);
+
   // Reference for the complete profile area
   const profileRef = useRef(null);
 
-  // Fetch unread notifications count
+  // Fetch unread notifications count and detect new real-time alerts
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (isBackgroundPoll = false) => {
       try {
         const notifs = await apiRequest("/api/notifications");
         if (Array.isArray(notifs)) {
           const unread = notifs.filter((n) => !n.read).length;
           setUnreadCount(unread);
+          try {
+            localStorage.setItem("carecore_unread_count", unread.toString());
+          } catch {}
+
+          if (notifs.length > 0) {
+            const newest = notifs[0];
+            if (
+              isBackgroundPoll &&
+              !newest.read &&
+              lastSeenNotifIdRef.current !== null &&
+              newest.id !== lastSeenNotifIdRef.current
+            ) {
+              setNewAlertToast(newest);
+            }
+            lastSeenNotifIdRef.current = newest.id;
+          }
         }
       } catch (err) {
         console.error("Failed to load notifications count:", err);
       }
     };
-    fetchNotifications();
 
-    // Listen for custom event if notifications are marked read elsewhere
-    const handleNotifUpdate = () => fetchNotifications();
+    // Initial load
+    fetchNotifications(false);
+
+    // Fast polling (every 4 seconds) so background actions and due dates appear instantly
+    const pollInterval = setInterval(() => fetchNotifications(true), 4000);
+
+    // Immediate listener for actions taken anywhere in this window
+    const handleNotifUpdate = () => fetchNotifications(true);
     window.addEventListener("notifications-updated", handleNotifUpdate);
+
+    // Cross-tab broadcast listener
+    let channel = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        channel = new BroadcastChannel("carecore_notifications");
+        channel.onmessage = () => fetchNotifications(true);
+      }
+    } catch {}
+
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("notifications-updated", handleNotifUpdate);
+      if (channel) channel.close();
     };
   }, []);
 
@@ -169,7 +234,7 @@ const AdminHeader = ({ onMenuClick }) => {
             </p>
 
             <p className="text-[10px] text-[#819596]">
-              CareCore
+              {settings?.hospitalName || "CareCore"}
             </p>
 
           </div>
@@ -243,8 +308,12 @@ const AdminHeader = ({ onMenuClick }) => {
 
               {/* Avatar */}
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D7F4F1] text-sm font-bold text-[#087F7A]">
-                {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : "AD"}
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D7F4F1] text-sm font-bold text-[#087F7A] overflow-hidden">
+                {currentUser?.avatar ? (
+                  <img src={currentUser.avatar} alt={currentUser.name} className="h-full w-full object-cover" />
+                ) : (
+                  currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : "AD"
+                )}
               </div>
 
 
@@ -365,6 +434,54 @@ const AdminHeader = ({ onMenuClick }) => {
         </div>
 
       </div>
+
+      {/* Real-time Floating Notification Alert Toast */}
+      {newAlertToast && (
+        <div className="fixed right-4 top-20 z-50 flex max-w-sm sm:max-w-md items-start gap-3 rounded-2xl border border-[#08A6A0]/30 bg-white p-4 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F8F6] text-[#08A6A0]">
+            <Bell className="h-5 w-5 animate-pulse" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="rounded-full bg-[#E8F8F6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#08A6A0]">
+                {newAlertToast.type || "Notification"}
+              </span>
+              <span className="text-[11px] text-[#819596]">{newAlertToast.time || "Just now"}</span>
+            </div>
+
+            <p className="mt-1 text-sm font-semibold text-[#073F42] line-clamp-1">
+              {newAlertToast.title}
+            </p>
+
+            <p className="mt-0.5 text-xs text-[#527876] line-clamp-2 leading-relaxed">
+              {newAlertToast.message}
+            </p>
+
+            <div className="mt-2.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setNewAlertToast(null);
+                  navigate("/admin/notifications");
+                }}
+                className="text-xs font-bold text-[#08A6A0] hover:text-[#067F7A] transition"
+              >
+                View Notifications →
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setNewAlertToast(null)}
+            className="rounded-lg p-1 text-[#819596] hover:bg-slate-100 hover:text-[#073F42] transition"
+            aria-label="Dismiss notification"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
     </header>
   );

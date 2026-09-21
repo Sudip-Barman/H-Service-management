@@ -17,20 +17,27 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import {
-  getWorkforceUser,
-  getUserSchedule,
-} from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
 
 export default function Schedule({ user }) {
   const navigate = useNavigate();
 
-  const employeeId = user?.id || "EMP-1001";
+  const storedUser = (() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const workforceUser =
-    getWorkforceUser(employeeId) ||
-    getWorkforceUser("EMP-1001");
+  const currentUser = user || storedUser;
+  const employeeId = currentUser?.id ? String(currentUser.id) : "";
+
+  const workforceUser = {
+    name: currentUser?.name || "Staff Member",
+    department: currentUser?.profile?.department || currentUser?.profile?.specialization || "General Medicine",
+  };
 
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +45,10 @@ export default function Schedule({ user }) {
   const fetchSchedules = async () => {
     try {
       const data = await apiRequest("/schedules");
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const mapped = data.map((s) => ({
           id: s.id,
-          employeeId: s.doctor_id ? `EMP-${s.doctor_id}` : employeeId,
+          employeeId: s.doctor_id ? String(s.doctor_id) : employeeId,
           date: s.date || s.start_date || "",
           title: s.type || s.doctor_name || "Scheduled Shift",
           type: s.type || "Duty",
@@ -53,11 +60,11 @@ export default function Schedule({ user }) {
         }));
         setSchedules(mapped);
       } else {
-        setSchedules(getUserSchedule(employeeId));
+        setSchedules([]);
       }
     } catch (err) {
       console.error("Failed to load schedules from backend:", err);
-      setSchedules(getUserSchedule(employeeId));
+      setSchedules([]);
     } finally {
       setLoading(false);
     }
@@ -702,7 +709,7 @@ export default function Schedule({ user }) {
       {/* SCHEDULE REQUEST MODAL */}
       {requestModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#E2EFED] bg-[#E8F8F6] px-5 py-4">
               <div>
                 <h2 className="text-base font-bold text-[#073F42]">
