@@ -25,7 +25,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 
 /* =========================================================
    OPTIONS
@@ -1723,14 +1723,14 @@ const Booking = () => {
         error
       );
 
-      setFormError(
-        error.message ||
-          "Failed to save booking."
+      const msg = getErrorMessage(
+        error,
+        editingBooking
+          ? "Unable to update booking details. Please try again."
+          : "Unable to create booking. Please try again."
       );
-      showToast(
-        error.message || "Failed to save booking.",
-        "error"
-      );
+      setFormError(msg);
+      showToast(msg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -1791,14 +1791,12 @@ const Booking = () => {
         error
       );
 
-      setApiError(
-        error.message ||
-          "Failed to update booking status."
+      const statusMsg = getErrorMessage(
+        error,
+        "Failed to update booking status. Please try again."
       );
-      showToast(
-        error.message || "Failed to update booking status.",
-        "error"
-      );
+      setApiError(statusMsg);
+      showToast(statusMsg, "error");
     } finally {
       setUpdatingStatus(false);
     }

@@ -20,7 +20,7 @@ import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import PatientProfile from "../../../components/admin/PatientProfile";
 import Toast from "../../../components/common/Toast";
 
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 
 /* =========================================================
    HELPERS
@@ -897,9 +897,10 @@ const Patients = () => {
       showToast({
         type: "error",
         title: "Failed to Load Patients",
-        message:
-          error.message ||
-          "Unable to fetch patient records from the server.",
+        message: getErrorMessage(
+          error,
+          "Unable to fetch patient records from the server."
+        ),
       });
     } finally {
       setLoading(false);
@@ -1307,9 +1308,7 @@ const Patients = () => {
         showToast({
           type: "error",
           title: "Delete Failed",
-          message:
-            error.message ||
-            "Unable to delete the patient.",
+          message: getErrorMessage(error, "Unable to delete the patient."),
         });
       } finally {
         setDeleting(false);

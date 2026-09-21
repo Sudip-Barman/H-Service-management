@@ -21,7 +21,7 @@ import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import NurseForm from "../../../components/admin/NurseForm";
 import NurseProfile from "../../../components/admin/NurseProfile";
 import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 import { getTemporaryPassword, saveTemporaryPassword } from "../../../utils/temporaryPasswords";
 
 /* -------------------------------------------------------------------------- */
@@ -620,8 +620,10 @@ const Nurses = () => {
         });
         showToast("Nurse details updated successfully!", "success");
       } catch (err) {
-        console.error("Failed to update nurse on backend:", err);
-        showToast(err.message || "Failed to update nurse", "error");
+        showToast(
+          getErrorMessage(err, "Unable to update nurse details. Please try again."),
+          "error"
+        );
       }
 
       setNurses((currentNurses) =>
@@ -676,8 +678,10 @@ const Nurses = () => {
       });
       showToast("Nurse registered successfully with photo!", "success");
     } catch (err) {
-      console.error("Failed to create nurse on backend:", err);
-      showToast(err.message || "Failed to register nurse", "error");
+        showToast(
+          getErrorMessage(err, "Nurse registration failed. Please try again."),
+          "error"
+        );
     }
 
     const nextId =
@@ -743,8 +747,10 @@ const Nurses = () => {
       await apiRequest(`/api/nurses/${deletedId}`, { method: "DELETE" });
       showToast("Nurse removed successfully!", "success");
     } catch (err) {
-      console.error("Failed to delete nurse on backend:", err);
-      showToast(err.message || "Failed to delete nurse", "error");
+        showToast(
+          getErrorMessage(err, "Failed to remove nurse. Please try again."),
+          "error"
+        );
     }
 
     setNurses((currentNurses) =>

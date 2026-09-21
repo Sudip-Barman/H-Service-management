@@ -20,7 +20,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import RoomBedForm from "../../../components/admin/RoomBedForm";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 
 
 /* -------------------------------------------------------------------------- */
@@ -470,8 +470,10 @@ export default function RoomBed() {
       showToast(`Room ${newRoom.roomNumber} created and saved to database!`, "success");
       await fetchRooms();
     } catch (err) {
-      console.error("Failed to save room:", err);
-      showToast(err.message || "Failed to save room to database", "error");
+      showToast(
+        getErrorMessage(err, "Failed to save room to database. Please try again."),
+        "error"
+      );
       setRooms((current) => [newRoom, ...current]);
     }
   };
@@ -510,8 +512,10 @@ export default function RoomBed() {
         showToast(`Bed added to room!`, "success");
       }
     } catch (err) {
-      console.error("Failed to add bed:", err);
-      showToast(err.message || "Failed to save bed to database", "error");
+      showToast(
+        getErrorMessage(err, "Failed to save bed to database. Please try again."),
+        "error"
+      );
       setRooms((current) =>
         current.map((room) =>
           room.id === roomId

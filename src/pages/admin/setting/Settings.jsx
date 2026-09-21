@@ -20,6 +20,7 @@ import {
 	UserRound,
 } from "lucide-react";
 import { useHospitalSettings, DEFAULT_HOSPITAL_SETTINGS } from "../../../context/HospitalSettingsContext";
+import { getErrorMessage } from "../../../api/api";
 
 const tabs = [
 	{ id: "hospital", label: "Hospital profile", icon: Building2 },
@@ -59,7 +60,7 @@ const Settings = () => {
 			window.setTimeout(() => setSaved(false), 2800);
 		} catch (err) {
 			console.error("Failed to save settings:", err);
-			showToast(err.message || "Failed to save settings", "error");
+			showToast(getErrorMessage(err, "Failed to save settings. Please try again."), "error");
 		}
 	};
 

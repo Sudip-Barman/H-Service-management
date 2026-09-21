@@ -11,7 +11,7 @@ import {
   LogOut,
   ArrowRight,
 } from "lucide-react";
-import { apiRequest } from "../../api/api";
+import { apiRequest, getErrorMessage } from "../../api/api";
 import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 import { clearTemporaryPassword } from "../../utils/temporaryPasswords";
 
@@ -119,8 +119,10 @@ const FirstTimePassword = () => {
     } catch (err) {
       console.error("Change password error:", err);
       setError(
-        err.message ||
+        getErrorMessage(
+          err,
           "Failed to update password. Please verify your temporary password."
+        )
       );
     } finally {
       setLoading(false);

@@ -1,4 +1,25 @@
+import { getErrorMessage } from "../utils/errorHandler";
+
 const API = "http://127.0.0.1:8000";
+
+export const API_ORIGIN = (
+  import.meta.env.VITE_API_URL || API
+).replace(/\/api\/?$/, "");
+
+export const getPhotoUrl = (photo) => {
+  if (!photo) return "";
+
+  if (
+    photo.startsWith("http://") ||
+    photo.startsWith("https://") ||
+    photo.startsWith("blob:") ||
+    photo.startsWith("data:")
+  ) {
+    return photo;
+  }
+
+  return `${API_ORIGIN}${photo.startsWith("/") ? photo : `/${photo}`}`;
+};
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("access_token");
@@ -28,9 +49,11 @@ export const apiRequest = async (endpoint, options = {}) => {
     });
   } catch (networkError) {
     // The server is unreachable (not running, wrong port, etc.)
-    throw new Error(
-      "Unable to connect to the server. Please make sure the backend is running at http://127.0.0.1:8000"
+    const netErr = new Error(
+      "Unable to connect to the server. Please check your connection or make sure the backend is running."
     );
+    netErr.isNetworkError = true;
+    throw netErr;
   }
 
 
@@ -46,7 +69,7 @@ export const apiRequest = async (endpoint, options = {}) => {
       try {
         data = JSON.parse(text);
       } catch {
-        throw new Error("Invalid JSON response from server");
+        throw new Error("Invalid response received from the server.");
       }
     }
   } else {
@@ -70,11 +93,16 @@ export const apiRequest = async (endpoint, options = {}) => {
       }
     }
 
-    throw new Error(
-      data?.detail ||
-      data?.message ||
-      "Something went wrong"
-    );
+    const cleanMessage = getErrorMessage({
+      status: response.status,
+      data,
+    });
+
+    const error = new Error(cleanMessage);
+    error.status = response.status;
+    error.data = data;
+    error.response = response;
+    throw error;
   }
 
   // If a mutation succeeds, trigger notifications update instantly across the entire application
@@ -95,4 +123,5 @@ export const apiRequest = async (endpoint, options = {}) => {
   return data;
 };
 
+export { getErrorMessage } from "../utils/errorHandler";
 export default API;

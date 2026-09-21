@@ -20,16 +20,8 @@ import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import DoctorForm from "../../../components/admin/DoctorForm";
 import DoctorProfile from "../../../components/admin/DoctorProfile";
 import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, API_ORIGIN, getPhotoUrl, getErrorMessage } from "../../../api/api";
 import { getTemporaryPassword, saveTemporaryPassword } from "../../../utils/temporaryPasswords";
-
-/* =========================================================
-   CONFIG
-========================================================= */
-
-const API_ORIGIN = (
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
-).replace(/\/api\/?$/, "");
 
 /* =========================================================
    HELPERS
@@ -56,21 +48,6 @@ const getInitials = (doctor) => {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
-};
-
-const getPhotoUrl = (photo) => {
-  if (!photo) return "";
-
-  if (
-    photo.startsWith("http://") ||
-    photo.startsWith("https://") ||
-    photo.startsWith("blob:") ||
-    photo.startsWith("data:")
-  ) {
-    return photo;
-  }
-
-  return `${API_ORIGIN}${photo.startsWith("/") ? photo : `/${photo}`}`;
 };
 
 const formatDoctor = (doctor) => {
@@ -514,7 +491,7 @@ const Doctors = () => {
       );
 
       showToast(
-        err?.message || "Failed to load doctors",
+        getErrorMessage(err, "Failed to load doctors. Please try again."),
         "error"
       );
     } finally {
@@ -786,21 +763,11 @@ const Doctors = () => {
         err
       );
 
-      let message =
-        err?.message ||
-        (doctorId
-          ? "Failed to update doctor"
-          : "Failed to register doctor");
+      const fallback = doctorId
+        ? "Unable to update doctor details. Please try again."
+        : "Doctor registration failed. Please try again.";
 
-      /*
-        apiRequest may return FastAPI validation errors
-        in different formats. Keep the UI message readable.
-      */
-      if (typeof message !== "string") {
-        message = "Something went wrong";
-      }
-
-      showToast(message, "error");
+      showToast(getErrorMessage(err, fallback), "error");
     } finally {
       setSaving(false);
     }
@@ -859,7 +826,7 @@ const Doctors = () => {
       );
 
       showToast(
-        err?.message || "Failed to remove doctor",
+        getErrorMessage(err, "Failed to remove doctor. Please try again."),
         "error"
       );
     } finally {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 import {
   AlertCircle,
   CheckCircle2,
@@ -561,7 +561,7 @@ const Medicines = () => {
       showToast(`${medicineToDelete.medicine_name} deleted successfully!`);
     } catch (err) {
       console.error("Failed to delete medicine:", err);
-      showToast(err.message || "Failed to delete medicine", "error");
+      showToast(getErrorMessage(err, "Failed to delete medicine. Please try again."), "error");
     } finally {
       setMedicineToDelete(null);
     }

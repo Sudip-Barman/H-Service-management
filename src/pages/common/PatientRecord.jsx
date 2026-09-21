@@ -19,7 +19,7 @@ import {
   RefreshCw,
   CheckCircle2,
 } from "lucide-react";
-import { apiRequest } from "../../api/api";
+import { apiRequest, getErrorMessage } from "../../api/api";
 
 export default function PatientRecord({ portal = "workforce" }) {
   const { id } = useParams();
@@ -40,7 +40,7 @@ export default function PatientRecord({ portal = "workforce" }) {
       setPatient(data);
     } catch (err) {
       console.error("Failed to load patient:", err);
-      setError(err.message || "Failed to load patient record.");
+      setError(getErrorMessage(err, "Failed to load patient record. Please verify the patient ID."));
     } finally {
       setLoading(false);
     }

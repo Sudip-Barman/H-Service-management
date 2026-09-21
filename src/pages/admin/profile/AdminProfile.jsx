@@ -13,7 +13,7 @@ import {
   Camera,
   Trash2,
 } from "lucide-react";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 import { useHospitalSettings } from "../../../context/HospitalSettingsContext";
 
 const AdminProfile = () => {
@@ -143,7 +143,10 @@ const AdminProfile = () => {
       window.dispatchEvent(new CustomEvent("user-updated", { detail: updatedUser }));
       showToast("Profile details updated successfully!", "success");
     } catch (err) {
-      showToast(err.message || "Failed to update profile", "error");
+      showToast(
+        getErrorMessage(err, "Failed to update profile. Please try again."),
+        "error"
+      );
     } finally {
       setSavingProfile(false);
     }
@@ -178,7 +181,10 @@ const AdminProfile = () => {
       showToast("Password changed successfully!", "success");
       setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      showToast(err.message || "Failed to update password. Verify current password.", "error");
+      showToast(
+        getErrorMessage(err, "Failed to update password. Please verify your current password."),
+        "error"
+      );
     } finally {
       setChangingPassword(false);
     }

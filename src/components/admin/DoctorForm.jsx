@@ -5,6 +5,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { getPhotoUrl } from "../../api/api";
 
 const emptyDoctor = {
   doctor_id: null,
@@ -57,6 +58,13 @@ const DoctorForm = ({
   // Actual image File that will be sent to backend
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [form.photo]);
+
+  const photoUrl = getPhotoUrl(form.photo);
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -568,12 +576,13 @@ const DoctorForm = ({
 
                   <div className="relative">
 
-                    {form.photo ? (
+                    {photoUrl && !imgError ? (
                       <>
                         <img
-                          src={form.photo}
+                          src={photoUrl}
                           alt="Doctor"
                           className="h-28 w-28 rounded-2xl object-cover ring-4 ring-[#E8F8F6]"
+                          onError={() => setImgError(true)}
                         />
 
                         <button

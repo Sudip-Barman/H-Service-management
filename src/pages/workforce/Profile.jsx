@@ -27,7 +27,7 @@ import {
 import {
   getRolePermissions,
 } from "../../data/workforceData";
-import { apiRequest } from "../../api/api";
+import { apiRequest, getErrorMessage } from "../../api/api";
 
 export default function Profile({ user }) {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ export default function Profile({ user }) {
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
       console.error("Change password error:", err);
-      showToast(err.message || "Failed to update password", "error");
+      showToast(getErrorMessage(err, "Failed to update password. Please verify your current password."), "error");
     } finally {
       setPasswordLoading(false);
     }

@@ -17,7 +17,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import { apiRequest } from "../../api/api";
+import { apiRequest, getErrorMessage } from "../../api/api";
 
 export default function Schedule({ user }) {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ export default function Schedule({ user }) {
         reason: "",
       });
     } catch (err) {
-      showToast(err.message || "Failed to submit request", "error");
+      showToast(getErrorMessage(err, "Failed to submit request. Please try again."), "error");
     }
   };
 

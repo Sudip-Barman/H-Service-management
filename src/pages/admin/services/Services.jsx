@@ -20,7 +20,7 @@ import SearchFilter from "../../../components/admin/SearchFilter";
 import ServiceDetails from "../../../components/admin/ServiceDetails";
 import ServiceForm from "../../../components/admin/ServiceForm";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 
 import {
   serviceCategoryOptions,
@@ -604,8 +604,9 @@ const Services = () => {
       handleCloseForm();
     } catch (err) {
       console.error("Failed to save service:", err);
-      setFormError(err.message || "Failed to persist service to database.");
-      showToast(err.message || "Failed to save service.", "error");
+      const errorMsg = getErrorMessage(err, "Unable to save service. Please try again.");
+      setFormError(errorMsg);
+      showToast(errorMsg, "error");
     }
   };
 
@@ -660,7 +661,10 @@ const Services = () => {
       showToast("Service deleted successfully!", "success");
     } catch (err) {
       console.error("Failed to delete service:", err);
-      showToast(err.message || "Failed to delete service", "error");
+      showToast(
+        getErrorMessage(err, "Failed to delete service. Please try again."),
+        "error"
+      );
     } finally {
       setServiceToRemove(null);
     }

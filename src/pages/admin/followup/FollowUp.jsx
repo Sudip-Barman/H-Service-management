@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 import {
   CalendarCheck,
   CalendarDays,
@@ -542,7 +542,10 @@ const FollowUp = () => {
         showToast("Follow-up updated successfully!", "success");
       } catch (err) {
         console.error("Failed to update follow-up on backend:", err);
-        showToast(err.message || "Failed to update follow-up", "error");
+        showToast(
+          getErrorMessage(err, "Failed to update follow-up. Please try again."),
+          "error"
+        );
       }
     } else {
       const generatedCode = `FU-${1001 + followUps.length}`;
@@ -642,7 +645,10 @@ const FollowUp = () => {
       showToast("Follow-up deleted successfully!", "success");
     } catch (err) {
       console.error("Failed to delete follow up on backend:", err);
-      showToast("Failed to delete follow-up", "error");
+      showToast(
+        getErrorMessage(err, "Failed to delete follow-up. Please try again."),
+        "error"
+      );
     }
   };
 

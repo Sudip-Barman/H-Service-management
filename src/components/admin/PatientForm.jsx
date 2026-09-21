@@ -9,7 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { apiRequest } from "../../api/api";
+import { apiRequest, getErrorMessage } from "../../api/api";
 import Toast from "../common/Toast";
 
 // -----------------------------------------------------------------------------
@@ -960,11 +960,12 @@ export default function PatientForm({
         title: isEdit
           ? "Update Failed"
           : "Registration Failed",
-        message:
-          error.message ||
-          (isEdit
-            ? "Failed to update patient."
-            : "Failed to register patient."),
+        message: getErrorMessage(
+          error,
+          isEdit
+            ? "Unable to update patient details. Please try again."
+            : "Unable to register patient. Please try again."
+        ),
       });
     }
   };

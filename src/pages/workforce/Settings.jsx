@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { apiRequest } from "../../api/api";
+import { apiRequest, getErrorMessage } from "../../api/api";
 
 const Settings = ({ user }) => {
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ const Settings = ({ user }) => {
         setPasswordSuccess("");
       }, 1800);
     } catch (err) {
-      setPasswordError(err.message || "Failed to change password");
+      setPasswordError(getErrorMessage(err, "Failed to change password. Please verify your current password."));
     } finally {
       setPasswordLoading(false);
     }

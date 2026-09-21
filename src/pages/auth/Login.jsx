@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { login } from "../../api/auth";
+import { getErrorMessage } from "../../api/api";
 import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 
 const Login = () => {
@@ -162,8 +163,7 @@ const Login = () => {
       console.error("Login error:", error);
 
       setError(
-        error.message ||
-          "Unable to connect to the server. Make sure the FastAPI backend is running."
+        getErrorMessage(error, "Login failed: invalid email or password.")
       );
     } finally {
       setLoading(false);

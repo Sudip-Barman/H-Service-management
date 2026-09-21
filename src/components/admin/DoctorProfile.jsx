@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Activity,
   CalendarDays,
@@ -12,6 +13,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { getPhotoUrl } from "../../api/api";
 
 /* =========================================================
    HELPERS
@@ -177,7 +179,14 @@ const DoctorProfile = ({
 }) => {
   if (!doctor) return null;
 
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [doctor?.photo]);
+
   const name = getDoctorName(doctor);
+  const photoUrl = getPhotoUrl(doctor?.photo);
 
   return (
     <div
@@ -210,11 +219,12 @@ const DoctorProfile = ({
             {/* Doctor Photo */}
 
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#E8F8F6] bg-[#DDF4F1] text-base font-bold text-[#078E89]">
-              {doctor.photo ? (
+              {photoUrl && !imgError ? (
                 <img
-                  src={doctor.photo}
+                  src={photoUrl}
                   alt={name}
                   className="h-full w-full object-cover"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 getInitials(name)

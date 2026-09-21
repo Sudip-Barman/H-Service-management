@@ -14,7 +14,7 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 
 /* =========================================================
    HELPERS
@@ -222,7 +222,7 @@ const Schedules = () => {
       setFormOpen(false);
       showToast("Schedule created successfully!");
     } catch (err) {
-      showToast(err.message || "Failed to save schedule", "error");
+      showToast(getErrorMessage(err, "Failed to save schedule. Please try again."), "error");
     }
   };
 
@@ -234,7 +234,7 @@ const Schedules = () => {
       setSchedules((current) => current.filter((s) => (s.id || s.schedule_id) !== id));
       showToast("Schedule deleted successfully!");
     } catch (err) {
-      showToast(err.message || "Failed to delete schedule", "error");
+      showToast(getErrorMessage(err, "Failed to delete schedule. Please try again."), "error");
     }
   };
 

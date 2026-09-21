@@ -24,7 +24,7 @@ import {
   statusOptions,
   emptyStaffForm,
 } from "../../../data";
-import { apiRequest } from "../../../api/api";
+import { apiRequest, getErrorMessage } from "../../../api/api";
 import {
   getTemporaryPassword,
   saveTemporaryPassword,
@@ -491,8 +491,10 @@ const Staff = () => {
       showToast("Staff registered successfully!");
       closeAddModal();
     } catch (err) {
-      console.error("Failed to register staff:", err);
-      showToast(err.message || "Failed to register staff member", "error");
+        showToast(
+          getErrorMessage(err, "Unable to register staff member. Please try again."),
+          "error"
+        );
     }
   };
 
@@ -603,8 +605,10 @@ const Staff = () => {
       showToast("Staff updated successfully!");
       closeAddModal();
     } catch (err) {
-      console.error("Failed to update staff:", err);
-      showToast(err.message || "Failed to update staff member", "error");
+        showToast(
+          getErrorMessage(err, "Unable to update staff member. Please try again."),
+          "error"
+        );
     }
   };
 
@@ -681,8 +685,10 @@ const Staff = () => {
       );
       showToast(`${staffToRemove.name} removed successfully!`);
     } catch (err) {
-      console.error("Failed to delete staff on backend:", err);
-      showToast(err.message || "Failed to delete staff member", "error");
+        showToast(
+          getErrorMessage(err, "Failed to remove staff member. Please try again."),
+          "error"
+        );
     } finally {
       setStaffToRemove(null);
     }
