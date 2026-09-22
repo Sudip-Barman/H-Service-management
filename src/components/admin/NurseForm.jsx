@@ -5,6 +5,13 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
+import {
+  sanitizePhoneNumber,
+  validatePhoneNumber,
+  validateDateOfBirth,
+  getDobInputBounds,
+} from "../../utils/validation";
 
 const emptyNurse = {
   nurse_id: null,
@@ -68,6 +75,9 @@ const NurseForm = ({
   onClose,
   onSubmit,
 }) => {
+  const { settings } = useHospitalSettings();
+  const dobBounds = getDobInputBounds(settings, true);
+
   const [prevNurse, setPrevNurse] = useState(nurse);
   const [form, setForm] = useState(() => buildNurseFormState(nurse));
   const [photoPreview, setPhotoPreview] = useState(
@@ -118,6 +128,15 @@ const NurseForm = ({
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
+    if (name === "phone") {
+      const sanitized = sanitizePhoneNumber(value);
+      setForm((current) => ({
+        ...current,
+        [name]: sanitized,
+      }));
+      return;
+    }
 
     setForm((current) => ({
       ...current,
@@ -279,6 +298,20 @@ const NurseForm = ({
     if (!form.last_name.trim()) {
       alert("Last name is required.");
       return false;
+    }
+
+    const phoneError = validatePhoneNumber(form.phone, "Phone number", false);
+    if (phoneError) {
+      alert(phoneError);
+      return false;
+    }
+
+    if (form.date_of_birth) {
+      const dobError = validateDateOfBirth(form.date_of_birth, settings, true);
+      if (dobError) {
+        alert(dobError);
+        return false;
+      }
     }
 
     if (!form.registration_number.trim()) {
@@ -557,6 +590,8 @@ const NurseForm = ({
                     type="date"
                     value={form.date_of_birth}
                     onChange={handleChange}
+                    min={dobBounds.min}
+                    max={dobBounds.max}
                   />
 
                   <SelectField
@@ -577,7 +612,9 @@ const NurseForm = ({
                     type="tel"
                     value={form.phone}
                     onChange={handleChange}
-                    placeholder="Phone number"
+                    placeholder="10-digit phone number"
+                    maxLength={10}
+                    inputMode="numeric"
                   />
 
                 </div>
@@ -932,7 +969,9 @@ const InputField = ({
   placeholder = "",
   required = false,
   min,
+  max,
   step,
+  ...rest
 }) => (
   <label className="block">
     <span className="mb-1 sm:mb-1.5 block text-xs font-semibold text-[#31585A]">
@@ -953,7 +992,9 @@ const InputField = ({
       placeholder={placeholder}
       required={required}
       min={min}
+      max={max}
       step={step}
+      {...rest}
       className="
         h-10 sm:h-11 w-full
         rounded-xl

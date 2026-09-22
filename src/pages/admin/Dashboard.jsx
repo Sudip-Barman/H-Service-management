@@ -8,7 +8,6 @@ import {
   BellRing,
   CalendarDays,
   ChevronRight,
-  Droplets,
   HeartPulse,
   Package,
   Pill,
@@ -239,25 +238,6 @@ const Dashboard = () => {
       });
     }
 
-    /*
-     * Blood bank
-     * Only show it when the backend provides blood-bank data.
-     */
-    if (
-      stats.blood_bank_status !== undefined &&
-      stats.blood_bank_status !== null
-    ) {
-      items.push({
-        label: "Blood bank",
-        value: String(stats.blood_bank_status),
-        detail:
-          stats.blood_bank_detail !== undefined &&
-          stats.blood_bank_detail !== null
-            ? String(stats.blood_bank_detail)
-            : "Backend data",
-        icon: Droplets,
-      });
-    }
 
     return items;
   }, [stats]);

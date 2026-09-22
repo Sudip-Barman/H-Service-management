@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../../api/api";
 import {
+  AlertCircle,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -18,203 +19,6 @@ import {
   X,
 } from "lucide-react";
 
-/*
-|--------------------------------------------------------------------------
-| MASTER STAFF LIST
-|--------------------------------------------------------------------------
-| Complete list of doctors and staff who should appear every day.
-|--------------------------------------------------------------------------
-*/
-
-const staffList = [
-  {
-    id: "EMP-1001",
-    name: "Dr. Arindam Sen",
-    role: "Doctor",
-    department: "General Medicine",
-    shift: "09:00 AM - 05:00 PM",
-    phone: "+91 98765 12001",
-    email: "arindam.sen@carecore.com",
-  },
-  {
-    id: "EMP-1002",
-    name: "Suman Roy",
-    role: "GNM Nurse",
-    department: "Nursing",
-    shift: "08:00 AM - 08:00 PM",
-    phone: "+91 98765 12002",
-    email: "suman.roy@carecore.com",
-  },
-  {
-    id: "EMP-1003",
-    name: "Anita Roy",
-    role: "Elder Caregiver",
-    department: "Patient Care",
-    shift: "08:00 AM - 08:00 PM",
-    phone: "+91 98765 12003",
-    email: "anita.roy@carecore.com",
-  },
-  {
-    id: "EMP-1004",
-    name: "Mita Das",
-    role: "Baby Caretaker",
-    department: "Child Care",
-    shift: "10:00 AM - 06:00 PM",
-    phone: "+91 98765 12004",
-    email: "mita.das@carecore.com",
-  },
-  {
-    id: "EMP-1005",
-    name: "Rahul Ghosh",
-    role: "ICU Nurse",
-    department: "ICU",
-    shift: "Night Shift",
-    phone: "+91 98765 12005",
-    email: "rahul.ghosh@carecore.com",
-  },
-  {
-    id: "EMP-1006",
-    name: "Priyanka Paul",
-    role: "ANM Nurse",
-    department: "Community Nursing",
-    shift: "08:00 AM - 04:00 PM",
-    phone: "+91 98765 12006",
-    email: "priyanka.paul@carecore.com",
-  },
-  {
-    id: "EMP-1007",
-    name: "Vikash Kumar",
-    role: "Male Attendant",
-    department: "Patient Care",
-    shift: "08:00 AM - 08:00 PM",
-    phone: "+91 98765 12007",
-    email: "vikash.kumar@carecore.com",
-  },
-  {
-    id: "EMP-1008",
-    name: "Riya Mukherjee",
-    role: "Receptionist",
-    department: "Reception",
-    shift: "09:00 AM - 05:00 PM",
-    phone: "+91 98765 12008",
-    email: "riya.m@carecore.com",
-  },
-];
-
-const initialAttendance = [
-  {
-    id: "EMP-1001",
-    name: "Dr. Arindam Sen",
-    role: "Doctor",
-    department: "General Medicine",
-    date: "2026-09-07",
-    checkIn: "08:52 AM",
-    checkOut: "05:04 PM",
-    shift: "09:00 AM - 05:00 PM",
-    status: "Present",
-    workHours: "8h 12m",
-    phone: "+91 98765 12001",
-    email: "arindam.sen@carecore.com",
-  },
-  {
-    id: "EMP-1002",
-    name: "Suman Roy",
-    role: "GNM Nurse",
-    department: "Nursing",
-    date: "2026-09-07",
-    checkIn: "07:55 AM",
-    checkOut: "08:03 PM",
-    shift: "08:00 AM - 08:00 PM",
-    status: "Present",
-    workHours: "12h 08m",
-    phone: "+91 98765 12002",
-    email: "suman.roy@carecore.com",
-  },
-  {
-    id: "EMP-1003",
-    name: "Anita Roy",
-    role: "Elder Caregiver",
-    department: "Patient Care",
-    date: "2026-09-07",
-    checkIn: "08:10 AM",
-    checkOut: "08:15 PM",
-    shift: "08:00 AM - 08:00 PM",
-    status: "Late",
-    workHours: "12h 05m",
-    phone: "+91 98765 12003",
-    email: "anita.roy@carecore.com",
-  },
-  {
-    id: "EMP-1004",
-    name: "Mita Das",
-    role: "Baby Caretaker",
-    department: "Child Care",
-    date: "2026-09-07",
-    checkIn: "09:58 AM",
-    checkOut: "06:02 PM",
-    shift: "10:00 AM - 06:00 PM",
-    status: "Present",
-    workHours: "8h 04m",
-    phone: "+91 98765 12004",
-    email: "mita.das@carecore.com",
-  },
-  {
-    id: "EMP-1005",
-    name: "Rahul Ghosh",
-    role: "ICU Nurse",
-    department: "ICU",
-    date: "2026-09-07",
-    checkIn: "--",
-    checkOut: "--",
-    shift: "Night Shift",
-    status: "On Leave",
-    workHours: "0h",
-    phone: "+91 98765 12005",
-    email: "rahul.ghosh@carecore.com",
-  },
-  {
-    id: "EMP-1006",
-    name: "Priyanka Paul",
-    role: "ANM Nurse",
-    department: "Community Nursing",
-    date: "2026-09-07",
-    checkIn: "07:58 AM",
-    checkOut: "04:02 PM",
-    shift: "08:00 AM - 04:00 PM",
-    status: "Present",
-    workHours: "8h 04m",
-    phone: "+91 98765 12006",
-    email: "priyanka.paul@carecore.com",
-  },
-  {
-    id: "EMP-1007",
-    name: "Vikash Kumar",
-    role: "Male Attendant",
-    department: "Patient Care",
-    date: "2026-09-07",
-    checkIn: "--",
-    checkOut: "--",
-    shift: "08:00 AM - 08:00 PM",
-    status: "Absent",
-    workHours: "0h",
-    phone: "+91 98765 12007",
-    email: "vikash.kumar@carecore.com",
-  },
-  {
-    id: "EMP-1008",
-    name: "Riya Mukherjee",
-    role: "Receptionist",
-    department: "Reception",
-    date: "2026-09-07",
-    checkIn: "09:02 AM",
-    checkOut: "05:01 PM",
-    shift: "09:00 AM - 05:00 PM",
-    status: "Present",
-    workHours: "7h 59m",
-    phone: "+91 98765 12008",
-    email: "riya.m@carecore.com",
-  },
-];
 
 const statusOptions = [
   "All",
@@ -380,71 +184,132 @@ const exportAttendanceCsv = (records, selectedDate) => {
 const Attendance = () => {
   const today = getToday();
 
-  const [attendance, setAttendance] =
-    useState(initialAttendance);
-  const [liveStaff, setLiveStaff] = useState(staffList);
+  const [attendance, setAttendance] = useState([]);
+  const [liveStaff, setLiveStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [departmentFilter, setDepartmentFilter] =
-    useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
 
-  const [selectedDate, setSelectedDate] =
-    useState(today);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [timeEditorMember, setTimeEditorMember] = useState(null);
 
-  const [showFilters, setShowFilters] =
-    useState(false);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [doctorsRes, nursesRes, staffRes, attRes] = await Promise.allSettled([
+        apiRequest("/api/doctors"),
+        apiRequest("/api/nurses"),
+        apiRequest("/api/staff"),
+        apiRequest("/api/attendance"),
+      ]);
 
-  const [selectedEmployee, setSelectedEmployee] =
-    useState(null);
+      const allWorkforce = [];
+      const seen = new Set();
 
-  const [timeEditorMember, setTimeEditorMember] =
-    useState(null);
+      // 1. Doctors from /api/doctors
+      if (doctorsRes.status === "fulfilled" && Array.isArray(doctorsRes.value)) {
+        for (const d of doctorsRes.value) {
+          const empId = d.registration_number || `DOC-${d.id}`;
+          const key = d.email ? d.email.toLowerCase() : `doc-${d.id}`;
+          seen.add(key);
+          allWorkforce.push({
+            id: empId,
+            doc_id: d.id,
+            staff_id: null,
+            nurse_id: null,
+            name: `Dr. ${d.first_name || ""} ${d.last_name || ""}`.trim(),
+            role: "Doctor",
+            department: d.department || d.specialization || "General Medicine",
+            shift: "09:00 AM - 05:00 PM",
+            phone: d.phone || "",
+            email: d.email || "",
+          });
+        }
+      }
+
+      // 2. Nurses from /api/nurses
+      if (nursesRes.status === "fulfilled" && Array.isArray(nursesRes.value)) {
+        for (const n of nursesRes.value) {
+          const empId = n.registration_number || `NUR-${n.id}`;
+          const key = n.email ? n.email.toLowerCase() : `nur-${n.id}`;
+          seen.add(key);
+          allWorkforce.push({
+            id: empId,
+            nurse_id: n.id,
+            doc_id: null,
+            staff_id: n.staff_id || null,
+            name: `${n.first_name || ""} ${n.last_name || ""}`.trim(),
+            role: "Nurse",
+            department: n.department || n.ward || "Nursing",
+            shift: n.shift_type ? `${n.shift_type} Shift` : "08:00 AM - 08:00 PM",
+            phone: n.phone || "",
+            email: n.email || "",
+          });
+        }
+      }
+
+      // 3. Other Staff from /api/staff (deduplicate against doctors/nurses)
+      if (staffRes.status === "fulfilled" && Array.isArray(staffRes.value)) {
+        for (const s of staffRes.value) {
+          const key = s.email ? s.email.toLowerCase() : `stf-${s.id}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            const empId = s.username ? `EMP-${s.username}` : `STF-${s.id}`;
+            allWorkforce.push({
+              id: empId,
+              staff_id: s.id,
+              doc_id: null,
+              nurse_id: null,
+              name: s.name || "Staff Member",
+              role: s.role || "Staff",
+              department: s.department || s.role || "Administration",
+              shift: s.shift || "09:00 AM - 05:00 PM",
+              phone: s.phone || "",
+              email: s.email || "",
+            });
+          }
+        }
+      }
+
+      setLiveStaff(allWorkforce);
+
+      // 4. Real Attendance records from /api/attendance
+      if (attRes.status === "fulfilled" && Array.isArray(attRes.value)) {
+        const mappedAtt = attRes.value.map((a) => ({
+          id: a.employee_id || (a.staff_id ? `STF-${a.staff_id}` : `ATT-${a.id}`),
+          backendId: a.id,
+          staff_id: a.staff_id,
+          employee_id: a.employee_id,
+          name: a.staff_name || a.name,
+          role: a.role,
+          department: a.department,
+          date: a.date,
+          checkIn: a.check_in || "--",
+          checkOut: a.check_out || "--",
+          shift: a.shift || "09:00 AM - 05:00 PM",
+          status: a.status || "Present",
+          workHours: calculateWorkHours(toTimeInput(a.check_in), toTimeInput(a.check_out)),
+          phone: a.phone || "",
+          email: a.email || "",
+        }));
+        setAttendance(mappedAtt);
+      } else {
+        setAttendance([]);
+      }
+    } catch (err) {
+      console.error("Failed to load attendance or workforce data:", err);
+      setError("Failed to load attendance data from the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [staffRes, attRes] = await Promise.allSettled([
-          apiRequest("/api/staff"),
-          apiRequest("/api/attendance"),
-        ]);
-
-        if (staffRes.status === "fulfilled" && Array.isArray(staffRes.value) && staffRes.value.length > 0) {
-          const mapped = staffRes.value.map((s) => ({
-            id: s.employee_id || `EMP-${1000 + s.id}`,
-            staff_id: s.id,
-            name: s.name,
-            role: s.role,
-            department: s.department || s.role,
-            shift: s.shift || "09:00 AM - 05:00 PM",
-            phone: s.phone || "",
-            email: s.email || "",
-          }));
-          setLiveStaff(mapped);
-        }
-
-        if (attRes.status === "fulfilled" && Array.isArray(attRes.value) && attRes.value.length > 0) {
-          const mappedAtt = attRes.value.map((a) => ({
-            id: a.employee_id || `EMP-${1000 + (a.staff_id || a.id)}`,
-            backendId: a.id,
-            staff_id: a.staff_id,
-            name: a.staff_name || a.name,
-            role: a.role,
-            department: a.department,
-            date: a.date,
-            checkIn: a.check_in || "--",
-            checkOut: a.check_out || "--",
-            shift: a.shift || "09:00 AM - 05:00 PM",
-            status: a.status,
-            workHours: a.check_in && a.check_out ? "8h 00m" : (a.check_in ? "In progress" : "0h"),
-            phone: a.phone || "",
-            email: a.email || "",
-          }));
-          setAttendance(mappedAtt);
-        }
-      } catch (err) {
-        console.error("Failed to load attendance or staff data:", err);
-      }
-    };
     fetchData();
   }, []);
 
@@ -457,12 +322,19 @@ const Attendance = () => {
       return liveStaff.map((staff) => {
         const existingRecord = attendance.find(
           (record) =>
-            record.id === staff.id &&
+            (record.id === staff.id ||
+              (record.employee_id && record.employee_id === staff.id) ||
+              (staff.staff_id && record.staff_id === staff.staff_id) ||
+              (record.name && staff.name && record.name.toLowerCase() === staff.name.toLowerCase())) &&
             record.date === today
         );
 
         if (existingRecord) {
-          return existingRecord;
+          return {
+            ...staff,
+            ...existingRecord,
+            id: staff.id,
+          };
         }
 
         return {
@@ -616,7 +488,7 @@ const Attendance = () => {
     setAttendance((current) => {
       const existingIndex = current.findIndex(
         (item) =>
-          item.id === member.id &&
+          (item.id === member.id || item.employee_id === member.id) &&
           item.date === today
       );
 
@@ -705,7 +577,7 @@ const Attendance = () => {
     setAttendance((current) => {
       const existingIndex = current.findIndex(
         (item) =>
-          item.id === updated.id &&
+          (item.id === updated.id || item.employee_id === updated.id) &&
           item.date === today
       );
 
@@ -776,6 +648,13 @@ const Attendance = () => {
           One-click attendance marking
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Date Navigation */}
       <div className="mb-4 rounded-xl border border-[#E2EFED] bg-white p-3 shadow-sm">
@@ -999,7 +878,12 @@ const Attendance = () => {
           </div>
         </div>
 
-        {filteredAttendance.length ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#08A6A0] border-t-transparent"></div>
+            <p className="mt-3 text-sm text-[#819596]">Loading attendance data...</p>
+          </div>
+        ) : filteredAttendance.length ? (
           <>
             {/* Desktop Table */}
             <div className="hidden overflow-x-auto lg:block">
@@ -1074,7 +958,16 @@ const Attendance = () => {
             </div>
           </>
         ) : (
-          <EmptyState />
+          <EmptyState
+            liveStaffCount={liveStaff.length}
+            hasFilters={Boolean(
+              search.trim() ||
+                statusFilter !== "All" ||
+                departmentFilter !== "All"
+            )}
+            isCurrentDate={isCurrentDate}
+            selectedDate={selectedDate}
+          />
         )}
       </section>
 
@@ -1207,7 +1100,7 @@ const AttendanceStatus = ({ status }) => (
 
 const Avatar = ({ name }) => (
   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F8F6] text-[11px] font-bold text-[#078E89]">
-    {name
+    {(name || "U")
       .split(" ")
       .filter(Boolean)
       .slice(0, 2)
@@ -1735,18 +1628,59 @@ const TimeEditor = ({
 |--------------------------------------------------------------------------
 */
 
-const EmptyState = () => (
-  <div className="px-6 py-16 text-center">
-    <CalendarDays className="mx-auto h-8 w-8 text-[#B6C8C7]" />
+const EmptyState = ({
+  liveStaffCount = 0,
+  hasFilters = false,
+  isCurrentDate = true,
+  selectedDate = "",
+}) => {
+  if (liveStaffCount === 0) {
+    return (
+      <div className="px-6 py-16 text-center">
+        <CalendarDays className="mx-auto h-8 w-8 text-[#B6C8C7]" />
 
-    <h3 className="mt-3 font-semibold text-[#173F41]">
-      No attendance records found
-    </h3>
+        <h3 className="mt-3 font-semibold text-[#173F41]">
+          No workforce members found
+        </h3>
 
-    <p className="mt-1 text-sm text-[#819596]">
-      Try another date or change the filters.
-    </p>
-  </div>
-);
+        <p className="mt-1 text-sm text-[#819596]">
+          No doctors, nurses, or staff members are registered in the system yet.
+        </p>
+      </div>
+    );
+  }
+
+  if (hasFilters) {
+    return (
+      <div className="px-6 py-16 text-center">
+        <CalendarDays className="mx-auto h-8 w-8 text-[#B6C8C7]" />
+
+        <h3 className="mt-3 font-semibold text-[#173F41]">
+          No matching records found
+        </h3>
+
+        <p className="mt-1 text-sm text-[#819596]">
+          No attendance records match your active search or filter criteria.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-16 text-center">
+      <CalendarDays className="mx-auto h-8 w-8 text-[#B6C8C7]" />
+
+      <h3 className="mt-3 font-semibold text-[#173F41]">
+        No attendance records found
+      </h3>
+
+      <p className="mt-1 text-sm text-[#819596]">
+        {isCurrentDate
+          ? "No attendance marked for today yet."
+          : `No attendance records found for ${formatDate(selectedDate)}.`}
+      </p>
+    </div>
+  );
+};
 
 export default Attendance;

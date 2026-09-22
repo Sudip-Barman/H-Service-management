@@ -17,56 +17,6 @@ import {
 	ExternalLink,
 } from "lucide-react";
 
-const initialNotifications = [
-	{
-		id: 1,
-		title: "Blood Bank Stock Alert",
-		message: "O negative blood stock is below the emergency reserve level.",
-		type: "Blood Bank",
-		priority: "Urgent",
-		department: "Blood Bank",
-		recipient: "All Clinical Staff",
-		date: "2026-09-09",
-		time: "09:15",
-		read: false,
-	},
-	{
-		id: 2,
-		title: "Medicine Expiry Reminder",
-		message: "12 medicine batches are approaching their expiry date.",
-		type: "Pharmacy",
-		priority: "High",
-		department: "Pharmacy",
-		recipient: "Pharmacy Team",
-		date: "2026-09-09",
-		time: "08:40",
-		read: false,
-	},
-	{
-		id: 3,
-		title: "Laboratory Equipment Maintenance",
-		message: "The ECG machine in Diagnostic Room 2 is due for maintenance.",
-		type: "Laboratory",
-		priority: "Normal",
-		department: "Laboratory",
-		recipient: "Lab Technicians",
-		date: "2026-09-08",
-		time: "16:30",
-		read: true,
-	},
-	{
-		id: 4,
-		title: "Emergency Department Roster Updated",
-		message: "The emergency department staff schedule has been updated.",
-		type: "Staff",
-		priority: "Normal",
-		department: "Emergency",
-		recipient: "Emergency Staff",
-		date: "2026-09-08",
-		time: "14:05",
-		read: true,
-	},
-];
 
 const emptyForm = {
 	title: "",
@@ -86,7 +36,6 @@ const typeStyles = {
 	Requests: "bg-violet-50 text-violet-700",
 	Feedback: "bg-rose-50 text-rose-700",
 	"Follow-up": "bg-orange-50 text-orange-700",
-	"Blood Bank": "bg-red-50 text-red-700",
 	Pharmacy: "bg-blue-50 text-blue-700",
 	Laboratory: "bg-purple-50 text-purple-700",
 	General: "bg-slate-100 text-slate-700",
@@ -111,7 +60,7 @@ const Notification = () => {
 				}
 			} catch (err) {
 				console.error("Failed to load notifications from server:", err);
-				setNotifications(initialNotifications);
+				setNotifications([]);
 			}
 		};
 		fetchNotifications();
@@ -323,7 +272,6 @@ const Notification = () => {
 								<option value="Requests">Requests</option>
 								<option value="Feedback">Feedback</option>
 								<option value="Follow-up">Follow-up</option>
-								<option value="Blood Bank">Blood Bank</option>
 								<option value="Pharmacy">Pharmacy</option>
 								<option value="Laboratory">Laboratory</option>
 								<option value="General">General</option>
@@ -543,7 +491,7 @@ const NotificationForm = ({ form, onChange, onSubmit, onClose }) => (
 				<Field label="Title" value={form.title} onChange={(value) => onChange("title", value)} placeholder="Notification title" />
 				<div><label className="mb-1.5 block text-xs font-semibold text-[#31585A]">Message</label><textarea required rows="4" value={form.message} onChange={(event) => onChange("message", event.target.value)} placeholder="Write the hospital update..." className="w-full rounded-xl border border-[#D9E9E7] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]" /></div>
 				<div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
-					<SelectField label="Type" value={form.type} onChange={(value) => onChange("type", value)} options={["General", "Services", "Patients", "Staff", "Admissions", "Bookings", "Requests", "Feedback", "Follow-up", "Blood Bank", "Pharmacy", "Laboratory"]} />
+					<SelectField label="Type" value={form.type} onChange={(value) => onChange("type", value)} options={["General", "Services", "Patients", "Staff", "Admissions", "Bookings", "Requests", "Feedback", "Follow-up", "Pharmacy", "Laboratory"]} />
 					<SelectField label="Priority" value={form.priority} onChange={(value) => onChange("priority", value)} options={["Normal", "High", "Urgent"]} />
 					<Field label="Department" value={form.department} onChange={(value) => onChange("department", value)} placeholder="All Departments" />
 					<Field label="Recipient" value={form.recipient} onChange={(value) => onChange("recipient", value)} placeholder="All Hospital Staff" />

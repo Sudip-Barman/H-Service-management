@@ -435,110 +435,7 @@ export const workforceAssignments = [
 // ATTENDANCE
 // ============================================================
 
-export const workforceAttendance = [
-  // Doctor
-  {
-    id: "ATT-001",
-    employeeId: "EMP-1001",
-    date: "2026-09-09",
-    checkIn: "09:08 AM",
-    checkOut: "05:31 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-002",
-    employeeId: "EMP-1001",
-    date: "2026-09-08",
-    checkIn: "09:15 AM",
-    checkOut: "05:20 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-003",
-    employeeId: "EMP-1001",
-    date: "2026-09-07",
-    checkIn: "09:04 AM",
-    checkOut: "05:12 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-004",
-    employeeId: "EMP-1001",
-    date: "2026-09-06",
-    checkIn: "09:10 AM",
-    checkOut: "05:25 PM",
-    status: "Completed",
-  },
-
-  // Nurse
-  {
-    id: "ATT-005",
-    employeeId: "EMP-1002",
-    date: "2026-09-09",
-    checkIn: "08:02 AM",
-    checkOut: "04:10 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-006",
-    employeeId: "EMP-1002",
-    date: "2026-09-08",
-    checkIn: "08:07 AM",
-    checkOut: "04:05 PM",
-    status: "Completed",
-  },
-
-  // Nurse
-  {
-    id: "ATT-007",
-    employeeId: "EMP-1006",
-    date: "2026-09-09",
-    checkIn: "09:03 AM",
-    checkOut: "05:05 PM",
-    status: "Completed",
-  },
-
-  // Staff
-  {
-    id: "ATT-008",
-    employeeId: "EMP-1003",
-    date: "2026-09-09",
-    checkIn: "09:01 AM",
-    checkOut: "05:02 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-009",
-    employeeId: "EMP-1004",
-    date: "2026-09-09",
-    checkIn: "08:32 AM",
-    checkOut: "04:35 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-010",
-    employeeId: "EMP-1007",
-    date: "2026-09-09",
-    checkIn: "09:55 AM",
-    checkOut: "06:04 PM",
-    status: "Completed",
-  },
-
-  {
-    id: "ATT-011",
-    employeeId: "EMP-1008",
-    date: "2026-09-09",
-    checkIn: "08:58 AM",
-    checkOut: "05:01 PM",
-    status: "Completed",
-  },
-];
+export const workforceAttendance = [];
 
 
 // ============================================================
@@ -582,51 +479,7 @@ export const workforceLeaves = [
 // NOTIFICATIONS
 // ============================================================
 
-export const workforceNotifications = [
-  {
-    id: "NOT-001",
-    employeeId: "EMP-1001",
-    title: "New Appointment",
-    message:
-      "A new patient consultation has been assigned to you.",
-    time: "10 minutes ago",
-    type: "appointment",
-    read: false,
-  },
-
-  {
-    id: "NOT-002",
-    employeeId: "EMP-1001",
-    title: "Schedule Updated",
-    message:
-      "Your schedule for September 11 has been updated.",
-    time: "1 hour ago",
-    type: "schedule",
-    read: false,
-  },
-
-  {
-    id: "NOT-003",
-    employeeId: "EMP-1001",
-    title: "Leave Request",
-    message:
-      "Your casual leave request is awaiting approval.",
-    time: "3 hours ago",
-    type: "leave",
-    read: true,
-  },
-
-  {
-    id: "NOT-004",
-    employeeId: "EMP-1001",
-    title: "System Notification",
-    message:
-      "Please complete your daily attendance before leaving.",
-    time: "Yesterday",
-    type: "system",
-    read: true,
-  },
-];
+export const workforceNotifications = [];
 
 
 // ============================================================
@@ -733,10 +586,8 @@ export const getUserAssignments = (employeeId) => {
 // ATTENDANCE HELPERS
 // ============================================================
 
-export const getWorkforceAttendance = (employeeId) => {
-  return workforceAttendance.filter(
-    (record) => record.employeeId === employeeId
-  );
+export const getWorkforceAttendance = (_employeeId) => {
+  return [];
 };
 
 
@@ -761,11 +612,8 @@ export const getUserLeaves = (employeeId) => {
 // NOTIFICATION HELPERS
 // ============================================================
 
-export const getUserNotifications = (employeeId) => {
-  return workforceNotifications.filter(
-    (notification) =>
-      notification.employeeId === employeeId
-  );
+export const getUserNotifications = (_employeeId) => {
+  return [];
 };
 
 

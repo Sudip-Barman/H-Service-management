@@ -43,7 +43,10 @@ const EMPTY_FORM = {
   notes: "",
   nextAction: "",
   status: "New",
+  isRecurring: false,
+  recurrenceInterval: "Daily",
 };
+
 
 /* =========================================================
    OPTIONS
@@ -482,6 +485,8 @@ const FollowUp = () => {
       notes: item.notes || "",
       nextAction: item.nextAction || "",
       status: item.status || "New",
+      isRecurring: Boolean(item.is_recurring),
+      recurrenceInterval: item.recurrence_interval || "Daily",
     });
 
     setShowModal(true);
@@ -514,6 +519,8 @@ const FollowUp = () => {
             ? {
                 ...item,
                 ...form,
+                is_recurring: Boolean(form.isRecurring),
+                recurrence_interval: form.isRecurring ? form.recurrenceInterval : null,
               }
             : item
         )
@@ -537,6 +544,8 @@ const FollowUp = () => {
             notes: form.notes,
             next_action: form.nextAction,
             status: form.status,
+            is_recurring: Boolean(form.isRecurring),
+            recurrence_interval: form.isRecurring ? form.recurrenceInterval : null,
           }),
         });
         showToast("Follow-up updated successfully!", "success");
@@ -552,6 +561,8 @@ const FollowUp = () => {
       const newFollowUp = {
         id: generatedCode,
         ...form,
+        is_recurring: Boolean(form.isRecurring),
+        recurrence_interval: form.isRecurring ? form.recurrenceInterval : null,
         createdAt: new Date().toISOString().slice(0, 10),
       };
 
@@ -574,6 +585,8 @@ const FollowUp = () => {
             notes: form.notes,
             next_action: form.nextAction,
             status: form.status,
+            is_recurring: Boolean(form.isRecurring),
+            recurrence_interval: form.isRecurring ? form.recurrenceInterval : null,
           }),
         });
         setFollowUps((previous) => [created, ...previous]);
@@ -1522,7 +1535,40 @@ const FollowUp = () => {
                     className="w-full resize-none rounded-lg border border-[#D9E9E7] bg-white px-3 py-2.5 text-sm text-[#173F41] outline-none placeholder:text-[#A1B1B1] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10"
                   />
                 </div>
+
+                {/* Recurring Reminder Setting */}
+                <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[#EAF1F0] bg-[#F7FBFA] p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-[#173F41]">Recurring Reminder</p>
+                    <p className="text-[11px] text-[#638284]">
+                      Automatically schedule the next occurrence after triggering notification
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.isRecurring || false}
+                        onChange={(e) => updateForm("isRecurring", e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#08A6A0] peer-checked:after:translate-x-full"></div>
+                    </label>
+                    {form.isRecurring && (
+                      <select
+                        value={form.recurrenceInterval || "Daily"}
+                        onChange={(e) => updateForm("recurrenceInterval", e.target.value)}
+                        className="rounded-lg border border-[#D9E9E7] bg-white px-2.5 py-1 text-xs text-[#173F41] outline-none focus:border-[#08A6A0]"
+                      >
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
               </div>
+
 
               {/* Footer */}
               <div className="mt-6 flex flex-col-reverse gap-2 border-t border-[#EAF1F0] pt-4 sm:flex-row sm:justify-end">

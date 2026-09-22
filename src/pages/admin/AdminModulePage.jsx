@@ -19,7 +19,6 @@ const moduleNames = {
   laboratory: "Laboratory Management",
   pharmacy: "Pharmacy Management",
   inventory: "Inventory Management",
-  blood: "Blood Management",
   billing: "Billing Management",
   payments: "Payment Management",
   insurance: "Insurance Management",

@@ -24,6 +24,10 @@ export const DEFAULT_HOSPITAL_SETTINGS = {
   weeklyReports: false,
   twoFactor: true,
   billingTaxRate: 5,
+  minPatientAge: 0,
+  maxPatientAge: 125,
+  minStaffAge: 18,
+  maxStaffAge: 75,
 };
 
 const STORAGE_KEY = "carecore_hospital_settings";

@@ -1,5 +1,10 @@
 import { Save, UserPlus, X } from "lucide-react";
 import { useState } from "react";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
+import {
+  sanitizePhoneNumber,
+  getDobInputBounds,
+} from "../../utils/validation";
 
 const StaffForm = ({
   form,
@@ -10,6 +15,8 @@ const StaffForm = ({
   onClose,
   isEditing = false,
 }) => {
+  const { settings } = useHospitalSettings();
+  const dobBounds = getDobInputBounds(settings, true);
   return (
     <div
       className="
@@ -165,6 +172,15 @@ const StaffForm = ({
             />
 
             <FormField
+              label="Date of Birth"
+              type="date"
+              value={form.date_of_birth}
+              onChange={(value) => onChange("date_of_birth", value)}
+              min={dobBounds.min}
+              max={dobBounds.max}
+            />
+
+            <FormField
               label="Designation"
               value={form.designation}
               onChange={(value) => onChange("designation", value)}
@@ -213,9 +229,12 @@ const StaffForm = ({
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <FormField
               label="Phone Number"
+              type="tel"
               value={form.phone}
-              onChange={(value) => onChange("phone", value)}
-              placeholder="+91 XXXXX XXXXX"
+              onChange={(value) => onChange("phone", sanitizePhoneNumber(value))}
+              placeholder="10-digit phone number"
+              maxLength={10}
+              inputMode="numeric"
               required
             />
 
@@ -340,6 +359,9 @@ const FormField = ({
   placeholder,
   type = "text",
   required = false,
+  min,
+  max,
+  ...rest
 }) => {
   return (
     <div>
@@ -361,10 +383,13 @@ const FormField = ({
 
       <input
         type={type}
-        value={value}
+        value={value ?? ""}
         required={required}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        min={min}
+        max={max}
+        {...rest}
         className="
           h-10 w-full
           rounded-xl

@@ -19,7 +19,6 @@ import {
   Search,
   Settings2,
   Stethoscope,
-  Utensils,
   UserRound,
   WalletCards,
   X,
@@ -258,17 +257,6 @@ const TypeBadge = ({ type }) => {
         "border-purple-200 bg-purple-50 text-purple-700",
     },
 
-    Food: {
-      icon: Utensils,
-      className:
-        "border-orange-200 bg-orange-50 text-orange-700",
-    },
-
-    Blood: {
-      icon: Banknote,
-      className:
-        "border-red-200 bg-red-50 text-red-700",
-    },
   };
 
   const item = config[type] || {

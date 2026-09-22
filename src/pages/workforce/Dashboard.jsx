@@ -22,7 +22,6 @@ import {
   getUserPatients,
   getUserAssignments,
   getUserAttendance,
-  getUserNotifications,
   getRolePermissions,
 } from "../../data/workforceData";
 import { apiRequest } from "../../api/api";
@@ -74,7 +73,30 @@ export default function Dashboard() {
   const patients = getUserPatients(employeeId);
   const assignments = getUserAssignments(employeeId);
   const attendance = getUserAttendance(employeeId);
-  const notifications = getUserNotifications(employeeId);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchNotifications = async () => {
+      try {
+        const data = await apiRequest("/api/notifications");
+        if (isMounted && Array.isArray(data)) {
+          setNotifications(data);
+        }
+      } catch (err) {
+        if (isMounted) setNotifications([]);
+      }
+    };
+
+    fetchNotifications();
+
+    const handleUpdate = () => fetchNotifications();
+    window.addEventListener("notifications-updated", handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("notifications-updated", handleUpdate);
+    };
+  }, []);
 
   const today = new Date();
 

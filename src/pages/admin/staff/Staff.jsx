@@ -30,8 +30,15 @@ import {
   saveTemporaryPassword,
   generateTemporaryPassword,
 } from "../../../utils/temporaryPasswords";
+import { useHospitalSettings } from "../../../context/HospitalSettingsContext";
+import {
+  sanitizePhoneNumber,
+  validatePhoneNumber,
+  validateDateOfBirth,
+} from "../../../utils/validation";
 
 const Staff = () => {
+  const { settings } = useHospitalSettings();
   /* =======================================================
      STAFF STATE
   ======================================================= */
@@ -81,6 +88,7 @@ const Staff = () => {
                 designation: doc.specialization ? `${doc.specialization} Specialist` : "Doctor",
                 department: doc.department || doc.specialization || "Medical",
                 gender: doc.gender || "Male",
+                date_of_birth: doc.date_of_birth || "",
                 phone: doc.phone || "",
                 email: doc.email || "",
                 address: doc.address || "",
@@ -127,6 +135,7 @@ const Staff = () => {
                 designation: nurse.qualification || "Registered Nurse",
                 department: nurse.department || nurse.ward || "Nursing",
                 gender: nurse.gender || "Female",
+                date_of_birth: nurse.date_of_birth || "",
                 phone: nurse.phone || "",
                 email: nurse.email || "",
                 address: nurse.address || "",
@@ -176,6 +185,7 @@ const Staff = () => {
           designation: member.role || "Staff",
           department: member.department || member.role || "General",
           gender: member.gender || "Male",
+          date_of_birth: member.date_of_birth || "",
           phone: member.phone || "",
           email: member.email || "",
           address: member.address || "",
@@ -349,9 +359,10 @@ const Staff = () => {
   ======================================================= */
 
   const updateForm = (field, value) => {
+    const finalValue = field === "phone" ? sanitizePhoneNumber(value) : value;
     setForm((current) => ({
       ...current,
-      [field]: value,
+      [field]: finalValue,
     }));
   };
 
@@ -417,8 +428,16 @@ const Staff = () => {
       return "Staff category is required.";
     }
 
-    if (!form.phone.trim()) {
-      return "Phone number is required.";
+    const phoneError = validatePhoneNumber(form.phone, "Phone number", true);
+    if (phoneError) {
+      return phoneError;
+    }
+
+    if (form.date_of_birth) {
+      const dobError = validateDateOfBirth(form.date_of_birth, settings, true);
+      if (dobError) {
+        return dobError;
+      }
     }
 
     if (!form.qualification.trim()) {
@@ -449,6 +468,7 @@ const Staff = () => {
           name: form.name,
           role: form.category || form.designation || "Staff",
           gender: "Male",
+          date_of_birth: form.date_of_birth || null,
           phone: form.phone,
           email: form.email || null,
           address: form.address || null,
@@ -513,6 +533,7 @@ const Staff = () => {
       department: member.department || "",
       qualification: member.qualification || "",
       experience: member.experience || "",
+      date_of_birth: member.date_of_birth || "",
       phone: member.phone || "",
       email: member.email || "",
       address: member.address || "",
@@ -552,6 +573,7 @@ const Staff = () => {
           formData.append("specialization", form.designation || form.category || "General Medicine");
           formData.append("department", form.department || "Medical");
           formData.append("phone", form.phone);
+          if (form.date_of_birth) formData.append("date_of_birth", form.date_of_birth);
           if (form.email) formData.append("email", form.email);
           if (form.address) formData.append("address", form.address);
           if (form.qualification) formData.append("qualification", form.qualification);
@@ -567,6 +589,7 @@ const Staff = () => {
             body: JSON.stringify({
               first_name: nameParts[0] || "Nurse",
               last_name: nameParts.slice(1).join(" ") || "",
+              date_of_birth: form.date_of_birth || null,
               phone: form.phone,
               email: form.email || null,
               address: form.address || null,
@@ -581,6 +604,7 @@ const Staff = () => {
               name: form.name,
               role: form.category || form.designation || "Staff",
               gender: editingStaff.gender || "Male",
+              date_of_birth: form.date_of_birth || null,
               phone: form.phone,
               email: form.email || null,
               address: form.address || null,

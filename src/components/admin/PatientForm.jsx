@@ -11,6 +11,13 @@ import {
 
 import { apiRequest, getErrorMessage } from "../../api/api";
 import Toast from "../common/Toast";
+import { useHospitalSettings } from "../../context/HospitalSettingsContext";
+import {
+  sanitizePhoneNumber,
+  validatePhoneNumber,
+  validateDateOfBirth,
+  getDobInputBounds,
+} from "../../utils/validation";
 
 // -----------------------------------------------------------------------------
 // Patient Services
@@ -103,6 +110,9 @@ export default function PatientForm({
   open = true,
   initialRegistrationNumber = "",
 }) {
+  const { settings } = useHospitalSettings();
+  const dobBounds = getDobInputBounds(settings, false);
+
   const [form, setForm] = useState(EMPTY_FORM);
 
   const [serviceOptions, setServiceOptions] =
@@ -423,8 +433,14 @@ export default function PatientForm({
     setForm((prev) => {
       const next = {
         ...prev,
-        [name]: value,
       };
+
+      if (name === "phone" || name === "emergencyContactPhone") {
+        next[name] = sanitizePhoneNumber(value);
+        return next;
+      }
+
+      next[name] = value;
 
       // Auto-detect age when Date of Birth is filled or changed
       if (name === "dateOfBirth") {
@@ -717,6 +733,43 @@ export default function PatientForm({
 
     const trimmedProblem =
       form.patientProblem.trim();
+
+    // Phone validation
+    const phoneError = validatePhoneNumber(form.phone, "Phone number", true);
+    if (phoneError) {
+      showToast({
+        type: "error",
+        title: "Invalid Phone Number",
+        message: phoneError,
+      });
+      return;
+    }
+
+    // Emergency Contact Phone validation (optional field, but if entered must be 10 digits)
+    if (form.emergencyContactPhone) {
+      const emPhoneError = validatePhoneNumber(form.emergencyContactPhone, "Emergency contact phone", false);
+      if (emPhoneError) {
+        showToast({
+          type: "error",
+          title: "Invalid Emergency Phone",
+          message: emPhoneError,
+        });
+        return;
+      }
+    }
+
+    // Date of Birth validation
+    if (form.dateOfBirth) {
+      const dobError = validateDateOfBirth(form.dateOfBirth, settings, false);
+      if (dobError) {
+        showToast({
+          type: "error",
+          title: "Invalid Date of Birth",
+          message: dobError,
+        });
+        return;
+      }
+    }
 
     // Patient problem validation
     if (!trimmedProblem) {
@@ -1094,6 +1147,8 @@ export default function PatientForm({
                   label="Date of Birth"
                   name="dateOfBirth"
                   type="date"
+                  min={dobBounds.min}
+                  max={dobBounds.max}
                   value={
                     form.dateOfBirth
                   }
@@ -1298,11 +1353,14 @@ export default function PatientForm({
                   label="Phone"
                   name="phone"
                   type="tel"
+                  maxLength={10}
+                  inputMode="numeric"
                   value={form.phone}
                   onChange={
                     handleChange
                   }
-                  placeholder="Enter phone number"
+                  placeholder="Enter 10-digit phone number"
+                  required
                 />
 
                 <InputField
@@ -1395,13 +1453,15 @@ export default function PatientForm({
                   label="Contact Phone"
                   name="emergencyContactPhone"
                   type="tel"
+                  maxLength={10}
+                  inputMode="numeric"
                   value={
                     form.emergencyContactPhone
                   }
                   onChange={
                     handleChange
                   }
-                  placeholder="Enter contact phone"
+                  placeholder="Enter 10-digit contact phone"
                 />
 
                 <InputField
@@ -1755,6 +1815,7 @@ function InputField({
   min,
   max,
   readOnly = false,
+  ...rest
 }) {
   return (
     <div>
@@ -1783,6 +1844,7 @@ function InputField({
         min={min}
         max={max}
         readOnly={readOnly}
+        {...rest}
         className={`h-10 w-full rounded-xl border border-[#E2EFED] bg-[#FAFDFC] px-3 text-xs text-[#173F41] outline-none transition placeholder:text-[#A0B1B1] focus:border-[#08A6A0] focus:ring-2 focus:ring-[#08A6A0]/10 sm:h-11 sm:px-3.5 sm:text-sm ${
           readOnly
             ? "cursor-not-allowed bg-[#F1F7F6] text-[#527173]"

@@ -16,176 +16,7 @@ import {
 } from "lucide-react";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 
-const initialMedicines = [
-  {
-    medicine_id: 1,
-    medicine_code: "MED001",
-    medicine_name: "Paracetamol 500mg",
-    generic_name: "Paracetamol",
-    medicine_type: "Tablet",
-    category: "Pain Relief",
-    manufacturer: "Cipla",
-    batch_number: "PCM001",
-    dosage: "500mg",
-    unit: "Tablet",
-    quantity: 250,
-    reorder_level: 50,
-    purchase_price: 1.5,
-    selling_price: 2,
-    manufacture_date: "2025-12-10",
-    expiry_date: "2027-12-10",
-    storage_location: "Rack A-01",
-    prescription_required: false,
-    status: "Available",
-  },
-  {
-    medicine_id: 2,
-    medicine_code: "MED002",
-    medicine_name: "Amoxicillin 500mg",
-    generic_name: "Amoxicillin",
-    medicine_type: "Capsule",
-    category: "Antibiotic",
-    manufacturer: "Sun Pharma",
-    batch_number: "AMX002",
-    dosage: "500mg",
-    unit: "Capsule",
-    quantity: 120,
-    reorder_level: 30,
-    purchase_price: 6,
-    selling_price: 8,
-    manufacture_date: "2025-09-15",
-    expiry_date: "2027-09-15",
-    storage_location: "Rack A-02",
-    prescription_required: true,
-    status: "Available",
-  },
-  {
-    medicine_id: 3,
-    medicine_code: "MED003",
-    medicine_name: "Omeprazole 20mg",
-    generic_name: "Omeprazole",
-    medicine_type: "Capsule",
-    category: "Gastric",
-    manufacturer: "Dr. Reddy's",
-    batch_number: "OMP003",
-    dosage: "20mg",
-    unit: "Capsule",
-    quantity: 15,
-    reorder_level: 20,
-    purchase_price: 3.5,
-    selling_price: 5,
-    manufacture_date: "2025-11-20",
-    expiry_date: "2026-11-20",
-    storage_location: "Rack B-01",
-    prescription_required: false,
-    status: "Low Stock",
-  },
-  {
-    medicine_id: 4,
-    medicine_code: "MED004",
-    medicine_name: "Cetirizine 10mg",
-    generic_name: "Cetirizine",
-    medicine_type: "Tablet",
-    category: "Allergy",
-    manufacturer: "Mankind",
-    batch_number: "CTZ004",
-    dosage: "10mg",
-    unit: "Tablet",
-    quantity: 80,
-    reorder_level: 25,
-    purchase_price: 2,
-    selling_price: 3,
-    manufacture_date: "2025-10-05",
-    expiry_date: "2027-10-05",
-    storage_location: "Rack B-02",
-    prescription_required: false,
-    status: "Available",
-  },
-  {
-    medicine_id: 5,
-    medicine_code: "MED005",
-    medicine_name: "Azithromycin 500mg",
-    generic_name: "Azithromycin",
-    medicine_type: "Tablet",
-    category: "Antibiotic",
-    manufacturer: "Zydus",
-    batch_number: "AZT005",
-    dosage: "500mg",
-    unit: "Tablet",
-    quantity: 0,
-    reorder_level: 20,
-    purchase_price: 8,
-    selling_price: 12,
-    manufacture_date: "2025-08-12",
-    expiry_date: "2027-08-12",
-    storage_location: "Rack C-01",
-    prescription_required: true,
-    status: "Out of Stock",
-  },
-  {
-    medicine_id: 6,
-    medicine_code: "MED006",
-    medicine_name: "Insulin Injection",
-    generic_name: "Human Insulin",
-    medicine_type: "Injection",
-    category: "Diabetes",
-    manufacturer: "Novo Nordisk",
-    batch_number: "INS006",
-    dosage: "40 IU/ml",
-    unit: "Vial",
-    quantity: 25,
-    reorder_level: 10,
-    purchase_price: 180,
-    selling_price: 220,
-    manufacture_date: "2025-06-10",
-    expiry_date: "2026-10-15",
-    storage_location: "Cold Storage",
-    prescription_required: true,
-    status: "Available",
-  },
-  {
-    medicine_id: 7,
-    medicine_code: "MED007",
-    medicine_name: "Vitamin B Complex",
-    generic_name: "Vitamin B Complex",
-    medicine_type: "Tablet",
-    category: "Vitamin",
-    manufacturer: "Abbott",
-    batch_number: "VBC007",
-    dosage: "100mg",
-    unit: "Tablet",
-    quantity: 200,
-    reorder_level: 40,
-    purchase_price: 2,
-    selling_price: 3.5,
-    manufacture_date: "2025-07-01",
-    expiry_date: "2028-07-01",
-    storage_location: "Rack C-02",
-    prescription_required: false,
-    status: "Available",
-  },
-  {
-    medicine_id: 8,
-    medicine_code: "MED008",
-    medicine_name: "Cough Syrup",
-    generic_name: "Dextromethorphan",
-    medicine_type: "Syrup",
-    category: "Respiratory",
-    manufacturer: "Himalaya",
-    batch_number: "CS008",
-    dosage: "100ml",
-    unit: "Bottle",
-    quantity: 10,
-    reorder_level: 15,
-    purchase_price: 55,
-    selling_price: 70,
-    manufacture_date: "2025-05-20",
-    expiry_date: "2026-09-20",
-    storage_location: "Rack D-01",
-    prescription_required: false,
-    status: "Low Stock",
-  },
-];
+
 
 const emptyForm = {
   medicine_code: "",
@@ -275,17 +106,32 @@ const formatDate = (date) => {
 };
 
 const Medicines = () => {
-  const [medicines, setMedicines] = useState(initialMedicines);
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchMedicines = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const data = await apiRequest("/api/medicines");
-        if (Array.isArray(data) && data.length > 0) {
-          setMedicines(data);
+        if (Array.isArray(data)) {
+          const mapped = data.map((m) => ({
+            ...m,
+            medicine_id: m.medicine_id || m.id,
+            purchase_price: Number(m.purchase_price) || 0,
+            selling_price: Number(m.selling_price) || 0,
+            quantity: Number(m.quantity) || 0,
+            reorder_level: Number(m.reorder_level) || 0,
+          }));
+          setMedicines(mapped);
         }
       } catch (err) {
         console.error("Failed to load medicines from backend:", err);
+        setError("Failed to load medicines from the server.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchMedicines();
@@ -425,7 +271,15 @@ const Medicines = () => {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      setMedicines((previous) => [created, ...previous]);
+      const normalized = {
+        ...created,
+        medicine_id: created.medicine_id || created.id,
+        purchase_price: Number(created.purchase_price) || 0,
+        selling_price: Number(created.selling_price) || 0,
+        quantity: Number(created.quantity) || 0,
+        reorder_level: Number(created.reorder_level) || 0,
+      };
+      setMedicines((previous) => [normalized, ...previous]);
       showToast("Medicine added successfully!");
     } catch (err) {
       console.error("Failed to add medicine via API:", err);
@@ -514,10 +368,19 @@ const Medicines = () => {
         body: JSON.stringify(payload),
       });
 
+      const normalized = {
+        ...updated,
+        medicine_id: updated.medicine_id || updated.id || medId,
+        purchase_price: Number(updated.purchase_price) || 0,
+        selling_price: Number(updated.selling_price) || 0,
+        quantity: Number(updated.quantity) || 0,
+        reorder_level: Number(updated.reorder_level) || 0,
+      };
+
       setMedicines((previous) =>
         previous.map((medicine) =>
           (medicine.medicine_id || medicine.id) === medId
-            ? { ...medicine, ...updated }
+            ? { ...medicine, ...normalized }
             : medicine
         )
       );
@@ -736,6 +599,13 @@ const Medicines = () => {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* =====================================================
           STAT CARDS
       ===================================================== */}
@@ -777,7 +647,7 @@ const Medicines = () => {
       {/* =====================================================
           QUICK ACTIONS
       ===================================================== */}
-{/* 
+      {/* 
       <div className="mb-7 grid grid-cols-2 gap-3 md:grid-cols-4">
 
         <QuickAction
@@ -952,7 +822,7 @@ const Medicines = () => {
               {filteredMedicines.map((medicine) => (
 
                 <tr
-                  key={medicine.medicine_id}
+                  key={medicine.medicine_id || medicine.id || medicine.medicine_code}
                   className="transition hover:bg-[#FBFEFD]"
                 >
 
@@ -1043,11 +913,11 @@ const Medicines = () => {
                   <td className="px-5 py-4">
 
                     <p className="text-sm font-bold text-[#173F41]">
-                      ₹{medicine.selling_price.toFixed(2)}
+                      ₹{Number(medicine.selling_price || 0).toFixed(2)}
                     </p>
 
                     <p className="text-xs text-[#819596]">
-                      Buy ₹{medicine.purchase_price.toFixed(2)}
+                      Buy ₹{Number(medicine.purchase_price || 0).toFixed(2)}
                     </p>
 
                   </td>
@@ -1100,7 +970,12 @@ const Medicines = () => {
 
           </table>
 
-          {filteredMedicines.length === 0 && (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#08A6A0] border-t-transparent"></div>
+              <p className="mt-3 text-sm text-[#819596]">Loading medicines...</p>
+            </div>
+          ) : filteredMedicines.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
 
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F8F6]">
@@ -1112,11 +987,13 @@ const Medicines = () => {
               </h3>
 
               <p className="mt-1 text-sm text-[#819596]">
-                Try changing your search or filter.
+                {medicines.length === 0
+                  ? "No medicines have been added yet. Click 'Add Medicine' to get started."
+                  : "Try changing your search or filter."}
               </p>
 
             </div>
-          )}
+          ) : null}
 
         </div>
       </div>
@@ -1126,10 +1003,15 @@ const Medicines = () => {
       ===================================================== */}
 
       <div className="space-y-3 md:hidden">
-        {filteredMedicines.length > 0 ? (
+        {loading ? (
+          <div className="rounded-xl border border-[#E2EFED] bg-white px-5 py-12 text-center shadow-sm">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#08A6A0] border-t-transparent"></div>
+            <p className="mt-3 text-sm text-[#819596]">Loading medicines...</p>
+          </div>
+        ) : filteredMedicines.length > 0 ? (
           filteredMedicines.map((medicine) => (
             <MedicineMobileCard
-              key={medicine.medicine_id || medicine.id}
+              key={medicine.medicine_id || medicine.id || medicine.medicine_code}
               medicine={medicine}
               onView={handleView}
               onEdit={handleEdit}
@@ -1150,7 +1032,9 @@ const Medicines = () => {
             </p>
 
             <p className="mt-1 text-xs text-[#819596]">
-              Try changing your search or filter.
+              {medicines.length === 0
+                ? "No medicines have been added yet."
+                : "Try changing your search or filter."}
             </p>
           </div>
         )}
@@ -1430,12 +1314,12 @@ const Medicines = () => {
 
             <Detail
               label="Purchase Price"
-              value={`₹${selectedMedicine.purchase_price.toFixed(2)}`}
+              value={`₹${Number(selectedMedicine.purchase_price || 0).toFixed(2)}`}
             />
 
             <Detail
               label="Selling Price"
-              value={`₹${selectedMedicine.selling_price.toFixed(2)}`}
+              value={`₹${Number(selectedMedicine.selling_price || 0).toFixed(2)}`}
             />
 
             <Detail
@@ -1531,11 +1415,10 @@ const Medicines = () => {
 
             <button
               onClick={handleStockUpdate}
-              className={`rounded-xl px-5 py-3 text-sm font-semibold text-white ${
-                stockAction === "add"
+              className={`rounded-xl px-5 py-3 text-sm font-semibold text-white ${stockAction === "add"
                   ? "bg-[#08A6A0] hover:bg-[#078F8A]"
                   : "bg-red-600 hover:bg-red-700"
-              }`}
+                }`}
             >
               {stockAction === "add" ? "Add Stock" : "Remove Stock"}
             </button>
@@ -1574,11 +1457,10 @@ const Medicines = () => {
 
       {toast && (
         <div
-          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg transition-all ${
-            toast.type === "error"
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg transition-all ${toast.type === "error"
               ? "border border-red-200 bg-red-50 text-red-700"
               : "border border-emerald-200 bg-emerald-50 text-emerald-700"
-          }`}
+            }`}
         >
           {toast.type === "error" ? (
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -1664,7 +1546,7 @@ const MedicineMobileCard = ({
           </p>
           <div className="mt-1 flex items-center justify-between">
             <span className="text-xs font-bold text-[#08A6A0] sm:text-sm">
-              ₹{medicine.selling_price?.toFixed(2)}
+              ₹{Number(medicine.selling_price || 0).toFixed(2)}
             </span>
             {expiryBadge(medicine.expiry_date)}
           </div>

@@ -226,6 +226,13 @@ const StaffDetails = ({
                 value={member.joiningDate}
               />
 
+              {member.date_of_birth && (
+                <DetailItem
+                  label="Date of Birth"
+                  value={member.date_of_birth}
+                />
+              )}
+
               <DetailItem
                 label="Status"
                 value={member.status}

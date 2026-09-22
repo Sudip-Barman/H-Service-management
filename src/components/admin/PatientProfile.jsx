@@ -2,7 +2,6 @@ import {
   Activity,
   BedDouble,
   CalendarDays,
-  ClipboardList,
   Droplets,
   Edit3,
   FileText,
@@ -415,8 +414,6 @@ function PatientProfile({
   const appointments = safeArray(
     patient?.appointments
   );
-
-  const labTests = safeArray(patient?.labTests);
 
   const requests = safeArray(
     patient?.requests || patient?.patientRequests
@@ -1044,94 +1041,7 @@ function PatientProfile({
             </ProfileSection>
 
             {/* =================================================
-                9. LAB TESTS
-            ================================================== */}
-
-            <ProfileSection
-              icon={ClipboardList}
-              title="Lab Tests"
-            >
-
-              {labTests.length > 0 ? (
-
-                <div className="space-y-2.5">
-
-                  {labTests.map((test, index) => (
-
-                    <div
-                      key={
-                        test?.id ||
-                        test?.testId ||
-                        index
-                      }
-                      className="
-                        flex items-center
-                        justify-between gap-3
-                        rounded-lg
-                        border border-[#E2EFED]
-                        bg-[#FAFDFC]
-                        p-3
-                      "
-                    >
-
-                      <div className="flex min-w-0 items-center gap-3">
-
-                        <div
-                          className="
-                            flex h-8 w-8 shrink-0
-                            items-center justify-center
-                            rounded-lg
-                            bg-[#EFF8FD]
-                            text-[#2877A6]
-                          "
-                        >
-                          <ClipboardList size={15} />
-                        </div>
-
-                        <div className="min-w-0">
-
-                          <p className="truncate text-sm font-semibold text-[#31585A]">
-                            {test?.name ||
-                              test?.testName ||
-                              "Lab Test"}
-                          </p>
-
-                          <p className="mt-0.5 text-xs text-[#819596]">
-                            {test?.date ||
-                              test?.testDate ||
-                              "-"}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                      <StatusBadge
-                        status={
-                          test?.status ||
-                          "Pending"
-                        }
-                      />
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              ) : (
-
-                <EmptyState
-                  icon={ClipboardList}
-                  text="No lab tests recorded"
-                />
-
-              )}
-
-            </ProfileSection>
-
-            {/* =================================================
-                10. PATIENT REQUESTS
+                9. PATIENT REQUESTS
             ================================================== */}
 
             <ProfileSection
@@ -1203,7 +1113,7 @@ function PatientProfile({
             </ProfileSection>
 
             {/* =================================================
-                11. ASSIGNED STAFF
+                10. ASSIGNED STAFF
             ================================================== */}
 
             <ProfileSection

@@ -310,6 +310,16 @@ const Operations = ({ settings, updateSetting }) => (
 			<SelectField label="Default appointment duration" value={settings.appointmentDuration} onChange={(value) => updateSetting("appointmentDuration", value)} options={["15", "30", "45", "60"]} suffix="minutes" />
 		</div>
 		<div className="mt-6 border-t border-[#E8F0EF] pt-5">
+			<h3 className="text-xs sm:text-sm font-bold text-[#173F41]">Age limits &amp; DOB validation</h3>
+			<p className="mt-0.5 text-[11px] sm:text-xs text-[#819596]">Configures the minimum and maximum allowed age constraints for patient and workforce registration forms.</p>
+			<div className="mt-3 grid gap-4 sm:grid-cols-2">
+				<Field label="Minimum Patient Age (Years)" type="number" value={settings.minPatientAge ?? 0} onChange={(value) => updateSetting("minPatientAge", Number(value) || 0)} />
+				<Field label="Maximum Patient Age (Years)" type="number" value={settings.maxPatientAge ?? 125} onChange={(value) => updateSetting("maxPatientAge", Number(value) || 125)} />
+				<Field label="Minimum Staff / Doctor / Nurse Age (Years)" type="number" value={settings.minStaffAge ?? 18} onChange={(value) => updateSetting("minStaffAge", Number(value) || 18)} />
+				<Field label="Maximum Staff / Doctor / Nurse Age (Years)" type="number" value={settings.maxStaffAge ?? 75} onChange={(value) => updateSetting("maxStaffAge", Number(value) || 75)} />
+			</div>
+		</div>
+		<div className="mt-6 border-t border-[#E8F0EF] pt-5">
 			<h3 className="text-xs sm:text-sm font-bold text-[#173F41]">Operational defaults</h3>
 			<div className="mt-3 space-y-2.5 sm:space-y-3">
 				<Toggle label="Allow online appointment requests" description="Patients can request available appointment slots from the public website." checked={true} onChange={() => {}} />

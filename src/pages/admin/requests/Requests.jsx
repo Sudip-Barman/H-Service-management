@@ -23,92 +23,6 @@ import StatCard from "../../../components/admin/StatCard";
 import SearchFilter from "../../../components/admin/SearchFilter";
 import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 
-const initialRequests = [
-  {
-    id: "REQ-1001",
-    type: "Lab Test",
-    item: "Complete Blood Count",
-    requestedFor: "Rahul Sharma",
-    patientId: "PAT-1024",
-    requestedBy: "Dr. Ananya Sen",
-    department: "Laboratory",
-    priority: "Urgent",
-    status: "Pending",
-    date: "2026-09-09",
-    requiredDate: "2026-09-09",
-    description: "CBC required for immediate diagnosis.",
-  },
-  {
-    id: "REQ-1002",
-    type: "Medicine",
-    item: "Paracetamol 500mg",
-    requestedFor: "Priya Das",
-    patientId: "PAT-1025",
-    requestedBy: "Nurse Riya",
-    department: "Pharmacy",
-    priority: "Normal",
-    status: "Approved",
-    date: "2026-09-09",
-    requiredDate: "2026-09-10",
-    description: "Medicine required for patient treatment.",
-  },
-  {
-    id: "REQ-1003",
-    type: "Equipment",
-    item: "Infusion Pump",
-    requestedFor: "Amit Roy",
-    patientId: "PAT-1026",
-    requestedBy: "Nurse Suman",
-    department: "ICU",
-    priority: "Critical",
-    status: "In Progress",
-    date: "2026-09-08",
-    requiredDate: "2026-09-09",
-    description: "Infusion pump required for ICU treatment.",
-  },
-  {
-    id: "REQ-1004",
-    type: "Room / Bed",
-    item: "General Ward Bed",
-    requestedFor: "Sourav Ghosh",
-    patientId: "PAT-1027",
-    requestedBy: "Reception",
-    department: "General Ward",
-    priority: "High",
-    status: "Completed",
-    date: "2026-09-08",
-    requiredDate: "2026-09-08",
-    description: "Bed allocation request completed.",
-  },
-  {
-    id: "REQ-1005",
-    type: "Service",
-    item: "Wheelchair Assistance",
-    requestedFor: "Mita Roy",
-    patientId: "PAT-1028",
-    requestedBy: "Reception",
-    department: "Emergency",
-    priority: "Urgent",
-    status: "Pending",
-    date: "2026-09-09",
-    requiredDate: "2026-09-09",
-    description: "Wheelchair assistance required at emergency entrance.",
-  },
-  {
-    id: "REQ-1006",
-    type: "Other",
-    item: "Patient File",
-    requestedFor: "Arindam Paul",
-    patientId: "PAT-1029",
-    requestedBy: "Dr. Amit Kumar",
-    department: "OPD",
-    priority: "Normal",
-    status: "Rejected",
-    date: "2026-09-07",
-    requiredDate: "2026-09-08",
-    description: "Old patient file requested for review.",
-  },
-];
 
 const requestTypes = ["Lab Test", "Equipment", "Medicine", "Room / Bed", "Service", "Other"];
 const statuses = ["Pending", "In Progress", "Approved", "Completed", "Rejected"];
@@ -126,10 +40,9 @@ const emptyForm = {
   description: "",
 };
 
-const getPriorityType = (priority) => priority?.toLowerCase() || "normal";
 
 function Request() {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
   const [patientsList, setPatientsList] = useState([]);
 
   useEffect(() => {
@@ -186,12 +99,12 @@ function Request() {
     return requests.filter((request) => {
       const matchesSearch =
         !query ||
-        request.id.toLowerCase().includes(query) ||
-        request.item.toLowerCase().includes(query) ||
-        request.requestedFor.toLowerCase().includes(query) ||
-        request.patientId.toLowerCase().includes(query) ||
-        request.requestedBy.toLowerCase().includes(query) ||
-        request.department.toLowerCase().includes(query);
+        String(request.id || "").toLowerCase().includes(query) ||
+        String(request.item || "").toLowerCase().includes(query) ||
+        String(request.requestedFor || "").toLowerCase().includes(query) ||
+        String(request.patientId || "").toLowerCase().includes(query) ||
+        String(request.requestedBy || "").toLowerCase().includes(query) ||
+        String(request.department || "").toLowerCase().includes(query);
 
       return (
         matchesSearch &&

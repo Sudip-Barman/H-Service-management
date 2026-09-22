@@ -23,9 +23,7 @@ import Schedules from "../pages/admin/schedules/Schedules";
 import Attendance from "../pages/admin/attendance/Attendance";
 import StaffShifts from "../pages/admin/shifts/StaffShifts";
 
-import BloodBank from "../pages/admin/bloods/BloodBank";
 import Medicine from "../pages/admin/medicine/Medicine";
-// import Food from "../pages/admin/food/Food";
 import Emergency from "../pages/admin/emergency/Emergency";
 import Inventory from "../pages/admin/inventory/Inventory";
 
@@ -300,10 +298,6 @@ const AppRoutes = () => {
 
 
         {/* Hospital Services */}
-        <Route
-          path="blood"
-          element={<BloodBank />}
-        />
 
         <Route
           path="medicine"

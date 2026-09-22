@@ -5,6 +5,7 @@ export const emptyStaffForm = {
   department: "",
   qualification: "",
   experience: "",
+  date_of_birth: "",
   phone: "",
   email: "",
   address: "",
