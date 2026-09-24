@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Activity,
   CalendarDays,
@@ -8,6 +9,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { getPhotoUrl } from "../../api/api";
 
 /* =========================================================
    HELPERS
@@ -170,6 +172,9 @@ const NurseProfile = ({
 
   const name = getNurseName(nurse);
 
+  const [imgError, setImgError] = useState(false);
+  const photoUrl = getPhotoUrl(nurse.photo);
+
   return (
     <div
       className="
@@ -202,11 +207,12 @@ const NurseProfile = ({
             {/* Nurse Avatar */}
 
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#E8F8F6] bg-[#DDF4F1] text-base font-bold text-[#078E89]">
-              {nurse.photo ? (
+              {photoUrl && !imgError ? (
                 <img
-                  src={nurse.photo}
+                  src={photoUrl}
                   alt={name}
                   className="h-full w-full object-cover"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 getInitials(name)

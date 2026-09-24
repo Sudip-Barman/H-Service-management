@@ -97,11 +97,24 @@ export default function Notifications({ user }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
+  const isRegistrationNotification = (n) => {
+    const title = (n?.title || "").toLowerCase();
+    return (
+      title.includes("registered") ||
+      title.includes("new patient") ||
+      title.includes("new doctor") ||
+      title.includes("new nurse") ||
+      title.includes("new staff")
+    );
+  };
+
   const fetchNotifications = async () => {
     try {
       const data = await apiRequest("/api/notifications");
       if (Array.isArray(data)) {
-        const mapped = data.map((n) => ({
+        // Exclude all registration events (Patient, Doctor, Nurse, Staff) from workforce view
+        const workforceOnly = data.filter((n) => !isRegistrationNotification(n));
+        const mapped = workforceOnly.map((n) => ({
           id: n.id,
           employeeId: employeeId,
           type: n.type?.toLowerCase() || "alert",

@@ -21,7 +21,7 @@ import ConfirmDialog from "../../../components/admin/ConfirmDialog";
 import NurseForm from "../../../components/admin/NurseForm";
 import NurseProfile from "../../../components/admin/NurseProfile";
 import SetCredentialsModal from "../../../components/admin/SetCredentialsModal";
-import { apiRequest, getErrorMessage } from "../../../api/api";
+import { apiRequest, getErrorMessage, getPhotoUrl } from "../../../api/api";
 import { getTemporaryPassword, saveTemporaryPassword } from "../../../utils/temporaryPasswords";
 
 /* -------------------------------------------------------------------------- */
@@ -210,45 +210,7 @@ const getInitials = (name = "") => {
   return initials || "N";
 };
 
-/*
- * Converts the photo value returned by your backend into
- * a usable browser URL.
- *
- * Supported:
- *
- * https://server.com/uploads/nurse.jpg
- * http://localhost:8000/uploads/nurse.jpg
- * /uploads/nurse.jpg
- * uploads/nurse.jpg
- * blob:http://localhost:5173/...
- */
-const getPhotoUrl = (photo) => {
-  if (!photo || typeof photo !== "string") {
-    return "";
-  }
 
-  const cleanPhoto = photo.trim();
-
-  if (!cleanPhoto) {
-    return "";
-  }
-
-  if (
-    cleanPhoto.startsWith("http://") ||
-    cleanPhoto.startsWith("https://") ||
-    cleanPhoto.startsWith("blob:") ||
-    cleanPhoto.startsWith("data:")
-  ) {
-    return cleanPhoto;
-  }
-
-  /*
-   * Change this only if your backend runs on another port.
-   */
-  const API_BASE_URL = "http://localhost:8000";
-
-  return `${API_BASE_URL}/${cleanPhoto.replace(/^\/+/, "")}`;
-};
 
 /*
  * Creates a temporary browser preview for a newly selected image.
@@ -262,6 +224,68 @@ const createPhotoPreview = (photoFile) => {
   }
 
   return URL.createObjectURL(photoFile);
+};
+
+/*
+ * Builds a multipart FormData payload matching the doctor upload architecture.
+ */
+const buildNurseFormData = (nurseData, isUpdate = false) => {
+  const formData = new FormData();
+
+  const appendField = (name, value) => {
+    if (value !== undefined && value !== null && value !== "") {
+      formData.append(name, value);
+    }
+  };
+
+  if (!isUpdate) {
+    formData.append(
+      "registration_number",
+      nurseData.registration_number?.trim() || `REG-NUR-${Date.now().toString().slice(-4)}`
+    );
+  } else if (nurseData.registration_number) {
+    formData.append("registration_number", nurseData.registration_number.trim());
+  }
+
+  appendField("first_name", nurseData.first_name?.trim());
+  appendField("middle_name", nurseData.middle_name?.trim());
+  appendField("last_name", nurseData.last_name?.trim());
+  appendField("date_of_birth", nurseData.date_of_birth);
+  formData.append("gender", nurseData.gender || "Female");
+  appendField("phone", nurseData.phone?.trim());
+  appendField("email", nurseData.email?.trim());
+  appendField("address", nurseData.address?.trim());
+  appendField("qualification", nurseData.qualification?.trim());
+  formData.append("department", nurseData.department?.trim() || "Nursing");
+  appendField("ward", nurseData.ward?.trim());
+  formData.append("experience_years", String(Number(nurseData.experience_years || 0)));
+  appendField("license_number", nurseData.license_number?.trim());
+  appendField("license_expiry", nurseData.license_expiry);
+  formData.append("shift_type", nurseData.shift_type || "Morning");
+  formData.append("status", nurseData.status || "Active");
+
+  if (nurseData.username) {
+    formData.append("username", nurseData.username.trim().toLowerCase());
+  }
+
+  if (!isUpdate && nurseData.temporary_password) {
+    formData.append("temporary_password", nurseData.temporary_password);
+  }
+
+  /*
+   * IMPORTANT:
+   * Only append the real image File.
+   * Matches Doctor upload architecture.
+   */
+  if (nurseData.photo_file instanceof File) {
+    formData.append("photo", nurseData.photo_file);
+  }
+
+  if (isUpdate && nurseData.remove_photo && !(nurseData.photo_file instanceof File)) {
+    formData.append("remove_photo", "true");
+  }
+
+  return formData;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -515,109 +539,45 @@ const Nurses = () => {
   const handleNurseSubmit = async (formData) => {
     if (!formData) return;
 
-    /*
-     * The form returns:
-     *
-     * photo      -> existing URL or temporary preview
-     * photo_file -> actual File object
-     */
-
-    let photo = formData.photo || "";
-
-    /*
-     * If a NEW image was selected, create a temporary preview.
-     *
-     * This is important because photo_file itself cannot be used
-     * directly inside <img src={...}>.
-     */
-    if (formData.photo_file instanceof File) {
-      photo = createPhotoPreview(
-        formData.photo_file
-      );
-    }
-
     /* ---------------------------------------------------------------------- */
     /*                                UPDATE                                  */
     /* ---------------------------------------------------------------------- */
 
     if (editingNurse?.nurse_id != null) {
-      const updatedNurse = {
-        ...editingNurse,
-        ...formData,
-
-        /*
-         * NEVER change the original nurse_id while editing.
-         */
-        nurse_id: editingNurse.nurse_id,
-
-        /*
-         * staff_id belongs to the staff table.
-         */
-        staff_id: Number(
-          formData.staff_id ||
-            editingNurse.staff_id
-        ),
-
-        experience_years: Number(
-          formData.experience_years || 0
-        ),
-
-        status:
-          formData.status ||
-          editingNurse.status ||
-          "Active",
-
-        /*
-         * Photo logic:
-         *
-         * 1. New file selected
-         *    -> temporary preview
-         *
-         * 2. Existing photo preserved
-         *    -> existing server URL/path
-         *
-         * 3. No photo at all
-         *    -> empty
-         */
-        photo:
-          formData.photo_file instanceof File
-            ? photo
-            : formData.photo !== undefined
-            ? formData.photo
-            : editingNurse.photo || "",
-
-        /*
-         * Keep the actual File so your API/backend
-         * can upload it.
-         */
-        photo_file:
-          formData.photo_file || null,
-      };
-
       try {
-        await apiRequest(`/api/nurses/${editingNurse.nurse_id}`, {
+        const formDataObj = buildNurseFormData(formData, true);
+        const response = await apiRequest(`/api/nurses/${editingNurse.nurse_id}`, {
           method: "PUT",
-          body: JSON.stringify({
-            first_name: formData.first_name,
-            middle_name: formData.middle_name || null,
-            last_name: formData.last_name || null,
-            date_of_birth: formData.date_of_birth || null,
-            gender: formData.gender || "Female",
-            phone: formData.phone,
-            email: formData.email || null,
-            address: formData.address || null,
-            qualification: formData.qualification || null,
-            department: formData.department,
-            ward: formData.ward || null,
-            experience_years: Number(formData.experience_years || 0),
-            license_number: formData.license_number || null,
-            license_expiry: formData.license_expiry || null,
-            shift_type: formData.shift_type || "Morning",
-            photo: formData.photo || photo || null,
-            status: formData.status || "Active",
-            username: formData.username || null,
-          }),
+          body: formDataObj,
         });
+
+        const updatedNurse = {
+          ...editingNurse,
+          ...(response || {}),
+          nurse_id: editingNurse.nurse_id,
+          staff_id: Number(response?.staff_id || editingNurse.staff_id),
+          experience_years: Number(response?.experience_years ?? editingNurse.experience_years ?? 0),
+          status: response?.status || editingNurse.status || "Active",
+          // Always use the stable backend URL (/uploads/nurses/...).
+          // Never store blob: URLs — they are revoked when the form closes.
+          photo: response ? (response.photo ?? "") : (editingNurse.photo ?? ""),
+        };
+
+        setNurses((currentNurses) =>
+          currentNurses.map((nurse) =>
+            Number(nurse.nurse_id) === Number(editingNurse.nurse_id)
+              ? updatedNurse
+              : nurse
+          )
+        );
+
+        if (
+          selectedNurse &&
+          Number(selectedNurse.nurse_id) === Number(editingNurse.nurse_id)
+        ) {
+          setSelectedNurse(updatedNurse);
+        }
+
         showToast("Nurse details updated successfully!", "success");
       } catch (err) {
         showToast(
@@ -626,110 +586,74 @@ const Nurses = () => {
         );
       }
 
-      setNurses((currentNurses) =>
-        currentNurses.map((nurse) =>
-          Number(nurse.nurse_id) ===
-          Number(editingNurse.nurse_id)
-            ? updatedNurse
-            : nurse
-        )
-      );
-
-      if (
-        selectedNurse &&
-        Number(selectedNurse.nurse_id) ===
-          Number(editingNurse.nurse_id)
-      ) {
-        setSelectedNurse(updatedNurse);
-      }
-
       setFormOpen(false);
       setEditingNurse(null);
-
       return;
     }
 
+    /* ---------------------------------------------------------------------- */
+    /*                                CREATE                                  */
+    /* ---------------------------------------------------------------------- */
+
     let createdNurse = null;
     try {
+      const formDataObj = buildNurseFormData(formData, false);
       createdNurse = await apiRequest("/api/nurses", {
         method: "POST",
-        body: JSON.stringify({
-          registration_number: formData.registration_number || `REG-NUR-${Date.now().toString().slice(-4)}`,
-          first_name: formData.first_name,
-          middle_name: formData.middle_name || null,
-          last_name: formData.last_name || null,
-          date_of_birth: formData.date_of_birth || null,
-          gender: formData.gender || "Female",
-          phone: formData.phone,
-          email: formData.email || null,
-          address: formData.address || null,
-          qualification: formData.qualification || null,
-          department: formData.department,
-          ward: formData.ward || null,
-          experience_years: Number(formData.experience_years || 0),
-          license_number: formData.license_number || null,
-          license_expiry: formData.license_expiry || null,
-          shift_type: formData.shift_type || "Morning",
-          photo: formData.photo || photo || null,
-          status: formData.status || "Active",
-          username: formData.username || null,
-          temporary_password: formData.temporary_password || null,
-        }),
+        body: formDataObj,
       });
+
+      const nextId =
+        createdNurse?.id ||
+        (nurses.length > 0
+          ? Math.max(
+              ...nurses.map(
+                (nurse) =>
+                  Number(nurse.nurse_id) || 0
+              )
+            ) + 1
+          : 1);
+
+      const finalTempPassword =
+        createdNurse?.temporary_password || formData.temporary_password || "";
+
+      saveTemporaryPassword({
+        role: "nurse",
+        id: nextId,
+        registration_number: createdNurse?.registration_number || formData.registration_number,
+        username: createdNurse?.username || formData.username,
+        email: createdNurse?.email || formData.email,
+        password: finalTempPassword,
+      });
+
+      const newNurse = {
+        ...(createdNurse || {}),
+        nurse_id: nextId,
+        id: nextId,
+        staff_id: Number(createdNurse?.staff_id || (100 + nextId)),
+        experience_years: Number(createdNurse?.experience_years ?? formData.experience_years ?? 0),
+        status: createdNurse?.status || "Active",
+        username: createdNurse?.username || "",
+        temporary_password: finalTempPassword,
+        // Use the stable backend URL (/uploads/nurses/...) so the photo
+        // remains visible after the form closes and blob URLs are revoked.
+        photo: createdNurse?.photo ?? "",
+        // Never store File objects or blob: URLs in state.
+        photo_file: undefined,
+      };
+
+      setNurses((currentNurses) => [
+        newNurse,
+        ...currentNurses,
+      ]);
+
       showToast("Nurse registered successfully with photo!", "success");
     } catch (err) {
-        showToast(
-          getErrorMessage(err, "Nurse registration failed. Please try again."),
-          "error"
-        );
+      showToast(
+        getErrorMessage(err, "Nurse registration failed. Please try again."),
+        "error"
+      );
     }
-
-    const nextId =
-      createdNurse?.id ||
-      (nurses.length > 0
-        ? Math.max(
-            ...nurses.map(
-              (nurse) =>
-                Number(nurse.nurse_id) || 0
-            )
-          ) + 1
-        : 1);
-
-    const finalTempPassword =
-      createdNurse?.temporary_password || formData.temporary_password || "";
-
-    saveTemporaryPassword({
-      role: "nurse",
-      id: nextId,
-      registration_number: createdNurse?.registration_number || formData.registration_number,
-      username: createdNurse?.username || formData.username,
-      email: createdNurse?.email || formData.email,
-      password: finalTempPassword,
-    });
-
-    const newNurse = {
-      ...formData,
-      username: createdNurse?.username || formData.username || "",
-      nurse_id: nextId,
-      id: nextId,
-      staff_id: Number(formData.staff_id || (100 + nextId)),
-      experience_years: Number(
-        formData.experience_years || 0
-      ),
-      status: formData.status || "Active",
-      temporary_password: finalTempPassword,
-      photo:
-        formData.photo_file instanceof File
-          ? photo
-          : formData.photo || "",
-      photo_file:
-        formData.photo_file || null,
-    };
-
-    setNurses((currentNurses) => [
-      newNurse,
-      ...currentNurses,
-    ]);
 
     setFormOpen(false);
     setEditingNurse(null);

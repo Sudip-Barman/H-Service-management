@@ -54,17 +54,37 @@ const WorkforceHeader = ({
         .toUpperCase() || "WM"
     : "WM";
 
-  const currentEmployeeId = storedUser?.id || user?.id || "";
+  // Employee ID shown in the header dropdown.
+  // Must match Profile.jsx and Settings.jsx — use registration_number first,
+  // then fall back to a formatted EMP-XXXX ID (same formula as Profile.jsx).
+  const currentEmployeeId =
+    storedUser?.profile?.registration_number ||
+    (storedUser?.id ? `EMP-${1000 + storedUser.id}` : "") ||
+    user?.id ||
+    "";
 
   // Fetch real unread notification count for the workforce user
   useEffect(() => {
     let isMounted = true;
 
+    const isRegistrationNotification = (n) => {
+      const title = (n?.title || "").toLowerCase();
+      return (
+        title.includes("registered") ||
+        title.includes("new patient") ||
+        title.includes("new doctor") ||
+        title.includes("new nurse") ||
+        title.includes("new staff")
+      );
+    };
+
     const fetchUnread = async () => {
       try {
         const data = await apiRequest("/api/notifications");
         if (isMounted && Array.isArray(data)) {
-          const count = data.filter((n) => !n.read).length;
+          // Registration events (Patient, Doctor, Nurse, Staff) are strictly excluded for workforce
+          const filtered = data.filter((n) => !isRegistrationNotification(n));
+          const count = filtered.filter((n) => !n.read).length;
           setUnreadCount(count);
         }
       } catch (err) {

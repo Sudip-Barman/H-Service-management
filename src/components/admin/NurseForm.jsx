@@ -6,6 +6,7 @@ import {
   X,
 } from "lucide-react";
 import { useHospitalSettings } from "../../context/HospitalSettingsContext";
+import { getPhotoUrl } from "../../api/api";
 import {
   sanitizePhoneNumber,
   validatePhoneNumber,
@@ -83,6 +84,13 @@ const NurseForm = ({
   const [photoPreview, setPhotoPreview] = useState(
     () => nurse?.photo || nurse?.staff?.photo || ""
   );
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [form.photo]);
+
+  const photoUrl = getPhotoUrl(form.photo);
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -98,6 +106,7 @@ const NurseForm = ({
     const updated = buildNurseFormState(nurse);
     setForm(updated);
     setPhotoPreview(updated.photo || "");
+    setImgError(false);
   }
 
   const stopCamera = () => {
@@ -165,16 +174,19 @@ const NurseForm = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPhotoPreview(reader.result);
-      setForm((current) => ({
-        ...current,
-        photo: reader.result,
-        photo_file: file,
-      }));
-    };
-    reader.readAsDataURL(file);
+    if (form.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(form.photo);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
+    setImgError(false);
+    setForm((current) => ({
+      ...current,
+      photo: previewUrl,
+      photo_file: file,
+      remove_photo: false,
+    }));
 
     event.target.value = "";
   };
@@ -184,16 +196,18 @@ const NurseForm = ({
   /* -------------------------------------------------------------------------- */
 
   const handleRemovePhoto = () => {
-    if (photoPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(photoPreview);
+    if (form.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(form.photo);
     }
 
     setPhotoPreview("");
+    setImgError(false);
 
     setForm((current) => ({
       ...current,
       photo: "",
       photo_file: null,
+      remove_photo: true,
     }));
   };
 
@@ -267,17 +281,41 @@ const NurseForm = ({
       canvas.height
     );
 
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          alert("Unable to create the photo file.");
+          return;
+        }
 
-    setPhotoPreview(dataUrl);
+        const file = new File(
+          [blob],
+          `nurse-photo-${Date.now()}.jpg`,
+          {
+            type: "image/jpeg",
+          }
+        );
 
-    setForm((current) => ({
-      ...current,
-      photo: dataUrl,
-      photo_file: null,
-    }));
+        if (form.photo?.startsWith("blob:")) {
+          URL.revokeObjectURL(form.photo);
+        }
 
-    stopCamera();
+        const previewUrl = URL.createObjectURL(file);
+        setPhotoPreview(previewUrl);
+        setImgError(false);
+
+        setForm((current) => ({
+          ...current,
+          photo: previewUrl,
+          photo_file: file,
+          remove_photo: false,
+        }));
+
+        stopCamera();
+      },
+      "image/jpeg",
+      0.85
+    );
   };
 
   /* -------------------------------------------------------------------------- */
@@ -365,6 +403,7 @@ const NurseForm = ({
 
       // Backend uses this for actual file upload.
       photo_file: form.photo_file || null,
+      remove_photo: Boolean(form.remove_photo),
     };
 
     onSubmit(nurseData);
@@ -377,8 +416,8 @@ const NurseForm = ({
   const handleClose = () => {
     stopCamera();
 
-    if (photoPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(photoPreview);
+    if (form.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(form.photo);
     }
 
     setForm({
@@ -386,6 +425,7 @@ const NurseForm = ({
     });
 
     setPhotoPreview("");
+    setImgError(false);
     setCameraError("");
 
     onClose();
@@ -456,11 +496,12 @@ const NurseForm = ({
                     <div className="relative shrink-0">
                       <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#E8F8F6] shadow-md ring-1 ring-[#D9E9E7]">
 
-                        {photoPreview ? (
+                        {photoUrl && !imgError ? (
                           <img
-                            src={photoPreview}
+                            src={photoUrl}
                             alt="Nurse"
                             className="h-full w-full object-cover"
+                            onError={() => setImgError(true)}
                           />
                         ) : (
                           <div className="flex flex-col items-center text-[#08A6A0]">
@@ -474,7 +515,7 @@ const NurseForm = ({
 
                       </div>
 
-                      {photoPreview && (
+                      {photoUrl && !imgError && (
                         <button
                           type="button"
                           onClick={handleRemovePhoto}
@@ -519,7 +560,7 @@ const NurseForm = ({
                           Use Camera
                         </button>
 
-                        {photoPreview && (
+                        {photoUrl && !imgError && (
                           <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D9E9E7] bg-white px-4 py-2.5 text-xs font-semibold text-[#31585A] transition hover:border-[#08A6A0] hover:text-[#08A6A0]">
                             <RotateCcw className="h-4 w-4" />
                             Change Photo

@@ -114,11 +114,23 @@ const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
+    const isRegistrationNotification = (n) => {
+      const title = (n?.title || "").toLowerCase();
+      return (
+        title.includes("registered") ||
+        title.includes("new patient") ||
+        title.includes("new doctor") ||
+        title.includes("new nurse") ||
+        title.includes("new staff")
+      );
+    };
+
     const fetchNotifications = async () => {
       try {
         const data = await apiRequest("/api/notifications");
         if (isMounted && Array.isArray(data)) {
-          setNotifications(data);
+          const workforceOnly = data.filter((n) => !isRegistrationNotification(n));
+          setNotifications(workforceOnly);
         }
       } catch (err) {
         if (isMounted) setNotifications([]);

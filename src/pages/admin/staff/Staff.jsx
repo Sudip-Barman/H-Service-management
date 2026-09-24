@@ -583,19 +583,21 @@ const Staff = () => {
             body: formData,
           });
         } else if (editingStaff.source === "nurse") {
-          const nameParts = form.name.trim().split(" ");
+          const formData = new FormData();
+          const cleanName = form.name.replace(/^nurse\s*/i, "").trim();
+          const nameParts = cleanName.split(" ");
+          formData.append("first_name", nameParts[0] || "Nurse");
+          formData.append("last_name", nameParts.slice(1).join(" ") || "");
+          formData.append("phone", form.phone);
+          formData.append("department", form.department || "Nursing");
+          if (form.date_of_birth) formData.append("date_of_birth", form.date_of_birth);
+          if (form.email) formData.append("email", form.email);
+          if (form.address) formData.append("address", form.address);
+          if (form.qualification) formData.append("qualification", form.qualification);
+
           await apiRequest(`/api/nurses/${editingStaff.backend_id}`, {
             method: "PUT",
-            body: JSON.stringify({
-              first_name: nameParts[0] || "Nurse",
-              last_name: nameParts.slice(1).join(" ") || "",
-              date_of_birth: form.date_of_birth || null,
-              phone: form.phone,
-              email: form.email || null,
-              address: form.address || null,
-              qualification: form.qualification || null,
-              department: form.department || "Nursing",
-            }),
+            body: formData,
           });
         } else {
           await apiRequest(`/api/staff/${editingStaff.backend_id}`, {

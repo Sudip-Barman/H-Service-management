@@ -243,7 +243,9 @@ const Settings = ({ user }) => {
               <p className="mt-1 text-[11px] text-[#9AAEAF]">
                 Employee ID:{" "}
                 <span className="font-medium text-[#55716E]">
-                  {profile?.id || employeeId}
+                  {profile?.registration_number ||
+                    (storedUser?.id ? `EMP-${1000 + storedUser.id}` : "") ||
+                    "—"}
                 </span>
               </p>
             </div>
