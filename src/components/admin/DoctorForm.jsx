@@ -57,8 +57,6 @@ const DoctorForm = ({
   const { settings } = useHospitalSettings();
   const dobBounds = getDobInputBounds(settings, true);
 
-  const [prevDoctor, setPrevDoctor] = useState(doctor);
-
   const [form, setForm] = useState(() =>
     doctor
       ? { ...emptyDoctor, ...doctor }
@@ -69,10 +67,21 @@ const DoctorForm = ({
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [imgError, setImgError] = useState(false);
+  const [removePhotoFlag, setRemovePhotoFlag] = useState(false);
 
   useEffect(() => {
     setImgError(false);
   }, [form.photo]);
+
+  useEffect(() => {
+    if (open) {
+      setForm(doctor ? { ...emptyDoctor, ...doctor } : { ...emptyDoctor });
+      setPhotoFile(null);
+      setPhotoPreview("");
+      setImgError(false);
+      setRemovePhotoFlag(false);
+    }
+  }, [open, doctor]);
 
   const photoUrl = getPhotoUrl(form.photo);
 
@@ -83,24 +92,6 @@ const DoctorForm = ({
   const streamRef = useRef(null);
 
   const isEditing = Boolean(doctor);
-
-  /*
-   * --------------------------------------------------------------------------
-   * Sync Form When Doctor Changes
-   * --------------------------------------------------------------------------
-   */
-
-  if (prevDoctor !== doctor) {
-    setPrevDoctor(doctor);
-
-    setForm(
-      doctor
-        ? { ...emptyDoctor, ...doctor }
-        : { ...emptyDoctor }
-    );
-
-    setPhotoFile(null);
-  }
 
   /*
    * --------------------------------------------------------------------------
@@ -174,7 +165,10 @@ const DoctorForm = ({
     if (
       ![
         "image/jpeg",
+        "image/jpg",
+        "image/pjpeg",
         "image/png",
+        "image/x-png",
         "image/webp",
       ].includes(file.type)
     ) {
@@ -405,6 +399,9 @@ const DoctorForm = ({
 
   const removePhoto = () => {
     setPhotoFile(null);
+    setPhotoPreview("");
+    setRemovePhotoFlag(true);
+    setImgError(false);
 
     setForm((current) => ({
       ...current,
@@ -521,6 +518,7 @@ const DoctorForm = ({
        * This is the actual File object.
        */
       photo_file: photoFile,
+      remove_photo: removePhotoFlag,
     };
 
     delete doctorData.photo;

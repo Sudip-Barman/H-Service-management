@@ -2,6 +2,8 @@ import { getErrorMessage } from "../utils/errorHandler";
 
 const API = "http://127.0.0.1:8000";
 
+// const API = "https://sonrisehospital.learninghub.ind.in";
+
 export const API_ORIGIN = (
   import.meta.env.VITE_API_URL || API
 ).replace(/\/api\/?$/, "");
@@ -41,9 +43,13 @@ export const apiRequest = async (endpoint, options = {}) => {
     ? endpoint
     : `/api${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
+  const url = path.startsWith("http://") || path.startsWith("https://")
+    ? path
+    : `${API_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
+
   let response;
   try {
-    response = await fetch(`${API}${path}`, {
+    response = await fetch(url, {
       ...options,
       headers,
     });
@@ -117,7 +123,7 @@ export const apiRequest = async (endpoint, options = {}) => {
         channel.postMessage({ type: "notifications-updated", endpoint: path });
         channel.close();
       }
-    } catch {}
+    } catch { }
   }
 
   return data;

@@ -218,6 +218,8 @@ const buildDoctorFormData = (doctorData, isUpdate = false) => {
   */
   if (doctorData.photo_file instanceof File) {
     formData.append("photo", doctorData.photo_file);
+  } else if (doctorData.remove_photo) {
+    formData.append("remove_photo", "true");
   }
 
   return formData;

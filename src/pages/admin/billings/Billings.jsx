@@ -2214,10 +2214,29 @@ const Billings = () => {
     } catch (_) {}
 
     try {
-      const [backendBills, srvData] = await Promise.allSettled([
+      const [backendBills, srvData, settingsData] = await Promise.allSettled([
         apiRequest("/api/billing"),
-        apiRequest("/api/services")
+        apiRequest("/api/services"),
+        apiRequest("/api/settings")
       ]);
+
+      let savedTax = 5;
+      if (settingsData.status === "fulfilled" && settingsData.value?.settings?.billingTaxRate !== undefined) {
+        const val = Number(settingsData.value.settings.billingTaxRate);
+        if (!isNaN(val) && val >= 0) {
+          savedTax = val;
+          setBillingSettings({ taxRate: savedTax });
+        }
+      } else {
+        try {
+          const cachedSettings = localStorage.getItem("hospital-billing-settings");
+          if (cachedSettings) {
+            const parsed = JSON.parse(cachedSettings);
+            if (parsed.taxRate !== undefined) savedTax = Number(parsed.taxRate);
+            setBillingSettings({ taxRate: savedTax });
+          }
+        } catch (_) {}
+      }
 
       if (srvData.status === "fulfilled" && Array.isArray(srvData.value)) {
         setServicesList(srvData.value);
@@ -2234,10 +2253,11 @@ const Billings = () => {
           patientEmail: b.patientEmail,
           address: b.address,
           type: b.type || "Service",
+          doctor: b.doctor || "",
           serviceName: b.serviceName || b.description || "General Service",
           serviceId: b.serviceId,
           description: b.description || b.serviceName || "Hospital Service",
-          department: "HomeCare",
+          department: b.department || "General",
           visitDate: b.visitDate || b.date,
           date: b.date,
           items: b.items && b.items.length > 0 ? b.items : [
@@ -2250,7 +2270,7 @@ const Billings = () => {
             }
           ],
           discount: b.discount || 0,
-          taxRate: 5,
+          taxRate: b.taxRate !== undefined && b.taxRate !== null ? Number(b.taxRate) : savedTax,
           amountPaid: Number(b.paidAmount || 0),
           paidAmount: Number(b.paidAmount || 0),
           totalAmount: Number(b.totalAmount || 0),
@@ -2264,28 +2284,6 @@ const Billings = () => {
       }
     } catch (error) {
       console.error("Failed to load billing data:", error);
-    }
-
-    // Load tax rate from backend settings (persistent)
-    try {
-      const settingsData = await apiRequest("/api/settings");
-      if (settingsData && settingsData.settings && settingsData.settings.billingTaxRate !== undefined) {
-        const savedTax = Number(settingsData.settings.billingTaxRate);
-        if (!isNaN(savedTax) && savedTax >= 0) {
-          setBillingSettings({ taxRate: savedTax });
-          return; // skip localStorage fallback
-        }
-      }
-    } catch (_) {}
-
-    // Fallback: load from localStorage
-    try {
-      const savedSettings = localStorage.getItem("hospital-billing-settings");
-      if (savedSettings) {
-        setBillingSettings(JSON.parse(savedSettings));
-      }
-    } catch (error) {
-      console.error("Failed to load settings:", error);
     }
   }, []);
 

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Trash2,
+  Edit3,
   UserRound,
 } from "lucide-react";
 import { apiRequest, getErrorMessage } from "../../../api/api";
@@ -116,6 +117,7 @@ const Schedules = () => {
     return start;
   });
   const [formOpen, setFormOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState(null);
   const [toast,    setToast]    = useState(null);
 
   const showToast = (message, type = "success") => {
@@ -211,6 +213,22 @@ const Schedules = () => {
         start_date: formData.start_date || formData.date,
         end_date:   formData.end_date || formData.start_date || formData.date,
       };
+
+      if (editingSchedule) {
+        const schedId = editingSchedule.id || editingSchedule.schedule_id;
+        const updated = await apiRequest(`/api/schedules/${schedId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        const updatedItem = { ...editingSchedule, ...payload, ...updated, id: schedId, schedule_id: schedId };
+        setSchedules((current) => current.map((s) => (s.id || s.schedule_id) === schedId ? updatedItem : s));
+        selectDate(payload.date);
+        setFormOpen(false);
+        setEditingSchedule(null);
+        showToast("Schedule updated successfully!");
+        return;
+      }
+
       const created = await apiRequest("/api/schedules", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -250,7 +268,10 @@ const Schedules = () => {
           <p className="mt-0.5 text-xs text-[#819596] sm:text-sm">Browse every date and view staff, ward, and procedure schedules.</p>
         </div>
         <button
-          onClick={() => setFormOpen(true)}
+          onClick={() => {
+            setEditingSchedule(null);
+            setFormOpen(true);
+          }}
           className="inline-flex h-10 sm:h-11 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#078E89] px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#067A76]"
         >
           <Plus className="h-4 w-4" /> Add Schedule
@@ -302,7 +323,7 @@ const Schedules = () => {
               : ""}
           </p>
         </div>
-        <div className="max-h-[520px] space-y-3 overflow-y-auto p-3.5 sm:p-4">
+        <div className="max-h-[680px] xl:max-h-none space-y-3 overflow-y-auto p-3.5 sm:p-4">
           {selectedSchedules.map((schedule) => (
             <ScheduleCard key={schedule.schedule_id} schedule={schedule} />
           ))}
@@ -356,14 +377,28 @@ const Schedules = () => {
                       <td className="px-3 py-3 text-sm text-[#31585A]">{schedule.location}</td>
                       <td className="px-3 py-3"><Badge status={schedule.status} /></td>
                       <td className="px-3 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => deleteSchedule(schedId, e)}
-                          className="rounded-lg p-1.5 text-[#819596] transition hover:bg-red-50 hover:text-red-600"
-                          title="Delete Schedule"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingSchedule(schedule);
+                              setFormOpen(true);
+                            }}
+                            className="rounded-lg p-1.5 text-[#819596] transition hover:bg-[#E8F8F6] hover:text-[#078E89]"
+                            title="Edit Schedule"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => deleteSchedule(schedId, e)}
+                            className="rounded-lg p-1.5 text-[#819596] transition hover:bg-red-50 hover:text-red-600"
+                            title="Delete Schedule"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -394,6 +429,18 @@ const Schedules = () => {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge status={schedule.status} />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingSchedule(schedule);
+                          setFormOpen(true);
+                        }}
+                        className="rounded-lg p-1 text-[#819596] hover:bg-[#E8F8F6] hover:text-[#078E89]"
+                        title="Edit Schedule"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => deleteSchedule(schedId, e)}
@@ -431,7 +478,11 @@ const Schedules = () => {
         <ScheduleForm
           selectedDate={selectedDate}
           doctorsList={doctorsList}
-          onClose={() => setFormOpen(false)}
+          initialData={editingSchedule}
+          onClose={() => {
+            setFormOpen(false);
+            setEditingSchedule(null);
+          }}
           onSubmit={saveSchedule}
         />
       )}
@@ -710,13 +761,13 @@ const Badge = ({ status }) => (
   </span>
 );
 
-const Modal = ({ children, onClose }) => (
+const Modal = ({ children, onClose, title = "Add Schedule", subtitle = "Create a doctor, ward, or procedure schedule." }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173F41]/40 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
     <div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-xl overflow-y-auto rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
       <div className="flex items-start justify-between border-b border-[#E2EFED] px-4 py-3 sm:px-5 sm:py-4">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-[#173F41]">Add Schedule</h2>
-          <p className="mt-0.5 text-xs text-[#819596]">Create a doctor, ward, or procedure schedule.</p>
+          <h2 className="text-base sm:text-lg font-bold text-[#173F41]">{title}</h2>
+          <p className="mt-0.5 text-xs text-[#819596]">{subtitle}</p>
         </div>
         <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-xl text-[#819596] hover:bg-[#E8F8F6]">
           <X className="h-4 w-4" />
@@ -744,14 +795,16 @@ const Select = ({ label, options, ...props }) => (
 );
 
 /* =========================================================
-   SCHEDULE FORM — unchanged
+   SCHEDULE FORM — with edit support
    ========================================================= */
-const ScheduleForm = ({ selectedDate, doctorsList, onClose, onSubmit }) => {
-  const [selectedDoctorId, setSelectedDoctorId] = useState("");
-  const [doctorName,  setDoctorName]  = useState("");
-  const [department,  setDepartment]  = useState("");
-  const [startDate,   setStartDate]   = useState(selectedDate);
-  const [endDate,     setEndDate]     = useState(selectedDate);
+const ScheduleForm = ({ selectedDate, doctorsList, onClose, onSubmit, initialData = null }) => {
+  const [selectedDoctorId, setSelectedDoctorId] = useState(
+    initialData?.doctor_id ? String(initialData.doctor_id) : ""
+  );
+  const [doctorName,  setDoctorName]  = useState(initialData?.doctor_name || "");
+  const [department,  setDepartment]  = useState(initialData?.department || "");
+  const [startDate,   setStartDate]   = useState(initialData?.start_date || initialData?.date || selectedDate);
+  const [endDate,     setEndDate]     = useState(initialData?.end_date || initialData?.start_date || initialData?.date || selectedDate);
 
   const handleDoctorChange = (e) => {
     const docId = e.target.value;
@@ -778,7 +831,11 @@ const ScheduleForm = ({ selectedDate, doctorsList, onClose, onSubmit }) => {
   };
 
   return (
-    <Modal onClose={onClose}>
+    <Modal
+      onClose={onClose}
+      title={initialData ? "Edit Schedule" : "Add Schedule"}
+      subtitle={initialData ? "Update schedule details." : "Create a doctor, ward, or procedure schedule."}
+    >
       <form onSubmit={handleFormSubmit} className="space-y-3.5 sm:space-y-4">
         <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
           <Input label="Starting Date" name="start_date" type="date" value={startDate}
@@ -813,11 +870,11 @@ const ScheduleForm = ({ selectedDate, doctorsList, onClose, onSubmit }) => {
           <Input label="Department" name="department" value={department}
             onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Cardiology" required
           />
-          <Input label="Location" name="location" placeholder="OPD Room / Ward / OT" required />
-          <Input label="Start Time" name="start_time" type="time" defaultValue="09:00" required />
-          <Input label="End Time"   name="end_time"   type="time" defaultValue="13:00" required />
-          <Select label="Schedule Type" name="type"   defaultValue="Consultation" options={["Consultation", "Ward Round", "Surgery", "Procedure"]} />
-          <Select label="Status"        name="status" defaultValue="Available"    options={["Available", "Booked"]} />
+          <Input label="Location" name="location" defaultValue={initialData?.location || ""} placeholder="OPD Room / Ward / OT" required />
+          <Input label="Start Time" name="start_time" type="time" defaultValue={initialData?.start_time || "09:00"} required />
+          <Input label="End Time"   name="end_time"   type="time" defaultValue={initialData?.end_time || "13:00"} required />
+          <Select label="Schedule Type" name="type"   defaultValue={initialData?.type || "Consultation"} options={["Consultation", "Ward Round", "Surgery", "Procedure"]} />
+          <Select label="Status"        name="status" defaultValue={initialData?.status || "Available"}    options={["Available", "Booked"]} />
         </div>
         <div className="flex justify-end gap-2 sm:gap-3 border-t border-[#EAF2F1] pt-3 sm:pt-4">
           <button type="button" onClick={onClose}
@@ -828,7 +885,7 @@ const ScheduleForm = ({ selectedDate, doctorsList, onClose, onSubmit }) => {
           <button type="submit"
             className="h-10 sm:h-11 rounded-xl bg-[#078E89] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#067A76]"
           >
-            Save Schedule
+            {initialData ? "Update Schedule" : "Save Schedule"}
           </button>
         </div>
       </form>

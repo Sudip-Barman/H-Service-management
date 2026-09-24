@@ -501,13 +501,28 @@ const FollowUp = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (
-      !form.name ||
-      !form.phone ||
-      !form.type ||
-      !form.query ||
-      !form.followUpDate
-    ) {
+    if (!form.name?.trim()) {
+      showToast("Please enter a valid person name.", "error");
+      return;
+    }
+
+    if (!form.phone || form.phone.length < 10) {
+      showToast("Please enter a valid 10-digit phone number.", "error");
+      return;
+    }
+
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      showToast("Please enter a valid email address.", "error");
+      return;
+    }
+
+    if (!form.query?.trim()) {
+      showToast("Please enter the query or requirement.", "error");
+      return;
+    }
+
+    if (!form.followUpDate) {
+      showToast("Please select a follow-up date.", "error");
       return;
     }
 
@@ -593,11 +608,11 @@ const FollowUp = () => {
         showToast("Follow-up created successfully!", "success");
       } catch (err) {
         console.error("Failed to create follow-up via API:", err);
-        setFollowUps((previous) => [
-          newFollowUp,
-          ...previous,
-        ]);
-        showToast("Follow-up registered!", "success");
+        showToast(
+          getErrorMessage(err, "Failed to create follow-up. Please try again."),
+          "error"
+        );
+        return;
       }
     }
 
@@ -932,7 +947,7 @@ const FollowUp = () => {
                 ================================================= */}
 
             <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[1200px]">
+              <table className="w-full min-w-[1150px]">
                 <thead>
                   <tr className="border-b border-[#EAF1F0] bg-[#FAFDFC] text-left">
                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#819596]">
@@ -1325,23 +1340,25 @@ const FollowUp = () => {
                     onChange={(event) =>
                       updateForm(
                         "name",
-                        event.target.value
+                        event.target.value.replace(/[^a-zA-Z\s.'-]/g, "")
                       )
                     }
                   />
 
-                  <InputField
+                <InputField
                     label="Phone"
                     value={form.phone}
                     required
                     placeholder="Enter phone number"
                     onChange={(event) =>
-                      updateForm(
+                    updateForm(
                         "phone",
-                        event.target.value
-                      )
+                        event.target.value.replace(/\D/g, "").slice(0, 10)
+                    )
                     }
-                  />
+                    maxLength={10}
+                    inputMode="numeric"
+                />
 
                   <InputField
                     label="Email"
@@ -1454,6 +1471,7 @@ const FollowUp = () => {
                   </label>
 
                   <textarea
+                    required
                     value={form.query}
                     onChange={(event) =>
                       updateForm(

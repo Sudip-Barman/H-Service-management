@@ -183,7 +183,7 @@ const DoctorProfile = ({
 
   useEffect(() => {
     setImgError(false);
-  }, [doctor?.photo]);
+  }, [doctor?.photo, doctor?.id]);
 
   const name = getDoctorName(doctor);
   const photoUrl = getPhotoUrl(doctor?.photo);

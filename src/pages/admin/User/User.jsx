@@ -270,23 +270,23 @@ export default function User() {
 
               <tr className="border-b border-[#D9E9E7]">
 
-                <th className="px-5 py-3 text-left text-xs font-bold text-[#789092]">
+                <th className="px-3.5 sm:px-4 py-3 text-left text-xs font-bold text-[#789092]">
                   USER
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-bold text-[#789092]">
+                <th className="px-3.5 sm:px-4 py-3 text-left text-xs font-bold text-[#789092]">
                   CONTACT
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-bold text-[#789092]">
+                <th className="px-3.5 sm:px-4 py-3 text-left text-xs font-bold text-[#789092]">
                   REQUESTS
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-bold text-[#789092]">
+                <th className="px-3.5 sm:px-4 py-3 text-left text-xs font-bold text-[#789092]">
                   LAST ACTIVE
                 </th>
 
-                <th className="px-5 py-3 text-right text-xs font-bold text-[#789092]">
+                <th className="px-3.5 sm:px-4 py-3 text-right text-xs font-bold text-[#789092]">
                   ACTIONS
                 </th>
 
@@ -305,7 +305,7 @@ export default function User() {
 
                   {/* USER */}
 
-                  <td className="px-5 py-4">
+                  <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                     <div className="flex items-center gap-3">
 
@@ -333,7 +333,7 @@ export default function User() {
 
                   {/* CONTACT */}
 
-                  <td className="px-5 py-4">
+                  <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                     <div className="space-y-1">
 
@@ -359,7 +359,7 @@ export default function User() {
 
                   {/* REQUESTS */}
 
-                  <td className="px-5 py-4">
+                  <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                     <span className="text-sm font-semibold text-[#073F42]">
                       {user.serviceRequests || 0}
@@ -369,7 +369,7 @@ export default function User() {
 
                   {/* LAST ACTIVE */}
 
-                  <td className="px-5 py-4">
+                  <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                     <span className="text-xs text-[#789092]">
                       {formatDate(user.lastActive)}
@@ -379,7 +379,7 @@ export default function User() {
 
                   {/* ACTIONS */}
 
-                  <td className="px-5 py-4">
+                  <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                     <div className="flex justify-end gap-1">
 

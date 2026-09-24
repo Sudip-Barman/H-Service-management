@@ -109,21 +109,15 @@ export function validateDateOfBirth(dobString, settings = {}, isStaff = false, r
     const minAge = Number(settings?.minStaffAge ?? 18);
     const maxAge = Number(settings?.maxStaffAge ?? 75);
 
-    if (age < minAge) {
-      return `Age must be at least ${minAge} years.`;
-    }
-    if (age > maxAge) {
-      return `Age cannot exceed ${maxAge} years.`;
+    if (age < minAge || age > maxAge) {
+      return `Staff age must be between ${minAge} and ${maxAge} years.`;
     }
   } else {
     const minAge = Number(settings?.minPatientAge ?? settings?.minAge ?? 0);
     const maxAge = Number(settings?.maxPatientAge ?? settings?.maxAge ?? 125);
 
-    if (age < minAge) {
-      return `Patient age cannot be less than ${minAge} years.`;
-    }
-    if (age > maxAge) {
-      return `Patient age cannot exceed ${maxAge} years.`;
+    if (age < minAge || age > maxAge) {
+      return `Patient age must be between ${minAge} and ${maxAge} years.`;
     }
   }
 

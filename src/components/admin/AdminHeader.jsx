@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiRequest } from "../../api/api";
+import { apiRequest, getPhotoUrl } from "../../api/api";
 import { useHospitalSettings } from "../../context/HospitalSettingsContext";
 import {
   Bell,
@@ -310,7 +310,7 @@ const AdminHeader = ({ onMenuClick }) => {
 
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D7F4F1] text-sm font-bold text-[#087F7A] overflow-hidden">
                 {currentUser?.avatar ? (
-                  <img src={currentUser.avatar} alt={currentUser.name} className="h-full w-full object-cover" />
+                  <img src={getPhotoUrl(currentUser.avatar)} alt={currentUser.name} className="h-full w-full object-cover" />
                 ) : (
                   currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : "AD"
                 )}

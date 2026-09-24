@@ -15,9 +15,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "../../api/api";
 
-import {
-  getWorkforceAttendance,
-} from "../../data/workforceData";
+
 
 const getTodayDateStr = () => new Date().toISOString().slice(0, 10);
 
@@ -34,18 +32,25 @@ const Attendance = () => {
     }
   })();
 
-  const user = storedUser || { name: "Workforce Member", role: "staff", id: "" };
-  const employeeId = user?.employeeId || (user?.id ? (String(user.id).startsWith("EMP-") ? user.id : `EMP-${1000 + Number(user.id)}`) : "EMP-1001");
+const user = storedUser || null;
+
+const employeeId =
+  user?.profile?.id != null
+    ? String(user.profile.id)
+    : user?.id != null
+    ? String(user.id)
+    : "";
+
+const userRole = user?.role?.toLowerCase() || "";
   const CURRENT_DATE = getTodayDateStr();
 
-  // --------------------------------------------------
-  // Attendance data
-  // --------------------------------------------------
 
-  const initialAttendance = getWorkforceAttendance(employeeId) || [];
+  // --------------------------------------------------
+// Attendance data
+// --------------------------------------------------
 
-  const [attendanceRecords, setAttendanceRecords] =
-    useState(initialAttendance);
+const [attendanceRecords, setAttendanceRecords] =
+  useState([]);
 
   // --------------------------------------------------
   // Today's attendance
@@ -59,40 +64,77 @@ const Attendance = () => {
     status: "Not Marked",
   });
 
-  useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const data = await apiRequest("/api/attendance");
-        if (Array.isArray(data)) {
-          const mapped = data.map((r) => ({
-            id: r.id,
-            employeeId: r.employee_id || `EMP-${1000 + (r.staff_id || r.id)}`,
-            name: r.staff_name || r.name,
-            date: r.date,
-            checkIn: r.check_in,
-            checkOut: r.check_out,
-            status: r.status,
-            shift: r.shift,
-          }));
+useEffect(() => {
+  let cancelled = false;
 
-          const userRecords = mapped.filter(
-            (r) => r.employeeId === employeeId || r.name === user?.name
-          );
+  const fetchAttendance = async () => {
+    try {
+      const data = await apiRequest("/api/attendance");
 
-          const recordsToShow = userRecords.length > 0 ? userRecords : mapped;
-          setAttendanceRecords(recordsToShow);
+      if (cancelled) return;
 
-          const todayRec = recordsToShow.find((r) => r.date === CURRENT_DATE);
-          if (todayRec) {
-            setTodayAttendance(todayRec);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load attendance from backend:", err);
+      if (!Array.isArray(data)) {
+        setAttendanceRecords([]);
+        return;
       }
-    };
-    fetchAttendance();
-  }, [employeeId, CURRENT_DATE]);
+
+      const mapped = data.map((r) => ({
+        id: r.id,
+        employeeId:
+          r.employee_id != null
+            ? String(r.employee_id)
+            : r.staff_id != null
+            ? String(r.staff_id)
+            : "",
+        name: r.staff_name || r.name || "",
+        date: r.date || "",
+        checkIn: r.check_in || null,
+        checkOut: r.check_out || null,
+        status: r.status || "Unknown",
+        shift: r.shift || "",
+      }));
+
+      const userRecords = mapped.filter(
+        (record) =>
+          record.employeeId &&
+          record.employeeId === employeeId
+      );
+
+      setAttendanceRecords(userRecords);
+
+      const todayRecord = userRecords.find(
+        (record) => record.date === CURRENT_DATE
+      );
+
+      if (todayRecord) {
+        setTodayAttendance(todayRecord);
+      } else {
+        setTodayAttendance({
+          date: CURRENT_DATE,
+          employeeId,
+          checkIn: null,
+          checkOut: null,
+          status: "Not Marked",
+        });
+      }
+    } catch (err) {
+      console.error(
+        "Failed to load attendance from backend:",
+        err
+      );
+
+      if (!cancelled) {
+        setAttendanceRecords([]);
+      }
+    }
+  };
+
+  fetchAttendance();
+
+  return () => {
+    cancelled = true;
+  };
+}, [employeeId, CURRENT_DATE]);
 
   // --------------------------------------------------
   // Camera states

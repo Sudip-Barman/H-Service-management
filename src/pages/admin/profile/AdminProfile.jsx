@@ -13,7 +13,7 @@ import {
   Camera,
   Trash2,
 } from "lucide-react";
-import { apiRequest, getErrorMessage } from "../../../api/api";
+import { apiRequest, getErrorMessage, getPhotoUrl } from "../../../api/api";
 import { useHospitalSettings } from "../../../context/HospitalSettingsContext";
 
 const AdminProfile = () => {
@@ -73,7 +73,7 @@ const AdminProfile = () => {
             username: data.username || prev.username,
             email: data.email || prev.email,
             phone: data.phone || prev.phone,
-            avatar: data.avatar || prev.avatar,
+            avatar: data.avatar || "",
           }));
           try {
             localStorage.setItem("user", JSON.stringify(data));
@@ -94,20 +94,57 @@ const AdminProfile = () => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      showToast("Profile image must be less than 2MB.", "error");
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Profile image must be less than 5MB.", "error");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setFormData((prev) => ({ ...prev, avatar: event.target.result }));
+
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+
+    try {
+      const res = await apiRequest("/api/auth/avatar", {
+        method: "POST",
+        body: uploadData,
+      });
+
+      if (res) {
+        const updatedAvatar = res.avatar || "";
+        setFormData((prev) => ({ ...prev, avatar: updatedAvatar }));
+        const updatedUser = { ...(user || {}), ...res, avatar: updatedAvatar };
+        setUser(updatedUser);
+        try {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        } catch {}
+        window.dispatchEvent(new CustomEvent("user-updated", { detail: updatedUser }));
+        showToast("Profile image updated successfully!", "success");
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      showToast(getErrorMessage(err, "Failed to upload photo."), "error");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    try {
+      const res = await apiRequest("/api/auth/avatar", {
+        method: "DELETE",
+      });
+      setFormData((prev) => ({ ...prev, avatar: "" }));
+      const updatedUser = { ...(user || {}), ...(res || {}), avatar: "" };
+      setUser(updatedUser);
+      try {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } catch {}
+      window.dispatchEvent(new CustomEvent("user-updated", { detail: updatedUser }));
+      showToast("Profile photo removed.", "success");
+    } catch (err) {
+      showToast(getErrorMessage(err, "Failed to remove photo."), "error");
+    }
   };
 
   const handleSaveProfile = async (e) => {
@@ -128,11 +165,11 @@ const AdminProfile = () => {
       const updatedUser = {
         ...(user || {}),
         ...(res || {}),
-        name: formData.name,
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone,
-        avatar: formData.avatar,
+        name: res?.name ?? formData.name,
+        username: res?.username ?? formData.username,
+        email: res?.email ?? formData.email,
+        phone: res?.phone ?? formData.phone,
+        avatar: res?.avatar ?? formData.avatar,
       };
 
       try {
@@ -217,7 +254,7 @@ const AdminProfile = () => {
             <div className="relative group flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold backdrop-blur-sm border border-white/20 overflow-hidden">
               {formData.avatar ? (
                 <img
-                  src={formData.avatar}
+                  src={getPhotoUrl(formData.avatar)}
                   alt={formData.name}
                   className="h-full w-full object-cover"
                 />
@@ -242,7 +279,7 @@ const AdminProfile = () => {
                 {formData.avatar && (
                   <button
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, avatar: "" }))}
+                    onClick={handleRemovePhoto}
                     className="inline-flex items-center gap-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 px-2.5 py-1 text-xs font-semibold text-red-200 transition border border-red-400/30"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

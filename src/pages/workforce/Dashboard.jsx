@@ -16,14 +16,7 @@ import {
   HeartPulse,
 } from "lucide-react";
 
-import {
-  getUserSchedule,
-  getUserAppointments,
-  getUserPatients,
-  getUserAssignments,
-  getUserAttendance,
-  getRolePermissions,
-} from "../../data/workforceData";
+
 import { apiRequest } from "../../api/api";
 
 export default function Dashboard() {
@@ -59,21 +52,65 @@ export default function Dashboard() {
     fetchProfile();
   }, []);
 
-  const role = currentUser?.role?.toLowerCase() || "staff";
-  const permissions = getRolePermissions(role);
-  const userName = currentUser?.name || currentUser?.profile?.name || "User";
-  const userDepartment = currentUser?.profile?.department || "Hospital Services";
-  const userDesignation = currentUser?.profile?.specialization || currentUser?.profile?.qualification || role;
-  const userEmployeeId = currentUser?.id ? `EMP-${1000 + currentUser.id}` : "";
+const role = currentUser?.role?.toLowerCase() || "staff";
 
-  // Use mock data for schedule/appointments/patients (no user-specific API exists yet)
-  const employeeId = "EMP-1001";
-  const schedules = getUserSchedule(employeeId);
-  const appointments = getUserAppointments(employeeId);
-  const patients = getUserPatients(employeeId);
-  const assignments = getUserAssignments(employeeId);
-  const attendance = getUserAttendance(employeeId);
-  const [notifications, setNotifications] = useState([]);
+const permissions = {
+  doctor: {
+    appointments: true,
+    patients: true,
+    assignments: false,
+    attendance: true,
+    leave: true,
+    schedule: true,
+  },
+  nurse: {
+    appointments: true,
+    patients: true,
+    assignments: true,
+    attendance: true,
+    leave: true,
+    schedule: true,
+  },
+  staff: {
+    appointments: false,
+    patients: true,
+    assignments: true,
+    attendance: true,
+    leave: true,
+    schedule: true,
+  },
+}[role] || {
+  appointments: false,
+  patients: true,
+  assignments: true,
+  attendance: true,
+  leave: true,
+  schedule: true,
+};
+
+const userName =
+  currentUser?.name ||
+  currentUser?.profile?.name ||
+  "User";
+
+const userDepartment =
+  currentUser?.profile?.department ||
+  "Hospital Services";
+
+const userDesignation =
+  currentUser?.profile?.specialization ||
+  currentUser?.profile?.qualification ||
+  role;
+
+const userEmployeeId = currentUser?.id
+  ? `EMP-${1000 + currentUser.id}`
+  : "";
+
+const [schedules, setSchedules] = useState([]);
+const [appointments, setAppointments] = useState([]);
+const [attendance, setAttendance] = useState([]);
+const [notifications, setNotifications] = useState([]);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -98,6 +135,59 @@ export default function Dashboard() {
     };
   }, []);
 
+
+  useEffect(() => {
+  if (!currentUser?.profile?.id) {
+    return;
+  }
+
+  let isMounted = true;
+
+  const fetchDashboardData = async () => {
+    try {
+      const [scheduleData, bookingData, attendanceData] =
+        await Promise.all([
+          apiRequest("/api/schedules"),
+          apiRequest("/api/bookings"),
+          apiRequest("/api/attendance"),
+        ]);
+
+      if (!isMounted) return;
+
+      setSchedules(
+        Array.isArray(scheduleData) ? scheduleData : []
+      );
+
+      setAppointments(
+        Array.isArray(bookingData) ? bookingData : []
+      );
+
+      setAttendance(
+        Array.isArray(attendanceData) ? attendanceData : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load workforce dashboard data:",
+        err
+      );
+
+      if (!isMounted) return;
+
+      setSchedules([]);
+      setAppointments([]);
+      setAttendance([]);
+    }
+  };
+
+  fetchDashboardData();
+
+  return () => {
+    isMounted = false;
+  };
+}, [currentUser?.profile?.id]);
+
+
+
   const today = new Date();
 
   const formatDate = (date) => {
@@ -109,45 +199,178 @@ export default function Dashboard() {
     });
   };
 
-  const formatTime = (time) => {
-    if (!time) return "--";
+const formatTime = (time) => {
+  if (!time) return "--";
 
-    const [hours, minutes] = time.split(":");
-    const date = new Date();
-    date.setHours(Number(hours), Number(minutes));
+  const value = String(time).trim();
 
-    return date.toLocaleTimeString("en-IN", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  // Already formatted as 12-hour time
+  if (/AM|PM/i.test(value)) {
+    return value;
+  }
 
-  const todayString = today.toISOString().split("T")[0];
+  const parts = value.split(":");
 
-  const todaySchedule = useMemo(() => {
-    return schedules
-      .filter((item) => item.date === todayString)
-      .sort((a, b) => a.startTime.localeCompare(b.startTime));
-  }, [schedules, todayString]);
+  if (parts.length < 2) {
+    return value;
+  }
 
-  const todayAppointments = useMemo(() => {
-    return appointments
-      .filter((item) => item.date === todayString)
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [appointments, todayString]);
+  const hours = Number(parts[0]);
+  const minutes = Number(parts[1]);
 
-  const todayAttendance = useMemo(() => {
-    return attendance.find((item) => item.date === todayString);
-  }, [attendance, todayString]);
+  if (
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes)
+  ) {
+    return "--";
+  }
+
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+
+  return date.toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const todayString = [
+  today.getFullYear(),
+  String(today.getMonth() + 1).padStart(2, "0"),
+  String(today.getDate()).padStart(2, "0"),
+].join("-");
+
+const todaySchedule = useMemo(() => {
+  const profileId = currentUser?.profile?.id;
+
+  if (!profileId) {
+    return [];
+  }
+
+  const profileIds = [
+    profileId,
+    currentUser?.profile?.staff_id,
+  ]
+    .filter(Boolean)
+    .map(Number);
+
+  return schedules
+    .filter((item) => {
+      const assignedId = Number(item.doctor_id);
+
+      return (
+        item.date === todayString &&
+        profileIds.includes(assignedId)
+      );
+    })
+    .sort((a, b) =>
+      String(a.start_time || "").localeCompare(
+        String(b.start_time || "")
+      )
+    )
+    .map((item) => ({
+      ...item,
+      title:
+        item.type ||
+        "Scheduled Activity",
+      startTime: item.start_time,
+      endTime: item.end_time,
+    }));
+}, [
+  schedules,
+  todayString,
+  currentUser,
+]);
+
+const todayAttendance = useMemo(() => {
+  const profileId = currentUser?.profile?.id;
+
+  if (!profileId) {
+    return null;
+  }
+
+  const employeeId =
+    `EMP-${1000 + Number(currentUser.id)}`;
+
+  const profileIds = [
+    profileId,
+    currentUser?.profile?.staff_id,
+  ]
+    .filter(Boolean)
+    .map(Number);
+
+  return (
+    attendance.find((record) => {
+      if (record.date !== todayString) {
+        return false;
+      }
+
+      return (
+        profileIds.includes(Number(record.staff_id)) ||
+        record.employee_id === employeeId ||
+        record.staff_name === currentUser?.name ||
+        record.staff_name === currentUser?.profile?.name
+      );
+    }) || null
+  );
+}, [
+  attendance,
+  todayString,
+  currentUser,
+]);
 
   const unreadNotifications = notifications.filter(
     (item) => !item.read
   );
 
-  const pendingAssignments = assignments.filter(
-    (item) => item.status !== "Completed"
-  );
+
+  const assignments = useMemo(() => {
+  const profileId = currentUser?.profile?.id;
+
+  if (!profileId) {
+    return [];
+  }
+
+  const profileIds = [
+    profileId,
+    currentUser?.profile?.staff_id,
+  ]
+    .filter(Boolean)
+    .map(Number);
+
+  return appointments
+    .filter((booking) => {
+      const isDoctor =
+        role === "doctor" &&
+        Number(booking.doctor_id) === Number(profileId);
+
+      const isAssignedStaff =
+        ["staff", "nurse"].includes(role) &&
+        profileIds.includes(
+          Number(booking.assigned_staff_id)
+        );
+
+      return isDoctor || isAssignedStaff;
+    })
+    .map((booking) => ({
+      id: booking.booking_id,
+      status: booking.status,
+      patientName: booking.patient_name,
+    }));
+}, [
+  appointments,
+  currentUser,
+  role,
+]);
+
+
+const pendingAssignments = assignments.filter(
+  (item) =>
+    !["Completed", "Cancelled"].includes(
+      item.status
+    )
+);
 
   const firstName =
     userName?.replace("Dr. ", "").split(" ")[0] || "User";
@@ -188,6 +411,111 @@ export default function Dashboard() {
         return "bg-slate-100 text-slate-600";
     }
   };
+
+  const todayAppointments = useMemo(() => {
+  const profileId = currentUser?.profile?.id;
+
+  if (!profileId) {
+    return [];
+  }
+
+  const profileIds = [
+    profileId,
+    currentUser?.profile?.staff_id,
+  ]
+    .filter(Boolean)
+    .map(Number);
+
+  return appointments
+    .filter((booking) => {
+      const isToday =
+        String(booking.booking_date || "") === todayString;
+
+      const isDoctor =
+        role === "doctor" &&
+        Number(booking.doctor_id) === Number(profileId);
+
+      const isAssignedStaff =
+        ["staff", "nurse"].includes(role) &&
+        profileIds.includes(
+          Number(booking.assigned_staff_id)
+        );
+
+      return (
+        isToday &&
+        (isDoctor || isAssignedStaff)
+      );
+    })
+    .sort((a, b) =>
+      String(a.booking_time || "").localeCompare(
+        String(b.booking_time || "")
+      )
+    )
+    .map((booking) => ({
+      ...booking,
+      id: booking.booking_id,
+      patientName:
+        booking.patient_name || "Patient",
+      date: booking.booking_date,
+      time: booking.booking_time,
+      type:
+        booking.booking_category ||
+        booking.booking_type ||
+        "Appointment",
+      department:
+        booking.service_area ||
+        booking.service_city ||
+        "",
+    }));
+}, [
+  appointments,
+  todayString,
+  currentUser,
+  role,
+]);
+
+
+const patients = useMemo(() => {
+  const profileId = currentUser?.profile?.id;
+
+  if (!profileId) {
+    return [];
+  }
+
+  const profileIds = [
+    profileId,
+    currentUser?.profile?.staff_id,
+  ]
+    .filter(Boolean)
+    .map(Number);
+
+  const assignedBookings = appointments.filter((booking) => {
+    const isDoctor =
+      role === "doctor" &&
+      Number(booking.doctor_id) === Number(profileId);
+
+    const isAssignedStaff =
+      ["staff", "nurse"].includes(role) &&
+      profileIds.includes(
+        Number(booking.assigned_staff_id)
+      );
+
+    return isDoctor || isAssignedStaff;
+  });
+
+  const uniquePatientIds = new Set(
+    assignedBookings
+      .map((booking) => booking.patient_id)
+      .filter(Boolean)
+  );
+
+  return [...uniquePatientIds];
+}, [
+  appointments,
+  currentUser,
+  role,
+]);
+
 
   const stats = [
     {

@@ -1877,6 +1877,35 @@ const Booking = () => {
         </div>
       )}
 
+      {apiError && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+          <div className="flex items-start sm:items-center gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-red-600 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="text-sm font-semibold">Unable to load booking records</p>
+              <p className="text-xs text-red-600 mt-0.5">{apiError}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              type="button"
+              onClick={loadData}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+            <button
+              type="button"
+              onClick={() => setApiError("")}
+              className="rounded-lg p-1 text-red-500 hover:bg-red-100"
+              title="Dismiss error"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* STATS */}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
@@ -2048,7 +2077,7 @@ const Booking = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1250px]">
+              <table className="w-full min-w-[1180px]">
                 <thead>
                   <tr className="border-b border-[#EAF2F0] bg-[#FAFDFC] text-left">
                     <TableHeader>
@@ -3454,21 +3483,20 @@ const AddBookingModal = ({
                         placeholder="Enter patient name"
                       />
 
-                      <FormField
+                    <FormField
                         label="Phone Number"
                         required
-                        type="tel"
-                        value={
-                          form.patient_phone
-                        }
+                        value={form.patient_phone}
                         onChange={(value) =>
-                          onChange(
+                        onChange(
                             "patient_phone",
-                            value
-                          )
+                            value.replace(/\D/g, "").slice(0, 10)
+                        )
                         }
                         placeholder="Enter phone number"
-                      />
+                        inputMode="numeric"
+                        maxLength={10}
+                    />
 
                       <FormField
                         label="Email"

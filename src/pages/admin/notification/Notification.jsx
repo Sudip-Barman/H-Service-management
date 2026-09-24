@@ -24,7 +24,10 @@ const emptyForm = {
 	type: "General",
 	priority: "Normal",
 	department: "All Departments",
+	recipient_mode: "all_staff",
 	recipient: "All Hospital Staff",
+	recipient_user_id: "",
+	recipient_user_ids: [],
 };
 
 const typeStyles = {
@@ -50,6 +53,7 @@ const priorityStyles = {
 const Notification = () => {
 	const navigate = useNavigate();
 	const [notifications, setNotifications] = useState([]);
+	const [usersList, setUsersList] = useState([]);
 
 	useEffect(() => {
 		const fetchNotifications = async () => {
@@ -64,6 +68,18 @@ const Notification = () => {
 			}
 		};
 		fetchNotifications();
+
+		const fetchUsers = async () => {
+			try {
+				const users = await apiRequest("/api/users");
+				if (Array.isArray(users)) {
+					setUsersList(users.filter((u) => u.role !== "patient"));
+				}
+			} catch (err) {
+				console.error("Failed to load users for notifications:", err);
+			}
+		};
+		fetchUsers();
 
 		// Fast real-time sync
 		const interval = setInterval(fetchNotifications, 4000);
@@ -123,37 +139,40 @@ const Notification = () => {
 			minute: "2-digit",
 		});
 
-		const newNotif = {
-			id: Date.now(),
-			...form,
-			date: today,
-			time: timeNow,
-			read: false,
-		};
-
 		try {
+			const payload = {
+				title: form.title.trim(),
+				message: form.message.trim(),
+				type: form.type,
+				priority: form.priority,
+				department: form.department,
+				recipient_mode: form.recipient_mode || "all_staff",
+				recipient: form.recipient_mode === "all_staff" ? "All Hospital Staff" : form.recipient,
+				recipient_user_id:
+					form.recipient_mode === "single" && form.recipient_user_id
+						? Number(form.recipient_user_id)
+						: null,
+				recipient_user_ids:
+					form.recipient_mode === "selected" && form.recipient_user_ids?.length
+						? form.recipient_user_ids.map(Number)
+						: null,
+				date: today,
+				time: timeNow,
+				read: false,
+			};
+
 			const created = await apiRequest("/api/notifications", {
 				method: "POST",
-				body: JSON.stringify({
-					title: form.title.trim(),
-					message: form.message.trim(),
-					type: form.type,
-					priority: form.priority,
-					department: form.department,
-					recipient: form.recipient,
-					date: today,
-					time: timeNow,
-					read: false,
-				}),
+				body: JSON.stringify(payload),
 			});
-			setNotifications((current) => [created, ...current]);
+			const added = Array.isArray(created) ? created : [created];
+			setNotifications((current) => [...added, ...current]);
 			window.dispatchEvent(new Event("notifications-updated"));
+			setShowForm(false);
 		} catch (err) {
 			console.error("Failed to create notification on backend:", err);
-			setNotifications((current) => [newNotif, ...current]);
+			alert(err?.message || "Failed to create notification. Please try again.");
 		}
-
-		setShowForm(false);
 	};
 
 	const markAsRead = async (id) => {
@@ -407,7 +426,15 @@ const Notification = () => {
 				</section>
 			</main>
 
-			{showForm && <NotificationForm form={form} onChange={updateForm} onSubmit={saveNotification} onClose={() => setShowForm(false)} />}
+			{showForm && (
+				<NotificationForm
+					form={form}
+					usersList={usersList}
+					onChange={updateForm}
+					onSubmit={saveNotification}
+					onClose={() => setShowForm(false)}
+				/>
+			)}
 			{selectedNotification && (
 				<NotificationDetails
 					notification={selectedNotification}
@@ -483,24 +510,145 @@ const NotificationDetails = ({ notification, onClose, onNavigate }) => (
 
 const DetailValue = ({ label, value }) => <div className="rounded-xl border border-[#EAF2F0] p-4"><p className="text-xs text-[#819596]">{label}</p><p className="mt-1 text-sm font-semibold text-[#31585A]">{value}</p></div>;
 
-const NotificationForm = ({ form, onChange, onSubmit, onClose }) => (
-	<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
-		<div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-2xl overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
-			<div className="flex items-start justify-between border-b border-[#EAF2F0] px-4 py-3 sm:px-6 sm:py-4"><div><h2 className="text-base sm:text-xl font-bold text-[#073F42]">New Notification</h2><p className="mt-0.5 text-xs text-[#819596]">Share important information with hospital teams</p></div><button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-xl p-1 text-[#819596] hover:bg-[#E8F8F6]"><X size={18} /></button></div>
-			<form onSubmit={onSubmit} className="max-h-[calc(92vh-80px)] space-y-4 overflow-y-auto p-4 sm:p-6">
-				<Field label="Title" value={form.title} onChange={(value) => onChange("title", value)} placeholder="Notification title" />
-				<div><label className="mb-1.5 block text-xs font-semibold text-[#31585A]">Message</label><textarea required rows="4" value={form.message} onChange={(event) => onChange("message", event.target.value)} placeholder="Write the hospital update..." className="w-full rounded-xl border border-[#D9E9E7] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]" /></div>
-				<div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
-					<SelectField label="Type" value={form.type} onChange={(value) => onChange("type", value)} options={["General", "Services", "Patients", "Staff", "Admissions", "Bookings", "Requests", "Feedback", "Follow-up", "Pharmacy", "Laboratory"]} />
-					<SelectField label="Priority" value={form.priority} onChange={(value) => onChange("priority", value)} options={["Normal", "High", "Urgent"]} />
-					<Field label="Department" value={form.department} onChange={(value) => onChange("department", value)} placeholder="All Departments" />
-					<Field label="Recipient" value={form.recipient} onChange={(value) => onChange("recipient", value)} placeholder="All Hospital Staff" />
+const NotificationForm = ({ form, usersList = [], onChange, onSubmit, onClose }) => {
+	const handleModeChange = (mode) => {
+		onChange("recipient_mode", mode);
+		if (mode === "all_staff") {
+			onChange("recipient", "All Hospital Staff");
+			onChange("recipient_user_id", "");
+			onChange("recipient_user_ids", []);
+		} else if (mode === "single") {
+			const first = usersList[0];
+			onChange("recipient_user_id", first ? String(first.id) : "");
+			onChange("recipient", first ? first.name : "");
+			onChange("recipient_user_ids", []);
+		} else if (mode === "selected") {
+			onChange("recipient_user_id", "");
+			onChange("recipient_user_ids", []);
+			onChange("recipient", "Selected Staff");
+		}
+	};
+
+	const handleSingleUserChange = (userId) => {
+		onChange("recipient_user_id", userId);
+		const found = usersList.find((u) => String(u.id) === String(userId));
+		if (found) {
+			onChange("recipient", found.name);
+		}
+	};
+
+	const toggleSelectedUser = (userId) => {
+		const current = form.recipient_user_ids || [];
+		const updated = current.includes(userId)
+			? current.filter((id) => id !== userId)
+			: [...current, userId];
+		onChange("recipient_user_ids", updated);
+		const names = usersList.filter((u) => updated.includes(u.id)).map((u) => u.name);
+		onChange("recipient", names.join(", ") || "Selected Staff");
+	};
+
+	return (
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#073F42]/50 p-2.5 sm:p-4 md:p-6 backdrop-blur-sm">
+			<div className="max-h-[92vh] sm:max-h-[94vh] w-full max-w-2xl overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
+				<div className="flex items-start justify-between border-b border-[#EAF2F0] px-4 py-3 sm:px-6 sm:py-4">
+					<div>
+						<h2 className="text-base sm:text-xl font-bold text-[#073F42]">New Notification</h2>
+						<p className="mt-0.5 text-xs text-[#819596]">Share important information with hospital teams</p>
+					</div>
+					<button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-xl p-1 text-[#819596] hover:bg-[#E8F8F6]">
+						<X size={18} />
+					</button>
 				</div>
-				<div className="flex justify-end gap-2 sm:gap-3 border-t border-[#EAF2F0] pt-4"><button type="button" onClick={onClose} className="h-10 sm:h-11 rounded-xl border border-[#D9E9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A]">Cancel</button><button type="submit" className="h-10 sm:h-11 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#078F8A]">Send Notification</button></div>
-			</form>
+				<form onSubmit={onSubmit} className="max-h-[calc(92vh-80px)] space-y-4 overflow-y-auto p-4 sm:p-6">
+					<Field label="Title" value={form.title} onChange={(value) => onChange("title", value)} placeholder="Notification title" />
+					<div>
+						<label className="mb-1.5 block text-xs font-semibold text-[#31585A]">Message</label>
+						<textarea required rows="4" value={form.message} onChange={(event) => onChange("message", event.target.value)} placeholder="Write the hospital update..." className="w-full rounded-xl border border-[#D9E9E7] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]" />
+					</div>
+					<div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
+						<SelectField label="Type" value={form.type} onChange={(value) => onChange("type", value)} options={["General", "Services", "Patients", "Staff", "Admissions", "Bookings", "Requests", "Feedback", "Follow-up", "Pharmacy", "Laboratory"]} />
+						<SelectField label="Priority" value={form.priority} onChange={(value) => onChange("priority", value)} options={["Normal", "High", "Urgent"]} />
+						<Field label="Department" value={form.department} onChange={(value) => onChange("department", value)} placeholder="All Departments" />
+
+						{/* Recipient Target Mode */}
+						<div>
+							<label className="mb-1.5 block text-xs font-semibold text-[#31585A]">Send To</label>
+							<select
+								value={form.recipient_mode || "all_staff"}
+								onChange={(e) => handleModeChange(e.target.value)}
+								className="h-10 sm:h-11 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 sm:px-4 text-xs sm:text-sm outline-none focus:border-[#08A6A0]"
+							>
+								<option value="all_staff">All Hospital Staff</option>
+								<option value="single">Single Staff Member</option>
+								<option value="selected">Selected Staff Members</option>
+							</select>
+						</div>
+					</div>
+
+					{/* Single User Selector */}
+					{form.recipient_mode === "single" && (
+						<div>
+							<label className="mb-1.5 block text-xs font-semibold text-[#31585A]">Select Recipient</label>
+							<select
+								value={form.recipient_user_id || ""}
+								onChange={(e) => handleSingleUserChange(e.target.value)}
+								required
+								className="h-10 sm:h-11 w-full rounded-xl border border-[#D9E9E7] bg-white px-3 sm:px-4 text-xs sm:text-sm outline-none focus:border-[#08A6A0]"
+							>
+								<option value="">-- Choose Staff Member --</option>
+								{usersList.map((u) => (
+									<option key={u.id} value={u.id}>
+										{u.name} ({u.role})
+									</option>
+								))}
+							</select>
+						</div>
+					)}
+
+					{/* Multiple Selected Users Checklist */}
+					{form.recipient_mode === "selected" && (
+						<div>
+							<label className="mb-1.5 block text-xs font-semibold text-[#31585A]">
+								Select Staff Members ({(form.recipient_user_ids || []).length} selected)
+							</label>
+							<div className="max-h-40 overflow-y-auto rounded-xl border border-[#D9E9E7] p-2 space-y-1 bg-[#FAFCFB]">
+								{usersList.map((u) => {
+									const checked = (form.recipient_user_ids || []).includes(u.id);
+									return (
+										<label
+											key={u.id}
+											className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer transition ${
+												checked ? "bg-[#E8F8F6] text-[#078E89] font-medium" : "text-[#31585A] hover:bg-white"
+											}`}
+										>
+											<input
+												type="checkbox"
+												checked={checked}
+												onChange={() => toggleSelectedUser(u.id)}
+												className="rounded border-[#D9E9E7] text-[#08A6A0] focus:ring-[#08A6A0]"
+											/>
+											<span className="truncate">{u.name}</span>
+											<span className="ml-auto text-[10px] uppercase font-semibold text-[#819596]">{u.role}</span>
+										</label>
+									);
+								})}
+							</div>
+						</div>
+					)}
+
+					<div className="flex justify-end gap-2 sm:gap-3 border-t border-[#EAF2F0] pt-4">
+						<button type="button" onClick={onClose} className="h-10 sm:h-11 rounded-xl border border-[#D9E9E7] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-[#31585A]">
+							Cancel
+						</button>
+						<button type="submit" className="h-10 sm:h-11 rounded-xl bg-[#08A6A0] px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-[#078F8A]">
+							Send Notification
+						</button>
+					</div>
+				</form>
+			</div>
 		</div>
-	</div>
-);
+	);
+};
 
 const Field = ({ label, value, onChange, placeholder }) => <div><label className="mb-1.5 block text-xs font-semibold text-[#31585A]">{label}</label><input required value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-10 sm:h-11 w-full rounded-xl border border-[#D9E9E7] px-3 sm:px-4 text-xs sm:text-sm outline-none focus:border-[#08A6A0] focus:ring-2 focus:ring-[#E8F8F6]" /></div>;
 

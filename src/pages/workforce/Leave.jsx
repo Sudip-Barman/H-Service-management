@@ -1,30 +1,53 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
+  CheckCircle2,
   Plus,
   X,
 } from "lucide-react";
 
 import {
-  getWorkforceUser,
-  getUserLeaves,
-} from "../../data/workforceData";
+  apiRequest,
+  getErrorMessage,
+} from "../../api/api";
 
 const Leave = ({ user }) => {
-  const employeeId = user?.id || "EMP-1001";
+  const storedUser = (() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const profile =
-    getWorkforceUser(employeeId) || getWorkforceUser("EMP-1001");
+  const currentUser = user || storedUser;
 
-  const existingLeaves = getUserLeaves(employeeId);
+  const profile = {
+    id: currentUser?.profile?.id || currentUser?.id || "",
+    name:
+      currentUser?.name ||
+      currentUser?.profile?.name ||
+      "Staff Member",
+    designation:
+      currentUser?.profile?.designation ||
+      currentUser?.profile?.specialization ||
+      currentUser?.role ||
+      "Staff",
+    department:
+      currentUser?.profile?.department ||
+      "General",
+  };
 
-  const [leaves, setLeaves] = useState(existingLeaves);
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const [formData, setFormData] = useState({
     leaveType: "Casual Leave",
@@ -32,6 +55,125 @@ const Leave = ({ user }) => {
     toDate: "",
     reason: "",
   });
+
+  useEffect(() => {
+  let mounted = true;
+
+  const loadLeaves = async () => {
+    setLoading(true);
+
+    try {
+      const data = await apiRequest("/api/requests");
+
+      if (!mounted) return;
+
+      const employeeName =
+        currentUser?.name ||
+        currentUser?.profile?.name ||
+        "";
+
+      const employeeEmail =
+        currentUser?.email ||
+        currentUser?.profile?.email ||
+        "";
+
+      const employeeLeaves = Array.isArray(data)
+        ? data
+            .filter((request) => {
+              const requestType = String(
+                request.type ||
+                request.request_type ||
+                ""
+            ).trim().toLowerCase();
+
+            if (requestType !== "leave") {
+                return false;
+            }
+
+              const requestedBy = String(
+                request.requestedBy ||
+                  request.requested_by ||
+                  ""
+              )
+                .trim()
+                .toLowerCase();
+
+              return (
+                requestedBy === employeeName.trim().toLowerCase() ||
+                requestedBy === employeeEmail.trim().toLowerCase()
+              );
+            })
+            .map((request) => ({
+              id: request.id,
+              requestId: request.request_id,
+              leaveType:
+                request.item ||
+                "Leave",
+              fromDate:
+                request.date ||
+                "",
+              toDate:
+                request.requiredDate ||
+                request.required_date ||
+                request.date ||
+                "",
+              reason:
+                request.description ||
+                "",
+              status:
+                request.status ||
+                "Pending",
+              requestedBy:
+                request.requestedBy ||
+                request.requested_by ||
+                "",
+            }))
+        : [];
+
+      setLeaves(employeeLeaves);
+    } catch (err) {
+      console.error("Failed to load leave requests:", err);
+
+      if (mounted) {
+        setLeaves([]);
+        showToast(
+          getErrorMessage(
+            err,
+            "Unable to load your leave requests."
+          ),
+          "error"
+        );
+      }
+    } finally {
+      if (mounted) {
+        setLoading(false);
+      }
+    }
+  };
+
+  loadLeaves();
+
+  return () => {
+    mounted = false;
+  };
+}, [
+  currentUser?.id,
+  currentUser?.name,
+  currentUser?.email,
+]);
+
+
+const showToast = (message, type = "success") => {
+  setToast({
+    message,
+    type,
+  });
+
+  setTimeout(() => {
+    setToast(null);
+  }, 3000);
+};
+
 
   const filteredLeaves = useMemo(() => {
     if (statusFilter === "All") {
@@ -65,28 +207,114 @@ const Leave = ({ user }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (
-      !formData.fromDate ||
-      !formData.toDate ||
-      !formData.reason.trim()
-    ) {
-      return;
-    }
+  if (
+    !formData.fromDate ||
+    !formData.toDate ||
+    !formData.reason.trim()
+  ) {
+    showToast(
+      "Please enter the leave dates and reason.",
+      "error"
+    );
+    return;
+  }
+
+  if (formData.toDate < formData.fromDate) {
+    showToast(
+      "To date cannot be earlier than the from date.",
+      "error"
+    );
+    return;
+  }
+
+  const requestedBy =
+    currentUser?.name ||
+    currentUser?.profile?.name ||
+    currentUser?.email ||
+    "Staff Member";
+
+  const department =
+    currentUser?.profile?.department ||
+    "General";
+
+  try {
+    const existingRequestData = await apiRequest(
+      "/api/requests"
+    );
+
+    const existingRequests = Array.isArray(
+      existingRequestData
+    )
+      ? existingRequestData
+      : [];
+
+    const nextNumber =
+      Math.max(
+        ...existingRequests.map(
+          (request) =>
+            Number(
+              String(request.id || "")
+                .replace(/\D/g, "")
+            ) || 0
+        ),
+        1000
+      ) + 1;
+
+    const requestCode = `REQ-${nextNumber}`;
+
+    const created = await apiRequest(
+      "/api/requests",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          request_code: requestCode,
+          request_type: "Leave",
+          item: formData.leaveType,
+          requested_for: requestedBy,
+          patient_id: null,
+          requested_by: requestedBy,
+          department,
+          priority:
+            formData.leaveType === "Emergency Leave"
+              ? "Urgent"
+              : "Normal",
+          status: "Pending",
+          date: formData.fromDate,
+          required_date: formData.toDate,
+          description: formData.reason.trim(),
+        }),
+      }
+    );
 
     const newLeave = {
-      id: `LV-${String(leaves.length + 1).padStart(3, "0")}`,
-      employeeId,
-      leaveType: formData.leaveType,
-      fromDate: formData.fromDate,
-      toDate: formData.toDate,
-      reason: formData.reason,
-      status: "Pending",
+      id: created?.id || requestCode,
+      requestId: created?.request_id,
+      leaveType:
+        created?.item ||
+        formData.leaveType,
+      fromDate:
+        created?.date ||
+        formData.fromDate,
+      toDate:
+        created?.requiredDate ||
+        created?.required_date ||
+        formData.toDate,
+      reason:
+        created?.description ||
+        formData.reason.trim(),
+      status:
+        created?.status ||
+        "Pending",
+      requestedBy,
     };
 
-    setLeaves((previous) => [newLeave, ...previous]);
+    setLeaves((previous) => [
+      newLeave,
+      ...previous,
+    ]);
 
     setFormData({
       leaveType: "Casual Leave",
@@ -96,7 +324,25 @@ const Leave = ({ user }) => {
     });
 
     setShowModal(false);
-  };
+
+    showToast(
+      "Leave request submitted successfully."
+    );
+  } catch (err) {
+    console.error(
+      "Failed to submit leave request:",
+      err
+    );
+
+    showToast(
+      getErrorMessage(
+        err,
+        "Unable to submit the leave request."
+      ),
+      "error"
+    );
+  }
+};
 
   const getStatusClasses = (status) => {
     switch (status?.toLowerCase()) {
@@ -129,6 +375,14 @@ const Leave = ({ user }) => {
         return <AlertCircle size={15} />;
     }
   };
+
+  const todayDate = new Date();
+
+const todayString = [
+  todayDate.getFullYear(),
+  String(todayDate.getMonth() + 1).padStart(2, "0"),
+  String(todayDate.getDate()).padStart(2, "0"),
+].join("-");
 
   return (
     <div className="space-y-6">
@@ -214,7 +468,15 @@ const Leave = ({ user }) => {
         </div>
 
         {/* Empty State */}
-        {filteredLeaves.length === 0 ? (
+        {loading ? (
+        <div className="px-6 py-16 text-center">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-[#E8F8F6] border-t-[#08A6A0]" />
+
+            <p className="text-sm text-gray-500">
+                Loading your leave requests...
+            </p>
+        </div>
+        ) : filteredLeaves.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
               <CalendarDays size={26} />
@@ -377,7 +639,7 @@ const Leave = ({ user }) => {
                     name="fromDate"
                     value={formData.fromDate}
                     onChange={handleInputChange}
-                    min={new Date().toISOString().split("T")[0]}
+                    min={todayString}
                     required
                     className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-[#08A6A0]"
                   />
@@ -393,10 +655,7 @@ const Leave = ({ user }) => {
                     name="toDate"
                     value={formData.toDate}
                     onChange={handleInputChange}
-                    min={
-                      formData.fromDate ||
-                      new Date().toISOString().split("T")[0]
-                    }
+                    min={formData.fromDate || todayString}
                     required
                     className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-[#08A6A0]"
                   />
@@ -453,6 +712,30 @@ const Leave = ({ user }) => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+            {toast && (
+        <div
+          className={`
+            fixed bottom-6 right-6 z-50
+            flex items-center gap-2.5
+            rounded-2xl px-5 py-3.5
+            text-sm font-semibold text-white shadow-2xl
+            transition-all duration-300
+            ${
+              toast.type === "error"
+                ? "bg-red-600"
+                : "bg-[#08A6A0]"
+            }
+          `}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle className="h-5 w-5 shrink-0" />
+          ) : (
+            <CheckCircle className="h-5 w-5 shrink-0" />
+          )}
+
+          <span>{toast.message}</span>
         </div>
       )}
     </div>
@@ -568,6 +851,7 @@ const SummaryCard = ({ title, value, icon }) => {
       <p className="mt-1 text-2xl font-bold text-[#073F42]">
         {value}
       </p>
+      
     </div>
   );
 };

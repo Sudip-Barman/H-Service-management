@@ -15,20 +15,10 @@ import {
 
 import { apiRequest } from "../../api/api";
 
-const Patients = ({ user }) => {
+const Patients = () => {
   const navigate = useNavigate();
 
-  const storedUser = (() => {
-    try {
-      const u = localStorage.getItem("user");
-      return u ? JSON.parse(u) : null;
-    } catch {
-      return null;
-    }
-  })();
 
-  const currentUser = user || storedUser;
-  const employeeId = currentUser?.id ? String(currentUser.id) : "";
 
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,26 +30,29 @@ const Patients = ({ user }) => {
         if (Array.isArray(data)) {
           const mapped = data.map((p) => ({
             id: p.id,
-            patientId: p.registration_number || `PAT-${1000 + p.id}`,
-            name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Patient",
-            age: p.age || 35,
-            gender: p.gender || "Not specified",
-            phone: p.phone || "N/A",
-            condition: p.medical_history || (p.blood_group ? `Blood: ${p.blood_group}` : "Stable"),
-            department: p.assigned_doctor || "General Medicine",
-            status: p.status || "Active",
+
+            patientId: p.registration_number || "",
+
+            name:
+                `${p.first_name || ""} ${p.last_name || ""}`.trim() ||
+                "Unknown Patient",
+
+            phone: p.phone || "",
+
+            condition: p.patient_problem || "",
+
+            ward: p.ward || "",
+
+            status: p.status || "Unknown",
+
             admissionDate: p.created_at
-              ? new Date(p.created_at).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "Recent",
-            appointmentTime: "10:30 AM",
-            doctorId: p.assigned_doctor_id
-              ? `DOC-${p.assigned_doctor_id}`
-              : employeeId,
-          }));
+                ? new Date(p.created_at).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            })
+            :   "",
+        }));
           setPatients(mapped);
         } else {
           setPatients([]);
@@ -72,7 +65,7 @@ const Patients = ({ user }) => {
       }
     };
     fetchPatients();
-  }, [employeeId]);
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -87,7 +80,7 @@ const Patients = ({ user }) => {
         patient.patientId?.toLowerCase().includes(search) ||
         patient.phone?.toLowerCase().includes(search) ||
         patient.condition?.toLowerCase().includes(search) ||
-        patient.department?.toLowerCase().includes(search);
+        patient.ward?.toLowerCase().includes(search);
 
       const matchesStatus =
         statusFilter === "All" ||
@@ -296,7 +289,13 @@ const Patients = ({ user }) => {
       {/* Patient List                                                       */}
       {/* ------------------------------------------------------------------ */}
 
-      {filteredPatients.length > 0 ? (
+        {loading ? (
+        <section className="rounded-xl border border-[#DCEBE9] bg-white px-6 py-14 text-center">
+            <p className="text-sm text-[#55716E]">
+                Loading patients...
+            </p>
+        </section>
+        ) : filteredPatients.length > 0 ? (
         <section className="overflow-hidden rounded-xl border border-[#DCEBE9] bg-white">
           {/* Desktop */}
           <div className="hidden overflow-x-auto md:block">
@@ -305,7 +304,7 @@ const Patients = ({ user }) => {
                 <tr className="border-b border-[#E2EFED] bg-[#F8FCFB]">
                   <TableHeader>Patient</TableHeader>
                   <TableHeader>Care / Condition</TableHeader>
-                  <TableHeader>Department</TableHeader>
+                  <TableHeader>Ward</TableHeader>
                   <TableHeader>Appointment / Admission</TableHeader>
                   <TableHeader>Contact</TableHeader>
                   <TableHeader>Status</TableHeader>
@@ -483,7 +482,7 @@ const PatientRow = ({
       {/* Department */}
       <td className="px-4 py-4">
         <span className="text-sm text-[#55716E]">
-          {patient.department || "Not assigned"}
+          {patient.ward || "Not assigned"}
         </span>
       </td>
 
@@ -578,9 +577,9 @@ const MobilePatient = ({
           icon={
             <Stethoscope className="h-3.5 w-3.5" />
           }
-          label="Department"
+          label="Ward"
           value={
-            patient.department ||
+           patient.ward  ||
             "Not assigned"
           }
         />

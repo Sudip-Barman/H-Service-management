@@ -27,7 +27,7 @@ import {
 import {
   getRolePermissions,
 } from "../../data/workforceData";
-import { apiRequest, getErrorMessage } from "../../api/api";
+import { apiRequest, getErrorMessage, getPhotoUrl } from "../../api/api";
 
 export default function Profile({ user }) {
   const navigate = useNavigate();
@@ -42,6 +42,7 @@ export default function Profile({ user }) {
   }, []);
 
   const [currentUser, setCurrentUser] = useState(storedUser);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const fetchFreshProfile = async () => {
@@ -65,6 +66,7 @@ export default function Profile({ user }) {
       email: currentUser?.email || prof.email || "",
       phone: currentUser?.phone || prof.phone || "",
       role: currentUser?.role || "staff",
+      photo: currentUser?.avatar || prof.photo || "",
       designation: prof.specialization || prof.qualification || currentUser?.role || "Hospital Staff",
       department: prof.department || "General",
       employeeId: prof.registration_number || (currentUser?.id ? `EMP-${1000 + currentUser.id}` : ""),
@@ -73,6 +75,12 @@ export default function Profile({ user }) {
       status: prof.status || "Active",
     };
   }, [currentUser]);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [workforceUser?.photo]);
+
+  const photoUrl = getPhotoUrl(workforceUser?.photo);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -246,8 +254,17 @@ export default function Profile({ user }) {
             {/* Identity */}
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
               {/* Avatar */}
-              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl border-4 border-white/20 bg-[#08A6A0] text-3xl font-bold text-white shadow-xl sm:h-32 sm:w-32 sm:text-4xl">
-                {initials}
+              <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-white/20 bg-[#08A6A0] text-3xl font-bold text-white shadow-xl sm:h-32 sm:w-32 sm:text-4xl">
+                {photoUrl && !imgError ? (
+                  <img
+                    src={photoUrl}
+                    alt={workforceUser?.name}
+                    className="h-full w-full object-cover"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  initials
+                )}
               </div>
 
               {/* Information */}

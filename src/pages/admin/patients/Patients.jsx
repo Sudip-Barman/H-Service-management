@@ -1201,59 +1201,9 @@ const Patients = () => {
            "Unexpected end of JSON input"
         --------------------------------------------------- */
 
-        const token =
-          localStorage.getItem(
-            "access_token"
-          );
-
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/patients/${deletedPatientId}`,
-          {
-            method: "DELETE",
-            headers: {
-              ...(token && {
-                Authorization: `Bearer ${token}`,
-              }),
-            },
-          }
-        );
-
-        /* ---------------------------------------------------
-           READ RESPONSE SAFELY
-
-           DELETE can return:
-           - 204 No Content
-           - JSON response
-           - text response
-        --------------------------------------------------- */
-
-        const responseText =
-          await response.text();
-
-        let responseData = null;
-
-        if (responseText) {
-          try {
-            responseData =
-              JSON.parse(responseText);
-          } catch {
-            responseData =
-              responseText;
-          }
-        }
-
-        /* ---------------------------------------------------
-           HANDLE SERVER ERROR
-        --------------------------------------------------- */
-
-        if (!response.ok) {
-          throw new Error(
-            responseData?.detail ||
-              responseData?.message ||
-              responseData ||
-              `Failed to delete patient (${response.status})`
-          );
-        }
+        await apiRequest(`/api/patients/${deletedPatientId}`, {
+          method: "DELETE",
+        });
 
         /* ---------------------------------------------------
            IMMEDIATELY REMOVE FROM REACT STATE

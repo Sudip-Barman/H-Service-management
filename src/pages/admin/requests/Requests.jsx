@@ -303,7 +303,7 @@ function Request() {
 
       {/* Desktop table */}
       <div className="hidden overflow-hidden rounded-2xl border border-[#E2EFED] bg-white shadow-sm lg:block">
-        <div className="max-h-[560px] overflow-auto">
+        <div className="max-h-[680px] xl:max-h-none overflow-auto">
           <table className="w-full border-collapse text-left">
             <thead className="sticky top-0 z-10 bg-[#FAFDFC]">
               <tr className="border-b border-[#E2EFED]">
@@ -334,10 +334,10 @@ function Request() {
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-[#31585A]">{request.requestedFor}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-[#31585A]">{request.requestedBy}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-[#31585A]">{request.department}</td>
-                  <td className="px-4 py-3"><PriorityBadge priority={request.priority} /></td>
-                  <td className="px-4 py-3"><StatusBadge status={request.status} /></td>
+                  <td className="px-4 py-2.5"><PriorityBadge priority={request.priority} /></td>
+                  <td className="px-4 py-2.5"><StatusBadge status={request.status} /></td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-[#5F7375]">{formatDate(request.date)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-2.5">
                     <div className="flex justify-end gap-1">
                       <ActionButton title="View Request" onClick={() => setSelectedRequest(request)}><Eye className="h-4 w-4" /></ActionButton>
                       <ActionButton title="Delete Request" danger onClick={() => setRequestToDelete(request)}><Trash2 className="h-4 w-4" /></ActionButton>

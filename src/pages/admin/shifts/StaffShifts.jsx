@@ -724,39 +724,39 @@ function StaffShifts() {
 
               <tr>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Shift ID
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Staff
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Department
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Date
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Shift
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Working Hours
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Location
                 </th>
 
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Status
                 </th>
 
-                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wide text-[#708789]">
+                <th className="px-3.5 sm:px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-[#708789]">
                   Actions
                 </th>
 
@@ -775,7 +775,7 @@ function StaffShifts() {
 
                     {/* SHIFT ID */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
                       <span className="font-semibold text-[#08A6A0]">
                         {shift.id}
                       </span>
@@ -783,7 +783,7 @@ function StaffShifts() {
 
                     {/* STAFF */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                       <div className="flex items-center gap-3">
 
@@ -807,7 +807,7 @@ function StaffShifts() {
 
                     {/* DEPARTMENT */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
                       <span className="text-sm font-medium text-[#31585A]">
                         {shift.department}
                       </span>
@@ -815,7 +815,7 @@ function StaffShifts() {
 
                     {/* DATE */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
                       <div className="flex items-center gap-2">
 
                         <CalendarDays
@@ -832,7 +832,7 @@ function StaffShifts() {
 
                     {/* SHIFT */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${
@@ -846,7 +846,7 @@ function StaffShifts() {
 
                     {/* WORKING HOURS */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                       <div className="flex items-center gap-2">
 
@@ -876,7 +876,7 @@ function StaffShifts() {
 
                     {/* LOCATION */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
                       <span className="text-sm text-[#31585A]">
                         {shift.location}
                       </span>
@@ -884,7 +884,7 @@ function StaffShifts() {
 
                     {/* STATUS */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${
@@ -898,7 +898,7 @@ function StaffShifts() {
 
                     {/* ACTIONS */}
 
-                    <td className="px-5 py-4">
+                    <td className="px-3.5 sm:px-4 py-3 sm:py-3.5">
 
                       <div className="flex items-center justify-end gap-2">
 

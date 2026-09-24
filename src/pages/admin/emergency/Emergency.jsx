@@ -217,7 +217,14 @@ function Emergency() {
 	}, [patients, query, triageFilter, statusFilter]);
 
 	const updateForm = (event) => {
-		setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+		const { name, value } = event.target;
+		if (name === "phone" || name === "emergencyPhone") {
+			setForm((current) => ({ ...current, [name]: value.replace(/\D/g, "").slice(0, 10) }));
+		} else if (name === "name" || name === "emergencyContact") {
+			setForm((current) => ({ ...current, [name]: value.replace(/[^a-zA-Z\s.'-]/g, "") }));
+		} else {
+			setForm((current) => ({ ...current, [name]: value }));
+		}
 	};
 
 	const updateStatus = async (patientId, status) => {
@@ -241,13 +248,18 @@ function Emergency() {
 
 	const addPatient = async (event) => {
 		event.preventDefault();
+
+		if (form.phone && form.phone.replace(/\D/g, "").length !== 10) {
+			alert("Patient phone number must be exactly 10 digits.");
+			return;
+		}
+
+		if (form.emergencyPhone && form.emergencyPhone.replace(/\D/g, "").length !== 10) {
+			alert("Emergency contact phone number must be exactly 10 digits.");
+			return;
+		}
+
 		const generatedCode = `ER-${String(24081 + patients.length).padStart(5, "0")}`;
-		const newPatient = {
-			...form,
-			id: generatedCode,
-			status: "Awaiting Doctor",
-			arrivalTime: "Today, just now",
-		};
 
 		try {
 			const created = await apiRequest("/api/emergency", {
@@ -274,13 +286,12 @@ function Emergency() {
 				}),
 			});
 			setPatients((current) => [created, ...current]);
+			setForm(emptyForm);
+			setShowAdd(false);
 		} catch (err) {
 			console.error("Failed to create emergency patient on backend:", err);
-			setPatients((current) => [newPatient, ...current]);
+			alert(err?.message || "Failed to register emergency patient.");
 		}
-
-		setForm(emptyForm);
-		setShowAdd(false);
 	};
 
 	const criticalCount = patients.filter((patient) => patient.triage === "Critical").length;
